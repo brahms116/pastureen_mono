@@ -13,7 +13,9 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// This is a local web application designed to be run locally, hence we remove https
+// app.UseHttpsRedirection();
+
 app.UseStaticFiles();
 
 app.UseRouting();
