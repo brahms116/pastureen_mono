@@ -5,3 +5,7 @@ version = 3
 [[package]]
 name = "print_table"
 version = "0.1.0"
+
+[[package]]
+name = "prpc"
+version = "0.1.0"
