@@ -1,2 +1,2 @@
 [workspace]
-members = ["print_table", "prpc_client", "prpc_server", "prpc_core"]
+members = ["print_table", "prpc_client", "prpc_server", "prpc_core", "csv_iterator"]
