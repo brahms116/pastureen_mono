@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct PRPCError {
+    #[serde(rename = "code")]
     pub kind: PRPCErrorType,
     pub message: String,
 }
