@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use super::error::*;
 
 #[derive(Serialize, Deserialize)]
-pub struct PRPCReqeust<T> {
+pub struct PRPCRequest<T> {
     pub auth: Option<String>,
     pub command: String,
     pub params: T,

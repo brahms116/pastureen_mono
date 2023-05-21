@@ -6,14 +6,14 @@ use std::collections::HashMap;
 use std::future::Future;
 
 pub enum PRPCMiddlewareResponse {
-    Next(Value),
+    Next(PRPCRequest<Value>),
     Return(PRPCResult<Value>),
 }
 
-type PRPCMiddleware = Box<dyn FnMut(Value) -> Box<dyn Future<Output = PRPCMiddlewareResponse>>>;
+type PRPCMiddleware = Box<dyn FnMut(PRPCRequest<Value>) -> Box<dyn Future<Output = PRPCMiddlewareResponse>>>;
 
 type PRPCAuthCommand =
-    Box<dyn FnMut(String, Value) -> Box<dyn Future<Output = PRPCResponse<Value>>>>;
+    Box<dyn FnMut(&str, Value) -> Box<dyn Future<Output = PRPCResponse<Value>>>>;
 
 type PRPCCommand = Box<dyn FnMut(Value) -> Box<dyn Future<Output = PRPCResponse<Value>>>>;
 
@@ -82,12 +82,12 @@ impl PRPCServerBuilder {
 
     pub fn use_authenticated_command<F, T, K, E>(&mut self, command: &str, mut handler: F)
     where
-        F: FnMut(String, T) -> Box<dyn Future<Output = K>> + 'static,
+        F: FnMut(&str, T) -> Box<dyn Future<Output = K>> + 'static,
         K: Into<PRPCResult<E>> + 'static,
         T: DeserializeOwned,
         E: Serialize,
     {
-        let my_handler: PRPCAuthCommand = Box::new(move |id: String, params: Value| {
+        let my_handler: PRPCAuthCommand = Box::new(move |id: &str, params: Value| {
             let args = serde_json::from_value::<T>(params);
             if args.is_err() {
                 let err = PRPCError {
@@ -141,43 +141,53 @@ pub struct PRPCServer {
 }
 
 impl PRPCServer {
-    pub async fn handle(&mut self, command: String, params: Value) -> PRPCResponse<Value> {
-        let mut middleware_params = params;
+    pub async fn handle(&mut self, input: Value) -> PRPCResponse<Value> {
+        let req = serde_json::from_value::<PRPCRequest<Value>>(input);
+        if req.is_err() {
+            let err = PRPCError {
+                kind: PRPCErrorType::InvalidArgument,
+                message: "Not a valid prpc request".to_string(),
+            };
+            return Err(err).into();
+        }
+        let mut req = req.unwrap();
+
         for middleware in self.middlewares.iter_mut() {
-            let res = middleware(middleware_params.clone());
-            let res = Box::into_pin(res);
-            let res = res.await;
-            match res {
-                PRPCMiddlewareResponse::Return(res) => {
-                    return res.into();
+            let fut = middleware(req);
+            let fut = Box::into_pin(fut);
+            let fut = fut.await;
+            match fut {
+                PRPCMiddlewareResponse::Next(value) => {
+                    req = value;
                 }
-                PRPCMiddlewareResponse::Next(params) => {
-                    middleware_params = params;
+                PRPCMiddlewareResponse::Return(value) => {
+                    return value.into();
                 }
             }
         }
 
-        let handler = self.commands.get_mut(&command);
-        if let Some(handler_func) = handler {
-            let res = handler_func(middleware_params);
-            let res = Box::into_pin(res);
-            let res = res.await;
-            return res;
+        let handler = self.commands.get_mut(&req.command);
+        if let Some(func) = handler {
+            let fut = func(req.params);
+            let fut = Box::into_pin(fut);
+            let fut = fut.await;
+            return fut;
         }
 
-        let handler = self.authenticated_commands.get_mut(&command);
-        if let Some(handler_func) = handler {
-            //TODO: Add authentication
-            let res = handler_func("".to_string(), middleware_params);
-            let res = Box::into_pin(res);
-            let res = res.await;
-            return res;
+        let handler = self.authenticated_commands.get_mut(&req.command);
+        if let Some(func) = handler {
+            // TODO: Authentication
+            let fut = func("USER_ID_HERE", req.params);
+            let fut = Box::into_pin(fut);
+            let fut = fut.await;
+            return fut;
         }
 
-        return Err(PRPCError {
+        let err = PRPCError {
             kind: PRPCErrorType::NotFound,
             message: "Command not found".to_string(),
-        }).into();
+        };
+        Err(err).into()
     }
 }
 
@@ -195,6 +205,4 @@ mod test {
     enum TestError {
         TestError,
     }
-
 }
-
