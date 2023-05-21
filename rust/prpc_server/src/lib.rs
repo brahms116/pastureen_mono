@@ -158,7 +158,6 @@ impl PRPCServer {
         }
 
         let handler = self.commands.get_mut(&command);
-
         if let Some(handler_func) = handler {
             let res = handler_func(middleware_params);
             let res = Box::into_pin(res);
@@ -168,6 +167,7 @@ impl PRPCServer {
 
         let handler = self.authenticated_commands.get_mut(&command);
         if let Some(handler_func) = handler {
+            //TODO: Add authentication
             let res = handler_func("".to_string(), middleware_params);
             let res = Box::into_pin(res);
             let res = res.await;
@@ -180,3 +180,21 @@ impl PRPCServer {
         }).into();
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Serialize, Deserialize)]
+    struct TestParams {
+        a: i32,
+        b: i32,
+    }
+
+    enum TestError {
+        TestError,
+    }
+
+}
+
