@@ -472,6 +472,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "prpc_server_hyper_wrapper"
+version = "0.1.0"
+
+[[package]]
 name = "prpc_server_lambda_wrapper"
 version = "0.1.0"
 dependencies = [
