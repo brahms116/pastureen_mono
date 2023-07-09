@@ -64,6 +64,24 @@ fn decode_token(token: &str, secret: &str) -> Result<String, PRPCServerInternalE
     Ok(token.claims.sub)
 }
 
+fn turn_response_result_to_value<T>(
+    result: PRPCResult<T>,
+) -> Result<PRPCResponse<Value>, serde_json::Error>
+where
+    T: SerializeTrait,
+{
+    match result {
+        Ok(response) => Ok(PRPCResponse {
+            result: Some(serde_json::to_value(response)?),
+            error: None,
+        }),
+        Err(error) => Ok(PRPCResponse {
+            result: None,
+            error: Some(error),
+        }),
+    }
+}
+
 pub enum PRPCMiddlewareResponse {
     Next(PRPCRequest<Value>),
     Return(PRPCResult<Value>),
@@ -121,19 +139,17 @@ impl PRPCServerBuilder {
             let fut = Box::into_pin(fut);
             let fut = async move {
                 let result = fut.await;
-                let result = result.into();
-                let result = serde_json::to_value(result);
-                if result.is_err() {
+                let result: PRPCResult<E> = result.into();
+                let response = turn_response_result_to_value(result);
+                if response.is_err() {
                     let err = PRPCError {
                         kind: PRPCErrorType::Internal,
-                        message: "Failed to serialize result into JSON".to_string(),
+                        message: "Failed to serialize json".to_string(),
                     };
-
                     let res: PRPCResponse<Value> = Err(err).into();
                     return res;
                 }
-                let res: PRPCResponse<Value> = Ok(result.unwrap()).into();
-                res
+                response.unwrap()
             };
             Box::new(fut)
         });
@@ -178,18 +194,16 @@ impl PRPCServerBuilder {
             let fut = async move {
                 let result = fut.await;
                 let result = result.into();
-                let result = serde_json::to_value(result);
-                if result.is_err() {
+                let response = turn_response_result_to_value(result);
+                if response.is_err() {
                     let err = PRPCError {
                         kind: PRPCErrorType::Internal,
-                        message: "Failed to serialize result into JSON".to_string(),
+                        message: "Failed to serialize json".to_string(),
                     };
-
                     let res: PRPCResponse<Value> = Err(err).into();
                     return res;
                 }
-                let res: PRPCResponse<Value> = Ok(result.unwrap()).into();
-                res
+                response.unwrap()
             };
             Box::new(fut)
         });
@@ -304,14 +318,15 @@ impl PRPCServer {
 
 #[cfg(test)]
 mod test {
-    // use super::*;
-    // use serde::{Deserialize, Serialize};
+    use super::*;
+    use serde::{Deserialize, Serialize};
+    use serde_json::json;
 
-    // #[derive(Deserialize)]
-    // struct TestParams {
-    //     a: i32,
-    //     b: i32,
-    // }
+    #[derive(Deserialize)]
+    struct TestParams {
+        a: i32,
+        b: i32,
+    }
 
     // #[derive(Serialize)]
     // enum TestError {
@@ -327,6 +342,15 @@ mod test {
     //     }
     // }
 
+    async fn test_function(params: TestParams) -> PRPCResult<i32> {
+        Ok(params.a + params.b).into()
+    }
+
+    fn test_function_wrapper(params: TestParams) -> Box<dyn Future<Output = PRPCResult<i32>>> {
+        let result = Box::new(test_function(params));
+        result
+    }
+
     // Invalid shape
 
     // Invalid command
@@ -334,6 +358,29 @@ mod test {
     // Invalid argument
 
     // Correct command
+    #[tokio::test]
+    async fn test_correct_command() {
+        let mut builder = PRPCServerBuilder::new();
+        builder.use_command("test", test_function_wrapper);
+        let mut server = builder.build();
+        let response = server
+            .handle(json!(
+                {
+                    "command": "test",
+                    "params": {
+                        "a": 1,
+                        "b": 2
+                    }
+                }
+            ))
+            .await;
+        println!("{:?}", response);
+        if let Some(num) = response.result {
+            assert_eq!(num, json!(3));
+        } else {
+            panic!("No result");
+        }
+    }
 
     // Correct authenticated command
 

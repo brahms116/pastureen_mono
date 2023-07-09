@@ -1,7 +1,7 @@
 // Global dependencies
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct PRPCError {
     #[serde(rename = "code")]
     pub kind: PRPCErrorType,
@@ -232,6 +232,7 @@ impl<'de> serde::de::Deserialize<'de> for PRPCErrorType {
     }
 }
 
+#[derive(Debug)]
 pub enum PRPCErrorType {
     Cancelled,
     Unknown,

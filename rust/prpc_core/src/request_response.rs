@@ -1,36 +1,52 @@
 // Global dependencies
 use serde::{Deserialize, Serialize};
+use serde::ser::Serialize as SerializeTrait;
 
 // External dependencies
 use super::error::*;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct PRPCRequest<T> {
     pub auth: Option<String>,
     pub command: String,
     pub params: T,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct PRPCResponse<T> {
     pub result: Option<T>,
     pub error: Option<PRPCError>,
 }
+
 
 pub type PRPCResult<T> = Result<T, PRPCError>;
 
 impl<T> From<PRPCResult<T>> for PRPCResponse<T> {
     fn from(result: PRPCResult<T>) -> Self {
         match result {
-            Ok(response) => PRPCResponse {
-                result: Some(response),
-                error: None,
-            },
+            Ok(response) => {
+                PRPCResponse {
+                    result: Some(response),
+                    error: None,
+                }
+            }
             Err(error) => PRPCResponse {
                 result: None,
                 error: Some(error),
             },
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_result_to_response() {
+        let result: PRPCResult<i32> = Ok(1);
+        let response: PRPCResponse<i32> = result.into();
+        assert_eq!(response.result, Some(1));
     }
 }
 

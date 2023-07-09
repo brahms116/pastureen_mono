@@ -11,3 +11,5 @@ prpc_core = { path = "../prpc_core" }
 prpc_server = { path = "../prpc_server" }
 serde_json = "1.0.96"
 
+[dev-dependencies]
+tokio = { version = "1.29.1", features = ["full"] }
