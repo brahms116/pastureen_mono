@@ -102,18 +102,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ec2_service"
-version = "0.1.0"
-dependencies = [
- "lambda_runtime",
- "prpc_core",
- "prpc_server",
- "prpc_server_lambda_wrapper",
- "serde_json",
- "tokio",
-]
-
-[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -567,6 +555,18 @@ dependencies = [
  "untrusted",
  "web-sys",
  "winapi",
+]
+
+[[package]]
+name = "router_service"
+version = "0.1.0"
+dependencies = [
+ "lambda_runtime",
+ "prpc_core",
+ "prpc_server",
+ "prpc_server_lambda_wrapper",
+ "serde_json",
+ "tokio",
 ]
 
 [[package]]

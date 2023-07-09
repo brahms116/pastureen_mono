@@ -1,4 +1,4 @@
-module "ec2_service" {
-  source      = "../ec2_service"
-  environment = var.environment
+module "router_service_development" {
+  source      = "../router_service"
+  environment = "dev"
 }

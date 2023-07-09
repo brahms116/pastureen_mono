@@ -1,5 +1,5 @@
 [package]
-name = "ec2_service"
+name = "router_service"
 version = "0.1.0"
 edition = "2021"
 

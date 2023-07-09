@@ -1,14 +1,14 @@
 resource "aws_lambda_function" "lambda" {
-  function_name    = var.lambda_function_name
-  filename         = var.lambda_zip_path
-  source_code_hash = filebase64sha256(var.lambda_zip_path)
-  handler          = "bootstrap"
-  runtime          = "provided.al2"
-  role             = aws_iam_role.lambda_role.arn
-  architectures    = ["arm64"]
+  function_name = var.lambda_function_name
+  role          = aws_iam_role.lambda_role.arn
+  architectures = ["arm64"]
+  package_type  = "Image"
+  image_uri     = var.ecr_image_uri
   environment {
     variables = var.lambda_environment_variables
   }
+  # This is bad
+  source_code_hash = timestamp()
 }
 
 

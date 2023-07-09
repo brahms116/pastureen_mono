@@ -4,13 +4,8 @@ provider "aws" {
 
 terraform {
   backend "s3" {
-    key    = "pastureen/test.tfstate"
+    key    = "pastureen/deployment.tfstate"
     bucket = "pastureen-tf-state-store"
     region = "ap-southeast-2"
   }
-}
-
-module "deployment" {
-  source      = "../deployment"
-  environment = "test"
 }
