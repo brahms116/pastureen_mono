@@ -88,11 +88,11 @@ pub enum PRPCMiddlewareResponse {
 }
 
 type PRPCMiddleware =
-    Box<dyn FnMut(PRPCRequest<Value>) -> Box<dyn Future<Output = PRPCMiddlewareResponse>>>;
+    Box<dyn Fn(PRPCRequest<Value>) -> Box<dyn Future<Output = PRPCMiddlewareResponse>>>;
 
-type PRPCAuthCommand = Box<dyn FnMut(&str, Value) -> Box<dyn Future<Output = PRPCResponse<Value>>>>;
+type PRPCAuthCommand = Box<dyn Fn(&str, Value) -> Box<dyn Future<Output = PRPCResponse<Value>>>>;
 
-type PRPCCommand = Box<dyn FnMut(Value) -> Box<dyn Future<Output = PRPCResponse<Value>>>>;
+type PRPCCommand = Box<dyn Fn(Value) -> Box<dyn Future<Output = PRPCResponse<Value>>>>;
 
 pub struct PRPCServerBuilder {
     middlewares: Vec<PRPCMiddleware>,
@@ -115,9 +115,9 @@ impl PRPCServerBuilder {
         self.middlewares.push(middleware);
     }
 
-    pub fn use_command<F, T, K, E>(&mut self, command: &str, mut handler: F)
+    pub fn use_command<F, T, K, E>(&mut self, command: &str, handler: F)
     where
-        F: FnMut(T) -> Box<dyn Future<Output = K>> + 'static,
+        F: Fn(T) -> Box<dyn Future<Output = K>> + 'static,
         K: Into<PRPCResult<E>> + 'static,
         T: DeserializeOwned,
         E: SerializeTrait,
@@ -164,10 +164,10 @@ impl PRPCServerBuilder {
     pub fn use_authenticated_command<F, T, K, E>(
         &mut self,
         command: &str,
-        mut handler: F,
+        handler: F,
     ) -> Result<(), PRPCServerError>
     where
-        F: FnMut(&str, T) -> Box<dyn Future<Output = K>> + 'static,
+        F: Fn(&str, T) -> Box<dyn Future<Output = K>> + 'static,
         K: Into<PRPCResult<E>> + 'static,
         T: DeserializeOwned,
         E: Serialize,
@@ -231,7 +231,7 @@ pub struct PRPCServer {
 }
 
 impl PRPCServer {
-    pub async fn handle(&mut self, input: Value) -> PRPCResponse<Value> {
+    pub async fn handle(&self, input: Value) -> PRPCResponse<Value> {
         let req = serde_json::from_value::<PRPCRequest<Value>>(input);
         if req.is_err() {
             let err = PRPCError {
@@ -242,7 +242,7 @@ impl PRPCServer {
         }
         let mut req = req.unwrap();
 
-        for middleware in self.middlewares.iter_mut() {
+        for middleware in self.middlewares.iter() {
             let fut = middleware(req);
             let fut = Box::into_pin(fut);
             let fut = fut.await;
@@ -256,7 +256,7 @@ impl PRPCServer {
             }
         }
 
-        let handler = self.commands.get_mut(&req.command);
+        let handler = self.commands.get(&req.command);
         if let Some(func) = handler {
             let fut = func(req.params);
             let fut = Box::into_pin(fut);
@@ -264,7 +264,7 @@ impl PRPCServer {
             return fut;
         }
 
-        let handler = self.authenticated_commands.get_mut(&req.command);
+        let handler = self.authenticated_commands.get(&req.command);
         if let Some(func) = handler {
             if let None = req.auth {
                 let err = PRPCError {
@@ -362,7 +362,7 @@ mod test {
     async fn test_correct_command() {
         let mut builder = PRPCServerBuilder::new();
         builder.use_command("test", test_function_wrapper);
-        let mut server = builder.build();
+        let server = builder.build();
         let response = server
             .handle(json!(
                 {
@@ -374,7 +374,6 @@ mod test {
                 }
             ))
             .await;
-        println!("{:?}", response);
         if let Some(num) = response.result {
             assert_eq!(num, json!(3));
         } else {
