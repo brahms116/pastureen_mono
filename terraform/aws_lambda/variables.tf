@@ -15,7 +15,7 @@ variable "lambda_environment_variables" {
   default     = {}
 }
 
-variable "ecr_image_uri" {
+variable "zip_location" {
   type        = string
-  description = "ECR image URI"
+  description = "Location of the zip package"
 }

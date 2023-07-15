@@ -1,23 +1,27 @@
-FROM rust:1.70.0-slim-buster as builder
-WORKDIR /usr/src/app
-RUN apt-get update && apt-get install pkg-config libssl-dev -y
+FROM public.ecr.aws/lambda/provided:al2.2023.07.10.09 as rust_lambda_builder
+
+RUN yum install -y jq openssl-devel gcc zip
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+    | CARGO_HOME=/cargo RUSTUP_HOME=/rustup sh -s -- -y --profile minimal --default-toolchain stable \
+    && source /cargo/env \
+    && rustup default stable
+
+WORKDIR /app
 COPY ./rust .
-RUN cargo build --release
 
-FROM debian:buster-slim as router_service
-RUN apt-get update && apt-get install libssl-dev ca-certificates -y
-COPY --from=builder /usr/src/app/target/release/router_service /usr/local/bin/router_service
-ENTRYPOINT ["/usr/local/bin/router_service"]
+RUN source /cargo/env \
+    && cargo build --release
 
-FROM debian:buster-slim as router_service_double
-RUN apt-get update && apt-get install libssl-dev ca-certificates -y
-COPY --from=builder /usr/src/app/target/release/router_service /usr/local/bin/router_service
-ENTRYPOINT ["/usr/local/bin/router_service"]
+WORKDIR /
 
+RUN mkdir zip
+RUN mkdir out
+RUN cp /app/target/release/router_service /zip/bootstrap
+RUN zip -j /out/router_service.zip /zip/bootstrap
 
+RUN cp /app/target/release/router_service /zip/bootstrap
+RUN zip -j  /out/router_service_double.zip /zip/bootstrap
 
-
-
-
-
+FROM alpine:3
+COPY --from=rust_lambda_builder /out /build/rust_lambda/
 
