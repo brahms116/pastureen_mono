@@ -11,6 +11,7 @@ struct CliArgs {
 enum FinSubcommand {
     Process,
     Unprocessed,
+    #[clap(alias = "types")]
     TransactionTypes(TransactionTypes),
 }
 
@@ -28,14 +29,30 @@ enum TransactionTypesSubcommand {
     },
     Update {
         #[clap(long)]
-        id: i32,
+        id: String,
         #[clap(long)]
         name: String,
     },
 }
 
-fn handle_error<T: std::error::Error> (error: T) {
+fn handle_error<T: std::error::Error>(error: T) {
     println!("Oops something went wrong: {}", error);
+}
+
+fn transaction_type_to_row(transaction_type: &TransactionType) -> [String; 2] {
+    [transaction_type.id.to_string(), transaction_type.name.to_string()]
+}
+
+fn print_transaction_types(transaction_types: &[TransactionType]) {
+    let headers: [&str; 2] = ["ID", "Name"];
+    let rows: Vec<[String; 2]> = transaction_types
+        .iter()
+        .map(transaction_type_to_row)
+        .collect();
+    let output_rows = print_table::print_table(&rows, &headers);
+    for row in output_rows {
+        println!("{}", row);
+    }
 }
 
 async fn transaction_types<T: FinApi>(api: T, args: TransactionTypes) {
@@ -47,7 +64,7 @@ async fn transaction_types<T: FinApi>(api: T, args: TransactionTypes) {
                 return;
             }
             let transaction_type = result.unwrap();
-            println!("Created transaction type: {:?}", transaction_type);
+            print_transaction_types(&[transaction_type]);
         }
         Some(TransactionTypesSubcommand::Update { id, name }) => {
             let transaction_type = TransactionType {
@@ -60,7 +77,7 @@ async fn transaction_types<T: FinApi>(api: T, args: TransactionTypes) {
                 return;
             }
             let transaction_type = result.unwrap();
-            println!("Updated transaction type: {:?}", transaction_type);
+            print_transaction_types(&[transaction_type]);
         }
         None => {
             let result = api.get_all_transaction_types().await;
@@ -69,8 +86,21 @@ async fn transaction_types<T: FinApi>(api: T, args: TransactionTypes) {
                 return;
             }
             let transaction_types = result.unwrap();
-            println!("Transaction types: {:?}", transaction_types);
+            print_transaction_types(&transaction_types);
         }
+    }
+}
+
+#[derive(Clone, Debug)]
+struct ApplicationConfig {
+    transaction_type_tablename: String,
+}
+
+fn get_default_config() -> ApplicationConfig {
+    let transaction_type_tablename = std::env::var("FIN_CLI_TRANSACTION_TYPE_TABLE_NAME")
+        .expect("Env var FLIN_CLI_TRANSACTION_TYPE_TABLE_NAME is missing");
+    ApplicationConfig {
+        transaction_type_tablename,
     }
 }
 
@@ -78,12 +108,14 @@ async fn transaction_types<T: FinApi>(api: T, args: TransactionTypes) {
 async fn main() {
     let args = CliArgs::parse();
 
-    let config = aws_config::load_from_env().await;
-    let client = aws_sdk_dynamodb::Client::new(&config);
+    let aws_config = aws_config::load_from_env().await;
+    let client = aws_sdk_dynamodb::Client::new(&aws_config);
+
+    let app_config = get_default_config();
 
     let db = FinDynamoDb {
         client,
-        transaction_type_tablename: "transaction_types".to_string(),
+        transaction_type_tablename: app_config.transaction_type_tablename,
     };
 
     let api = FinApiService::new(db);

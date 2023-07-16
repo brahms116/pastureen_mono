@@ -732,6 +732,7 @@ dependencies = [
  "aws-sdk-dynamodb",
  "clap",
  "fin_api",
+ "print_table",
  "tokio",
 ]
 
