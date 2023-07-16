@@ -497,6 +497,7 @@ dependencies = [
  "aws-sdk-dynamodb",
  "chrono",
  "thiserror",
+ "tokio-stream",
  "uuid",
 ]
 

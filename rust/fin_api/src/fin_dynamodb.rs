@@ -1,11 +1,12 @@
 use super::*;
 use async_trait::async_trait;
+use aws_sdk_dynamodb::error::SdkError;
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::Client;
 use std::collections::HashMap;
-use uuid::Uuid;
 use std::error::Error;
-use aws_sdk_dynamodb::error::SdkError;
+use tokio_stream::StreamExt;
+use uuid::Uuid;
 
 impl<E: Error> From<SdkError<E>> for FinError {
     fn from(err: SdkError<E>) -> Self {
@@ -62,11 +63,33 @@ pub struct FinDynamoDb {
 #[async_trait]
 impl TransactionTypeRepository for FinDynamoDb {
     async fn get_all(&self) -> Result<Vec<TransactionType>, FinError> {
-        todo!()
+        let scan_builder = self.client.scan();
+        let result: Result<Vec<HashMap<String, AttributeValue>>, _> = scan_builder
+            .table_name(&self.transaction_type_tablename)
+            .into_paginator()
+            .items()
+            .send()
+            .collect()
+            .await;
+
+        let result = result?;
+        result.into_iter().map(|e| e.try_into()).collect()
     }
 
     async fn get_by_id(&self, id: &str) -> Result<Option<TransactionType>, FinError> {
-        todo!()
+        let get_builder = self.client.get_item();
+        let result = get_builder
+            .table_name(&self.transaction_type_tablename)
+            .key("id", AttributeValue::S(id.to_string()))
+            .send()
+            .await?;
+
+        let attributes = result.item();
+
+        if let Some(attributes) = attributes {
+            return Ok(Some(attributes.clone().try_into()?));
+        }
+        Ok(None)
     }
 
     async fn create(&self, name: &str) -> Result<TransactionType, FinError> {
@@ -80,13 +103,30 @@ impl TransactionTypeRepository for FinDynamoDb {
         let result = update_builder
             .table_name(&self.transaction_type_tablename)
             .set_expression_attribute_values(Some(transaction_type.into()))
+            .return_values(aws_sdk_dynamodb::types::ReturnValue::AllNew)
             .send()
             .await?;
 
-        todo!()
+        let item = result.attributes.ok_or(FinError::DbError(
+            "Could not find attributes in result".to_string(),
+        ))?;
+
+        Ok(TransactionType::try_from(item)?)
     }
 
-    async fn update(&self, id: &str, name: &str) -> Result<TransactionType, FinError> {
-        todo!()
+    async fn update(&self, transaction_type: TransactionType) -> Result<TransactionType, FinError> {
+        let update_builder = self.client.update_item();
+        let result = update_builder
+            .table_name(&self.transaction_type_tablename)
+            .set_expression_attribute_values(Some(transaction_type.into()))
+            .return_values(aws_sdk_dynamodb::types::ReturnValue::AllNew)
+            .send()
+            .await?;
+
+        let item = result.attributes.ok_or(FinError::DbError(
+            "Could not find attributes in result".to_string(),
+        ))?;
+
+        Ok(TransactionType::try_from(item)?)
     }
 }

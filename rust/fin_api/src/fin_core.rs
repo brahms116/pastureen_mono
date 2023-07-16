@@ -37,7 +37,7 @@ pub trait TransactionTypeRepository {
     async fn get_all(&self) -> Result<Vec<TransactionType>, FinError>;
     async fn get_by_id(&self, id: &str) -> Result<Option<TransactionType>, FinError>;
     async fn create(&self, name: &str) -> Result<TransactionType, FinError>;
-    async fn update(&self, id: &str, name: &str) -> Result<TransactionType, FinError>;
+    async fn update(&self, transaction_type: TransactionType) -> Result<TransactionType, FinError>;
 }
 
 pub struct FinApi<Db: TransactionTypeRepository> {
@@ -65,9 +65,8 @@ impl<Db: TransactionTypeRepository> FinApi<Db> {
 
     pub async fn update_transaction_type(
         &self,
-        id: &str,
-        name: &str,
+        transaction_type: TransactionType,
     ) -> Result<TransactionType, FinError> {
-        self.db.update(id, name).await
+        self.db.update(transaction_type).await
     }
 }
