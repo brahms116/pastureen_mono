@@ -717,7 +717,6 @@ name = "fin_api"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "aws-config",
  "aws-sdk-dynamodb",
  "chrono",
  "thiserror",
