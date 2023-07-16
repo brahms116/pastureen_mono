@@ -4,7 +4,9 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum FinError {
     #[error("Database error: {0}")]
-    DbError(String)
+    DbError(String),
+    #[error("Item not found: {0}")]
+    NotFound(String)
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -40,30 +42,44 @@ pub trait TransactionTypeRepository {
     async fn update(&self, transaction_type: TransactionType) -> Result<TransactionType, FinError>;
 }
 
-pub struct FinApi<Db: TransactionTypeRepository> {
-    db: Db,
+#[async_trait]
+pub trait FinApi {
+    async fn get_all_transaction_types(&self) -> Result<Vec<TransactionType>, FinError>;
+    async fn get_transaction_type(&self, id: &str) -> Result<Option<TransactionType>, FinError>;
+    async fn create_transaction_type(&self, name: &str) -> Result<TransactionType, FinError>;
+    async fn update_transaction_type(
+        &self,
+        transaction_type: TransactionType,
+    ) -> Result<TransactionType, FinError>;
 }
 
-impl<Db: TransactionTypeRepository> FinApi<Db> {
+pub struct FinApiService<Db> {
+    db: Db,
+}
+impl<Db> FinApiService<Db> {
     pub fn new(db: Db) -> Self {
         Self { db }
     }
-    pub async fn get_all_transaction_types(&self) -> Result<Vec<TransactionType>, FinError> {
+}
+
+#[async_trait]
+impl<Db: TransactionTypeRepository + std::marker::Send + std::marker::Sync> FinApi for FinApiService<Db> {
+    async fn get_all_transaction_types(&self) -> Result<Vec<TransactionType>, FinError> {
         self.db.get_all().await
     }
 
-    pub async fn get_transaction_type(
+    async fn get_transaction_type(
         &self,
         id: &str,
     ) -> Result<Option<TransactionType>, FinError> {
         self.db.get_by_id(id).await
     }
 
-    pub async fn create_transaction_type(&self, name: &str) -> Result<TransactionType, FinError> {
+    async fn create_transaction_type(&self, name: &str) -> Result<TransactionType, FinError> {
         self.db.create(name).await
     }
 
-    pub async fn update_transaction_type(
+    async fn update_transaction_type(
         &self,
         transaction_type: TransactionType,
     ) -> Result<TransactionType, FinError> {

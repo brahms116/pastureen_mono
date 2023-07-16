@@ -115,6 +115,14 @@ impl TransactionTypeRepository for FinDynamoDb {
     }
 
     async fn update(&self, transaction_type: TransactionType) -> Result<TransactionType, FinError> {
+
+        let existing = self.get_by_id(&transaction_type.id).await?;
+        if existing.is_none() {
+            return Err(FinError::NotFound(format!(
+                "TransactionType with id {}",
+                transaction_type.id
+            )));
+        }
         let update_builder = self.client.update_item();
         let result = update_builder
             .table_name(&self.transaction_type_tablename)

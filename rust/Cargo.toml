@@ -8,5 +8,6 @@ members = [
   "prpc_server_lambda_wrapper",
   "prpc_server_hyper_wrapper",
   "router_service",
-  "fin_api"
+  "fin_api",
+  "fin_cli"
 ]
