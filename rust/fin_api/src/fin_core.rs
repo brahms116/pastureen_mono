@@ -29,7 +29,7 @@ pub type ClassifyingRuleList = Vec<ClassifyingRule>;
 pub struct Transaction {
     pub id: String,
     pub transaction_type_id: String,
-    pub ammount_cents: i64,
+    pub amount_cents: i64,
     pub date: i64,
     pub description: String,
 }
