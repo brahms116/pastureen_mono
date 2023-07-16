@@ -7,5 +7,6 @@ members = [
   "csv_iterator",
   "prpc_server_lambda_wrapper",
   "prpc_server_hyper_wrapper",
-  "router_service"
+  "router_service",
+  "fin_api"
 ]
