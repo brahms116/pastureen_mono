@@ -10,7 +10,7 @@ use uuid::Uuid;
 
 impl<E: Error> From<SdkError<E>> for FinError {
     fn from(err: SdkError<E>) -> Self {
-        Self::DbError(err.to_string())
+        Self::DbError(format!("{}", err))
     }
 }
 
@@ -99,23 +99,17 @@ impl TransactionTypeRepository for FinDynamoDb {
             name: name.to_string(),
         };
 
-        let update_builder = self.client.update_item();
-        let result = update_builder
+        let put_builder = self.client.put_item();
+        put_builder
             .table_name(&self.transaction_type_tablename)
-            .set_expression_attribute_values(Some(transaction_type.into()))
-            .return_values(aws_sdk_dynamodb::types::ReturnValue::AllNew)
+            .set_item(Some(transaction_type.clone().into()))
             .send()
             .await?;
 
-        let item = result.attributes.ok_or(FinError::DbError(
-            "Could not find attributes in result".to_string(),
-        ))?;
-
-        Ok(TransactionType::try_from(item)?)
+        Ok(transaction_type)
     }
 
     async fn update(&self, transaction_type: TransactionType) -> Result<TransactionType, FinError> {
-
         let existing = self.get_by_id(&transaction_type.id).await?;
         if existing.is_none() {
             return Err(FinError::NotFound(format!(
@@ -123,18 +117,13 @@ impl TransactionTypeRepository for FinDynamoDb {
                 transaction_type.id
             )));
         }
-        let update_builder = self.client.update_item();
-        let result = update_builder
+        let put_builder = self.client.put_item();
+        put_builder
             .table_name(&self.transaction_type_tablename)
-            .set_expression_attribute_values(Some(transaction_type.into()))
-            .return_values(aws_sdk_dynamodb::types::ReturnValue::AllNew)
+            .set_item(Some(transaction_type.clone().into()))
             .send()
             .await?;
 
-        let item = result.attributes.ok_or(FinError::DbError(
-            "Could not find attributes in result".to_string(),
-        ))?;
-
-        Ok(TransactionType::try_from(item)?)
+        Ok(transaction_type)
     }
 }
