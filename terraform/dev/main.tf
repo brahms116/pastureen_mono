@@ -3,3 +3,8 @@ module "router_service_development" {
   environment = "dev"
   is_initial_deployment = var.is_initial_deployment
 }
+
+module "fin_deployment" {
+  source      = "../fin"
+  environment = "dev"
+}
