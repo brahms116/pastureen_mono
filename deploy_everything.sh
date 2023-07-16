@@ -15,8 +15,8 @@ fi
 
 echo "Clearing artifacts"
 
-rm -rf ./build &> /dev/null
-docker rm pastureen_build_output &> /dev/null
+rm -rf ./build 2> /dev/null
+docker rm pastureen_build_output 2> /dev/null
 
 echo "Using docker to run build"
 
@@ -29,9 +29,8 @@ echo "Deploying artifacts"
 cd ./terraform/$env
 
 terraform init
-terraform apply
+terraform apply --auto-approve
 
 echo "Cleanup"
 cd ../..
-rm -rf ./build
 docker rm pastureen_build_output

@@ -319,7 +319,7 @@ impl PRPCServer {
 #[cfg(test)]
 mod test {
     use super::*;
-    use serde::{Deserialize, Serialize};
+    use serde::Deserialize;
     use serde_json::json;
 
     #[derive(Deserialize)]

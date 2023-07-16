@@ -1,6 +1,5 @@
 // Global dependencies
 use serde::{Deserialize, Serialize};
-use serde::ser::Serialize as SerializeTrait;
 
 // External dependencies
 use super::error::*;
@@ -18,18 +17,15 @@ pub struct PRPCResponse<T> {
     pub error: Option<PRPCError>,
 }
 
-
 pub type PRPCResult<T> = Result<T, PRPCError>;
 
 impl<T> From<PRPCResult<T>> for PRPCResponse<T> {
     fn from(result: PRPCResult<T>) -> Self {
         match result {
-            Ok(response) => {
-                PRPCResponse {
-                    result: Some(response),
-                    error: None,
-                }
-            }
+            Ok(response) => PRPCResponse {
+                result: Some(response),
+                error: None,
+            },
             Err(error) => PRPCResponse {
                 result: None,
                 error: Some(error),

@@ -26,7 +26,7 @@ async fn handler(event: LambdaEvent<Value>) -> Result<Value, Error> {
     let mut server = PRPCServerBuilder::new();
     server.use_command("hello", hello_wrapper);
     let server = server.build();
-    let mut server_wrapper = PRPCLambdaWrapper::new(server);
-    let result = server_wrapper.handle_lambda_event(event).await?;
+    let server_wrapper = PRPCLambdaWrapper::new(server);
+    let result = server_wrapper.handle_event(event).await?;
     Ok(result)
 }
