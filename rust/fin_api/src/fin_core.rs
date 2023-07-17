@@ -6,7 +6,7 @@ pub enum FinError {
     #[error("Database error: {0}")]
     DbError(String),
     #[error("Item not found: {0}")]
-    NotFound(String)
+    NotFound(String),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -18,6 +18,13 @@ pub struct TransactionType {
 #[derive(Debug, PartialEq, Clone)]
 pub struct ClassifyingRule {
     pub id: String,
+    pub name: String,
+    pub transaction_type_id: String,
+    pub pattern: String,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct ClassifyingRuleCreationArgs {
     pub name: String,
     pub transaction_type_id: String,
     pub pattern: String,
@@ -43,6 +50,16 @@ pub trait TransactionTypeRepository {
 }
 
 #[async_trait]
+pub trait ClassifyingRuleRepository {
+    async fn get_all(&self) -> Result<ClassifyingRuleList, FinError>;
+    async fn get_by_id(&self, id: &str) -> Result<Option<ClassifyingRule>, FinError>;
+    async fn create(&self, args: ClassifyingRuleCreationArgs) -> Result<ClassifyingRule, FinError>;
+    async fn update(&self, rule: ClassifyingRule) -> Result<ClassifyingRule, FinError>;
+    async fn delete(&self, id: &str) -> Result<ClassifyingRule, FinError>;
+    async fn reorder(&self, id: &str, after: &str) -> Result<ClassifyingRuleList, FinError>;
+}
+
+#[async_trait]
 pub trait FinApi {
     async fn get_all_transaction_types(&self) -> Result<Vec<TransactionType>, FinError>;
     async fn get_transaction_type(&self, id: &str) -> Result<Option<TransactionType>, FinError>;
@@ -63,26 +80,29 @@ impl<Db> FinApiService<Db> {
 }
 
 #[async_trait]
-impl<Db: TransactionTypeRepository + std::marker::Send + std::marker::Sync> FinApi for FinApiService<Db> {
+impl<Db> FinApi for FinApiService<Db>
+where
+    Db: TransactionTypeRepository
+        + std::marker::Send
+        + std::marker::Sync
+        + ClassifyingRuleRepository,
+{
     async fn get_all_transaction_types(&self) -> Result<Vec<TransactionType>, FinError> {
-        self.db.get_all().await
+        TransactionTypeRepository::get_all(&self.db).await
     }
 
-    async fn get_transaction_type(
-        &self,
-        id: &str,
-    ) -> Result<Option<TransactionType>, FinError> {
-        self.db.get_by_id(id).await
+    async fn get_transaction_type(&self, id: &str) -> Result<Option<TransactionType>, FinError> {
+        TransactionTypeRepository::get_by_id(&self.db, id).await
     }
 
     async fn create_transaction_type(&self, name: &str) -> Result<TransactionType, FinError> {
-        self.db.create(name).await
+        TransactionTypeRepository::create(&self.db, name).await
     }
 
     async fn update_transaction_type(
         &self,
         transaction_type: TransactionType,
     ) -> Result<TransactionType, FinError> {
-        self.db.update(transaction_type).await
+        TransactionTypeRepository::update(&self.db, transaction_type).await
     }
 }
