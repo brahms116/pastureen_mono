@@ -1,7 +1,8 @@
 use super::*;
 use async_trait::async_trait;
 use aws_sdk_dynamodb::error::SdkError;
-use aws_sdk_dynamodb::types::AttributeValue;
+use aws_sdk_dynamodb::operation::put_item::PutItemError;
+use aws_sdk_dynamodb::types::{AttributeValue, ReturnValue};
 use aws_sdk_dynamodb::Client;
 use std::collections::HashMap;
 use std::error::Error;
@@ -10,7 +11,7 @@ use uuid::Uuid;
 
 impl<E: Error> From<SdkError<E>> for FinError {
     fn from(err: SdkError<E>) -> Self {
-        Self::DbError(format!("{}", err))
+        Self::DbError(format!("{:?}", err))
     }
 }
 
@@ -110,20 +111,24 @@ impl TransactionTypeRepository for FinDynamoDb {
     }
 
     async fn update(&self, transaction_type: TransactionType) -> Result<TransactionType, FinError> {
-        let existing = self.get_by_id(&transaction_type.id).await?;
-        if existing.is_none() {
-            return Err(FinError::NotFound(format!(
-                "TransactionType with id {}",
-                transaction_type.id
-            )));
-        }
         let put_builder = self.client.put_item();
-        put_builder
+        let result = put_builder
             .table_name(&self.transaction_type_tablename)
             .set_item(Some(transaction_type.clone().into()))
+            .condition_expression("attribute_exists(id)")
+            .return_values(ReturnValue::AllOld)
             .send()
-            .await?;
+            .await;
 
+        if let Err(SdkError::ServiceError(put_item_err)) = result {
+            let err = put_item_err.err();
+            if let PutItemError::ConditionalCheckFailedException(_) = err {
+                return Err(FinError::NotFound(format!(
+                    "TransactionType with id {}",
+                    transaction_type.id
+                )));
+            }
+        }
         Ok(transaction_type)
     }
 }

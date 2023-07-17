@@ -36,7 +36,7 @@ enum TransactionTypesSubcommand {
 }
 
 fn handle_error<T: std::error::Error>(error: T) {
-    println!("Oops something went wrong: {}", error);
+    println!("Oops something went wrong: {:?}", error);
 }
 
 fn transaction_type_to_row(transaction_type: &TransactionType) -> [String; 2] {
