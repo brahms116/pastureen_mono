@@ -68,6 +68,16 @@ pub trait FinApi {
         &self,
         transaction_type: TransactionType,
     ) -> Result<TransactionType, FinError>;
+
+    async fn get_all_rules(&self) -> Result<ClassifyingRuleList, FinError>;
+    async fn get_rule(&self, id: &str) -> Result<Option<ClassifyingRule>, FinError>;
+    async fn create_rule(
+        &self,
+        args: ClassifyingRuleCreationArgs,
+    ) -> Result<ClassifyingRule, FinError>;
+    async fn update_rule(&self, rule: ClassifyingRule) -> Result<ClassifyingRule, FinError>;
+    async fn delete_rule(&self, id: &str) -> Result<ClassifyingRule, FinError>;
+    async fn reorder_rule(&self, id: &str, after: &str) -> Result<ClassifyingRuleList, FinError>;
 }
 
 pub struct FinApiService<Db> {
@@ -104,5 +114,32 @@ where
         transaction_type: TransactionType,
     ) -> Result<TransactionType, FinError> {
         TransactionTypeRepository::update(&self.db, transaction_type).await
+    }
+
+    async fn get_all_rules(&self) -> Result<ClassifyingRuleList, FinError> {
+        ClassifyingRuleRepository::get_all(&self.db).await
+    }
+
+    async fn get_rule(&self, id: &str) -> Result<Option<ClassifyingRule>, FinError> {
+        ClassifyingRuleRepository::get_by_id(&self.db, id).await
+    }
+
+    async fn create_rule(
+        &self,
+        args: ClassifyingRuleCreationArgs,
+    ) -> Result<ClassifyingRule, FinError> {
+        ClassifyingRuleRepository::create(&self.db, args).await
+    }
+
+    async fn update_rule(&self, rule: ClassifyingRule) -> Result<ClassifyingRule, FinError> {
+        ClassifyingRuleRepository::update(&self.db, rule).await
+    }
+
+    async fn delete_rule(&self, id: &str) -> Result<ClassifyingRule, FinError> {
+        ClassifyingRuleRepository::delete(&self.db, id).await
+    }
+
+    async fn reorder_rule(&self, id: &str, after: &str) -> Result<ClassifyingRuleList, FinError> {
+        ClassifyingRuleRepository::reorder(&self.db, id, after).await
     }
 }
