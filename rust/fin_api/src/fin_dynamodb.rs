@@ -275,16 +275,6 @@ impl ClassifyingRuleRepository for FinDynamoDb {
         &self,
         classifying_rule: ClassifyingRuleCreationArgs,
     ) -> Result<ClassifyingRule, FinError> {
-        let transaction_type =
-            TransactionTypeRepository::get_by_id(self, &classifying_rule.transaction_type_id)
-                .await?;
-        if transaction_type.is_none() {
-            return Err(FinError::NotFound(format!(
-                "Transaction type with id {}",
-                classifying_rule.transaction_type_id
-            )));
-        }
-
         let mut current = ClassifyingRuleRepository::get_all(self).await?;
         let rule = classifying_rule.to_rule(Uuid::new_v4().to_string());
         current.insert(0, rule.clone());
@@ -296,18 +286,6 @@ impl ClassifyingRuleRepository for FinDynamoDb {
         &self,
         classifying_rule: ClassifyingRuleUpdateArgs,
     ) -> Result<ClassifyingRule, FinError> {
-
-        if let Some(transaction_type_id) = &classifying_rule.transaction_type_id {
-            let transaction_type =
-                TransactionTypeRepository::get_by_id(self, transaction_type_id).await?;
-            if transaction_type.is_none() {
-                return Err(FinError::NotFound(format!(
-                    "Transaction type with id {}",
-                    transaction_type_id
-                )));
-            }
-        }
-
         let mut rules = ClassifyingRuleRepository::get_all(self).await?;
         let mut index: Option<usize> = None;
         for (i, rule) in rules.iter().enumerate() {

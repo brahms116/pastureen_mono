@@ -35,7 +35,7 @@ pub struct ClassifyingRuleUpdateArgs {
     pub id: String,
     pub name: Option<String>,
     pub transaction_type_id: Option<String>,
-    pub pattern: Option<String>
+    pub pattern: Option<String>,
 }
 
 impl ClassifyingRuleUpdateArgs {
@@ -48,7 +48,6 @@ impl ClassifyingRuleUpdateArgs {
         }
     }
 }
-
 
 impl ClassifyingRuleCreationArgs {
     pub fn to_rule(self, id: String) -> ClassifyingRule {
@@ -106,7 +105,10 @@ pub trait FinApi {
         &self,
         args: ClassifyingRuleCreationArgs,
     ) -> Result<ClassifyingRule, FinError>;
-    async fn update_rule(&self, rule: ClassifyingRuleUpdateArgs) -> Result<ClassifyingRule, FinError>;
+    async fn update_rule(
+        &self,
+        rule: ClassifyingRuleUpdateArgs,
+    ) -> Result<ClassifyingRule, FinError>;
     async fn delete_rule(&self, id: &str) -> Result<ClassifyingRule, FinError>;
     async fn reorder_rule(&self, id: &str, after: &str) -> Result<ClassifyingRuleList, FinError>;
 }
@@ -159,10 +161,29 @@ where
         &self,
         args: ClassifyingRuleCreationArgs,
     ) -> Result<ClassifyingRule, FinError> {
+        let transaction_type = self.get_transaction_type(&args.transaction_type_id).await?;
+        if transaction_type.is_none() {
+            return Err(FinError::NotFound(format!(
+                "Transaction type with id {}",
+                args.transaction_type_id
+            )));
+        }
         ClassifyingRuleRepository::create(&self.db, args).await
     }
 
-    async fn update_rule(&self, rule: ClassifyingRuleUpdateArgs) -> Result<ClassifyingRule, FinError> {
+    async fn update_rule(
+        &self,
+        rule: ClassifyingRuleUpdateArgs,
+    ) -> Result<ClassifyingRule, FinError> {
+        if let Some(transacction_type_id) = &rule.transaction_type_id {
+            let transaction_type = self.get_transaction_type(transacction_type_id).await?;
+            if transaction_type.is_none() {
+                return Err(FinError::NotFound(format!(
+                    "Transaction type with id {}",
+                    transacction_type_id
+                )));
+            }
+        }
         ClassifyingRuleRepository::update(&self.db, rule).await
     }
 
