@@ -11,8 +11,46 @@ struct CliArgs {
 enum FinSubcommand {
     Process,
     Unprocessed,
-    #[clap(alias = "types")]
-    TransactionTypes(TransactionTypes),
+    Types(TransactionTypes),
+    Rules(ClassifyingRules),
+}
+
+#[derive(Args, Debug)]
+struct ClassifyingRules {
+    #[clap(subcommand)]
+    subcommand: Option<ClassifyingRulesSubcommand>,
+}
+
+#[derive(Subcommand, Debug)]
+enum ClassifyingRulesSubcommand {
+    Add {
+        #[clap(long)]
+        name: String,
+        #[clap(long)]
+        transaction_type_id: String,
+        #[clap(long)]
+        pattern: String,
+    },
+    Update {
+        #[clap(long)]
+        id: String,
+        #[clap(long)]
+        name: String,
+        #[clap(long)]
+        transaction_type_id: String,
+        #[clap(long)]
+        pattern: String,
+    },
+    Delete {
+        #[clap(long)]
+        id: String,
+    },
+    Reorder {
+        #[clap(long)]
+        id: String,
+        #[clap(long)]
+        after: String,
+    },
 }
 
 #[derive(Args, Debug)]
@@ -39,8 +77,32 @@ fn handle_error<T: std::error::Error>(error: T) {
     println!("Oops something went wrong: {:?}", error);
 }
 
+fn classifying_rules_to_row(classifying_rule: &ClassifyingRule) -> [String; 4] {
+    [
+        classifying_rule.id.to_string(),
+        classifying_rule.name.to_string(),
+        classifying_rule.transaction_type_id.to_string(),
+        classifying_rule.pattern.to_string(),
+    ]
+}
+
+fn print_classifying_rules(classifying_rules: &[ClassifyingRule]) {
+    let headers: [&str; 4] = ["ID", "Name", "Transaction Type ID", "Pattern"];
+    let rows: Vec<[String; 4]> = classifying_rules
+        .iter()
+        .map(classifying_rules_to_row)
+        .collect();
+    let output_rows = print_table::print_table(&rows, &headers);
+    for row in output_rows {
+        println!("{}", row);
+    }
+}
+
 fn transaction_type_to_row(transaction_type: &TransactionType) -> [String; 2] {
-    [transaction_type.id.to_string(), transaction_type.name.to_string()]
+    [
+        transaction_type.id.to_string(),
+        transaction_type.name.to_string(),
+    ]
 }
 
 fn print_transaction_types(transaction_types: &[TransactionType]) {
@@ -52,6 +114,77 @@ fn print_transaction_types(transaction_types: &[TransactionType]) {
     let output_rows = print_table::print_table(&rows, &headers);
     for row in output_rows {
         println!("{}", row);
+    }
+}
+
+async fn classifying_rules<T: FinApi>(api: T, args: ClassifyingRules) {
+    match args.subcommand {
+        Some(ClassifyingRulesSubcommand::Add {
+            name,
+            transaction_type_id,
+            pattern,
+        }) => {
+            let result = api
+                .create_rule(ClassifyingRuleCreationArgs {
+                    name,
+                    transaction_type_id,
+                    pattern,
+                })
+                .await;
+            if let Err(e) = result {
+                handle_error(e);
+                return;
+            }
+            let classifying_rule = result.unwrap();
+            print_classifying_rules(&[classifying_rule]);
+        }
+        Some(ClassifyingRulesSubcommand::Update {
+            id,
+            name,
+            transaction_type_id,
+            pattern,
+        }) => {
+            let classifying_rule = ClassifyingRule {
+                id: id.to_string(),
+                name,
+                transaction_type_id,
+                pattern,
+            };
+            let result = api.update_rule(classifying_rule).await;
+            if let Err(e) = result {
+                handle_error(e);
+                return;
+            }
+            let classifying_rule = result.unwrap();
+            print_classifying_rules(&[classifying_rule]);
+        }
+        Some(ClassifyingRulesSubcommand::Delete { id }) => {
+            let result = api.delete_rule(&id).await;
+            if let Err(e) = result {
+                handle_error(e);
+                return;
+            }
+            let classifying_rule = result.unwrap();
+            print_classifying_rules(&[classifying_rule]);
+        }
+        Some(ClassifyingRulesSubcommand::Reorder { id, after }) => {
+            let result = api.reorder_rule(&id, &after).await;
+            if let Err(e) = result {
+                handle_error(e);
+                return;
+            }
+            let classifying_rules = result.unwrap();
+            print_classifying_rules(&classifying_rules);
+        }
+        None => {
+            let result = api.get_all_rules().await;
+            if let Err(e) = result {
+                handle_error(e);
+                return;
+            }
+            let classifying_rules = result.unwrap();
+            print_classifying_rules(&classifying_rules);
+        }
     }
 }
 
@@ -94,13 +227,17 @@ async fn transaction_types<T: FinApi>(api: T, args: TransactionTypes) {
 #[derive(Clone, Debug)]
 struct ApplicationConfig {
     transaction_type_tablename: String,
+    classifying_rules_tablename: String,
 }
 
 fn get_default_config() -> ApplicationConfig {
     let transaction_type_tablename = std::env::var("FIN_CLI_TRANSACTION_TYPE_TABLE_NAME")
-        .expect("Env var FLIN_CLI_TRANSACTION_TYPE_TABLE_NAME is missing");
+        .expect("Env var FIN_CLI_TRANSACTION_TYPE_TABLE_NAME is missing");
+    let classifying_rules_tablename = std::env::var("FIN_CLI_CLASSIFYING_RULES_TABLE_NAME")
+        .expect("Env var FIN_CLI_CLASSIFYING_RULES_TABLE_NAME is missing");
     ApplicationConfig {
         transaction_type_tablename,
+        classifying_rules_tablename,
     }
 }
 
@@ -116,6 +253,7 @@ async fn main() {
     let db = FinDynamoDb {
         client,
         transaction_type_tablename: app_config.transaction_type_tablename,
+        classifying_rules_tablename: app_config.classifying_rules_tablename,
     };
 
     let api = FinApiService::new(db);
@@ -133,8 +271,11 @@ async fn main() {
         FinSubcommand::Unprocessed => {
             println!("Unprocessed");
         }
-        FinSubcommand::TransactionTypes(args) => {
+        FinSubcommand::Types(args) => {
             transaction_types(api, args).await;
+        }
+        FinSubcommand::Rules(args) => {
+            classifying_rules(api, args).await;
         }
     }
 }

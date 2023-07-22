@@ -59,6 +59,7 @@ impl TryFrom<HashMap<String, AttributeValue>> for TransactionType {
 pub struct FinDynamoDb {
     pub client: Client,
     pub transaction_type_tablename: String,
+    pub classifying_rules_tablename: String,
 }
 
 #[async_trait]
@@ -130,5 +131,219 @@ impl TransactionTypeRepository for FinDynamoDb {
             }
         }
         Ok(transaction_type)
+    }
+}
+
+impl From<ClassifyingRule> for HashMap<String, AttributeValue> {
+    fn from(rule: ClassifyingRule) -> Self {
+        let mut map = HashMap::new();
+        map.insert("id".to_string(), AttributeValue::S(rule.id.to_string()));
+        map.insert("name".to_string(), AttributeValue::S(rule.name.to_string()));
+        map.insert(
+            "transactionTypeId".to_string(),
+            AttributeValue::S(rule.transaction_type_id.to_string()),
+        );
+        map.insert(
+            "pattern".to_string(),
+            AttributeValue::S(rule.pattern.to_string()),
+        );
+        map
+    }
+}
+
+fn get_string_key(key: &str, map: HashMap<String, AttributeValue>) -> Result<String, FinError> {
+    let value = map.get(key).ok_or(FinError::DbError(format!(
+        "Could not find field {} in dynamodb object",
+        key
+    )))?;
+    let value = value.as_s().map_err(|_| {
+        FinError::DbError(format!(
+            "Could not convert {} to string in dynamodb object",
+            key
+        ))
+    })?;
+    Ok(value.clone())
+}
+
+fn get_list_key(
+    key: &str,
+    map: HashMap<String, AttributeValue>,
+) -> Result<Vec<AttributeValue>, FinError> {
+    let value = map.get(key).ok_or(FinError::DbError(format!(
+        "Could not find field {} in dynamodb  object",
+        key
+    )))?;
+    let value = value.as_l().map_err(|_| {
+        FinError::DbError(format!(
+            "Could not convert {} to string in dynamodb object",
+            key
+        ))
+    })?;
+    Ok(value.clone())
+}
+
+impl TryFrom<HashMap<String, AttributeValue>> for ClassifyingRule {
+    type Error = FinError;
+
+    fn try_from(value: HashMap<String, AttributeValue>) -> Result<Self, Self::Error> {
+        let id = get_string_key("id", value.clone())?;
+        let name = get_string_key("name", value.clone())?;
+        let transaction_type_id = get_string_key("transactionTypeId", value.clone())?;
+        let pattern = get_string_key("pattern", value.clone())?;
+
+        Ok(ClassifyingRule {
+            id,
+            name,
+            transaction_type_id,
+            pattern,
+        })
+    }
+}
+
+fn classifying_rule_list_to_attributes(
+    list: ClassifyingRuleList,
+) -> HashMap<String, AttributeValue> {
+    let rules: Vec<AttributeValue> = list
+        .into_iter()
+        .map(|rule| AttributeValue::M(rule.into()))
+        .collect();
+
+    let mut map = HashMap::new();
+    map.insert("name".to_string(), AttributeValue::S("RULES".to_string()));
+    map.insert("rules".to_string(), AttributeValue::L(rules));
+    map
+}
+
+fn attributes_to_classifying_rule_list(
+    values: HashMap<String, AttributeValue>,
+) -> Result<ClassifyingRuleList, FinError> {
+    let rule_list = get_list_key("rules", values)?;
+    let mut rules: Vec<ClassifyingRule> = Vec::new();
+    for rule in rule_list.into_iter() {
+        let rule = rule.as_m();
+        if rule.is_err() {
+            continue;
+        }
+
+        let rule = rule.expect("should handle err case").clone();
+        let rule: Result<ClassifyingRule, _> = rule.try_into();
+        if rule.is_err() {
+            continue;
+        }
+        let rule = rule.expect("should handle err case");
+        rules.push(rule);
+    }
+    Ok(rules)
+}
+
+impl FinDynamoDb {
+    async fn save_classifying_rules(&self, rules: ClassifyingRuleList) -> Result<(), FinError> {
+        let put_builder = self.client.put_item();
+        put_builder
+            .table_name(&self.classifying_rules_tablename)
+            .set_item(Some(classifying_rule_list_to_attributes(rules)))
+            .send()
+            .await?;
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl ClassifyingRuleRepository for FinDynamoDb {
+    async fn get_all(&self) -> Result<ClassifyingRuleList, FinError> {
+        let builder = self.client.get_item();
+        let result = builder
+            .table_name(&self.classifying_rules_tablename.to_string())
+            .key("name", AttributeValue::S("RULES".to_string()))
+            .send()
+            .await?;
+
+        let attributes = result.item();
+        if let None = attributes {
+            return Ok(vec![]);
+        }
+        let attributes = attributes.expect("Should handle none case");
+        Ok(attributes_to_classifying_rule_list(attributes.clone())?)
+    }
+
+    async fn get_by_id(&self, id: &str) -> Result<Option<ClassifyingRule>, FinError> {
+        let rules = ClassifyingRuleRepository::get_all(self).await?;
+        Ok(rules.into_iter().find(|rule| rule.id == id))
+    }
+
+    async fn create(
+        &self,
+        classifying_rule: ClassifyingRuleCreationArgs,
+    ) -> Result<ClassifyingRule, FinError> {
+        let mut current = ClassifyingRuleRepository::get_all(self).await?;
+        let rule = classifying_rule.to_rule(Uuid::new_v4().to_string());
+        current.insert(0, rule.clone());
+        self.save_classifying_rules(current).await?;
+        Ok(rule)
+    }
+
+    async fn update(&self, classifying_rule: ClassifyingRule) -> Result<ClassifyingRule, FinError> {
+        let mut rules = ClassifyingRuleRepository::get_all(self).await?;
+        let mut index: Option<usize> = None;
+        for (i, rule) in rules.iter().enumerate() {
+            if rule.id == classifying_rule.id {
+                index = Some(i);
+                break;
+            }
+        }
+        let index = index.ok_or(FinError::NotFound(format!(
+            "Rule with id {}",
+            classifying_rule.id
+        )))?;
+        _ = std::mem::replace(&mut rules[index], classifying_rule.clone());
+        self.save_classifying_rules(rules).await?;
+        Ok(classifying_rule)
+    }
+
+    async fn delete(&self, id: &str) -> Result<ClassifyingRule, FinError> {
+        let rules = ClassifyingRuleRepository::get_all(self).await?;
+        let deleted_rule = rules
+            .iter()
+            .filter(|rule| rule.id == id)
+            .next()
+            .ok_or(FinError::NotFound(format!("Rule with id {}", id)))?
+            .clone();
+        let new_rules = rules.into_iter().filter(|rule| rule.id != id).collect();
+        self.save_classifying_rules(new_rules).await?;
+        Ok(deleted_rule)
+    }
+
+    async fn reorder(&self, id: &str, after: &str) -> Result<ClassifyingRuleList, FinError> {
+        let mut rules = ClassifyingRuleRepository::get_all(self).await?;
+        if id == after {
+            return Ok(rules);
+        }
+        let mut index: Option<usize> = None;
+        let mut after_index: Option<usize> = None;
+        for (i, rule) in rules.iter().enumerate() {
+            if rule.id == id {
+                index = Some(i);
+            }
+            if rule.id == after {
+                after_index = Some(i);
+            }
+        }
+        let index = index.ok_or(FinError::NotFound(format!("Rule with id {}", id)))?;
+        let after_index =
+            after_index.ok_or(FinError::NotFound(format!("Rule with id {}", after)))?;
+
+        if after_index == index {
+            return Ok(rules);
+        }
+
+        let rule = rules.remove(index);
+        if after > id {
+            rules.insert(after_index, rule);
+        }
+        else {
+            rules.insert(after_index + 1, rule);
+        }
+        self.save_classifying_rules(rules).await?;
+        Ok(ClassifyingRuleRepository::get_all(self).await?)
     }
 }

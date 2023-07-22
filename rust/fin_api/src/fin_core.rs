@@ -30,6 +30,18 @@ pub struct ClassifyingRuleCreationArgs {
     pub pattern: String,
 }
 
+
+impl ClassifyingRuleCreationArgs {
+    pub fn to_rule(self, id: String) -> ClassifyingRule {
+        ClassifyingRule {
+            id,
+            name: self.name,
+            transaction_type_id: self.transaction_type_id,
+            pattern: self.pattern,
+        }
+    }
+}
+
 pub type ClassifyingRuleList = Vec<ClassifyingRule>;
 
 #[derive(Debug, PartialEq, Clone)]
