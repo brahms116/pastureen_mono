@@ -30,6 +30,25 @@ pub struct ClassifyingRuleCreationArgs {
     pub pattern: String,
 }
 
+#[derive(Debug, PartialEq, Clone)]
+pub struct ClassifyingRuleUpdateArgs {
+    pub id: String,
+    pub name: Option<String>,
+    pub transaction_type_id: Option<String>,
+    pub pattern: Option<String>
+}
+
+impl ClassifyingRuleUpdateArgs {
+    pub fn merge_existing(self, rule: ClassifyingRule) -> ClassifyingRule {
+        ClassifyingRule {
+            id: self.id,
+            name: self.name.unwrap_or(rule.name),
+            transaction_type_id: self.transaction_type_id.unwrap_or(rule.transaction_type_id),
+            pattern: self.pattern.unwrap_or(rule.pattern),
+        }
+    }
+}
+
 
 impl ClassifyingRuleCreationArgs {
     pub fn to_rule(self, id: String) -> ClassifyingRule {
@@ -66,7 +85,7 @@ pub trait ClassifyingRuleRepository {
     async fn get_all(&self) -> Result<ClassifyingRuleList, FinError>;
     async fn get_by_id(&self, id: &str) -> Result<Option<ClassifyingRule>, FinError>;
     async fn create(&self, args: ClassifyingRuleCreationArgs) -> Result<ClassifyingRule, FinError>;
-    async fn update(&self, rule: ClassifyingRule) -> Result<ClassifyingRule, FinError>;
+    async fn update(&self, rule: ClassifyingRuleUpdateArgs) -> Result<ClassifyingRule, FinError>;
     async fn delete(&self, id: &str) -> Result<ClassifyingRule, FinError>;
     async fn reorder(&self, id: &str, after: &str) -> Result<ClassifyingRuleList, FinError>;
 }
@@ -87,7 +106,7 @@ pub trait FinApi {
         &self,
         args: ClassifyingRuleCreationArgs,
     ) -> Result<ClassifyingRule, FinError>;
-    async fn update_rule(&self, rule: ClassifyingRule) -> Result<ClassifyingRule, FinError>;
+    async fn update_rule(&self, rule: ClassifyingRuleUpdateArgs) -> Result<ClassifyingRule, FinError>;
     async fn delete_rule(&self, id: &str) -> Result<ClassifyingRule, FinError>;
     async fn reorder_rule(&self, id: &str, after: &str) -> Result<ClassifyingRuleList, FinError>;
 }
@@ -143,7 +162,7 @@ where
         ClassifyingRuleRepository::create(&self.db, args).await
     }
 
-    async fn update_rule(&self, rule: ClassifyingRule) -> Result<ClassifyingRule, FinError> {
+    async fn update_rule(&self, rule: ClassifyingRuleUpdateArgs) -> Result<ClassifyingRule, FinError> {
         ClassifyingRuleRepository::update(&self.db, rule).await
     }
 
