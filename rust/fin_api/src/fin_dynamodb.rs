@@ -9,9 +9,86 @@ use std::error::Error;
 use tokio_stream::StreamExt;
 use uuid::Uuid;
 
+fn get_string_key(key: &str, map: HashMap<String, AttributeValue>) -> Result<String, FinError> {
+    let value = map.get(key).ok_or(FinError::DbError(format!(
+        "Could not find field {} in dynamodb object",
+        key
+    )))?;
+    let value = value.as_s().map_err(|_| {
+        FinError::DbError(format!(
+            "Could not convert {} to string in dynamodb object",
+            key
+        ))
+    })?;
+    Ok(value.clone())
+}
+
+fn get_list_key(
+    key: &str,
+    map: HashMap<String, AttributeValue>,
+) -> Result<Vec<AttributeValue>, FinError> {
+    let value = map.get(key).ok_or(FinError::DbError(format!(
+        "Could not find field {} in dynamodb  object",
+        key
+    )))?;
+    let value = value.as_l().map_err(|_| {
+        FinError::DbError(format!(
+            "Could not convert {} to string in dynamodb object",
+            key
+        ))
+    })?;
+    Ok(value.clone())
+}
+
 impl<E: Error> From<SdkError<E>> for FinError {
     fn from(err: SdkError<E>) -> Self {
         Self::DbError(format!("{:?}", err))
+    }
+}
+
+impl From<UnproccessedTransaction> for HashMap<String, AttributeValue> {
+    fn from(item: UnproccessedTransaction) -> Self {
+        let mut map = HashMap::new();
+        map.insert("id".to_string(), AttributeValue::S(item.id.to_string()));
+        map.insert(
+            "amountCents".to_string(),
+            AttributeValue::N(item.amount_cents.to_string()),
+        );
+
+        map.insert(
+            "description".to_string(),
+            AttributeValue::S(item.description.to_string()),
+        );
+        map.insert("date".to_string(), AttributeValue::N(item.date.to_string()));
+
+        let month = get_timestamp_start_of_month(item.date);
+
+        map.insert("month".to_string(), AttributeValue::N(month.to_string()));
+        map
+    }
+}
+
+impl TryFrom<HashMap<String, AttributeValue>> for UnproccessedTransaction {
+    type Error = FinError;
+    fn try_from(value: HashMap<String, AttributeValue>) -> Result<Self, Self::Error> {
+        let id = get_string_key("id", value.clone())?;
+        let amount_cents = get_string_key("amountCents", value.clone())?;
+        let amount_cents = amount_cents
+            .parse::<i64>()
+            .map_err(|_| FinError::DbError("Could not parse amountCents".to_string()))?;
+
+        let description = get_string_key("description", value.clone())?;
+        let date = get_string_key("date", value.clone())?;
+        let date = date
+            .parse::<i64>()
+            .map_err(|_| FinError::DbError("Could not parse date".to_string()))?;
+
+        Ok(UnproccessedTransaction {
+            id,
+            amount_cents,
+            description,
+            date,
+        })
     }
 }
 
@@ -60,6 +137,7 @@ pub struct FinDynamoDb {
     pub client: Client,
     pub transaction_type_tablename: String,
     pub classifying_rules_tablename: String,
+    pub unprocessed_transactions_tablename: String,
 }
 
 #[async_trait]
@@ -149,37 +227,6 @@ impl From<ClassifyingRule> for HashMap<String, AttributeValue> {
         );
         map
     }
-}
-
-fn get_string_key(key: &str, map: HashMap<String, AttributeValue>) -> Result<String, FinError> {
-    let value = map.get(key).ok_or(FinError::DbError(format!(
-        "Could not find field {} in dynamodb object",
-        key
-    )))?;
-    let value = value.as_s().map_err(|_| {
-        FinError::DbError(format!(
-            "Could not convert {} to string in dynamodb object",
-            key
-        ))
-    })?;
-    Ok(value.clone())
-}
-
-fn get_list_key(
-    key: &str,
-    map: HashMap<String, AttributeValue>,
-) -> Result<Vec<AttributeValue>, FinError> {
-    let value = map.get(key).ok_or(FinError::DbError(format!(
-        "Could not find field {} in dynamodb  object",
-        key
-    )))?;
-    let value = value.as_l().map_err(|_| {
-        FinError::DbError(format!(
-            "Could not convert {} to string in dynamodb object",
-            key
-        ))
-    })?;
-    Ok(value.clone())
 }
 
 impl TryFrom<HashMap<String, AttributeValue>> for ClassifyingRule {
@@ -349,5 +396,74 @@ impl ClassifyingRuleRepository for FinDynamoDb {
         }
         self.save_classifying_rules(rules).await?;
         Ok(ClassifyingRuleRepository::get_all(self).await?)
+    }
+}
+
+#[async_trait]
+impl UnproccessedTransactionRepository for FinDynamoDb {
+    async fn get_all(&self, month: i64) -> Result<Vec<UnproccessedTransaction>, FinError> {
+        let builder = self.client.query();
+        let result = builder
+            .table_name(self.unprocessed_transactions_tablename.to_string())
+            .key_condition_expression("month = :month")
+            .expression_attribute_values(":month", AttributeValue::N(month.to_string()))
+            .scan_index_forward(false)
+            .send()
+            .await?;
+
+        let items = result.items();
+        if let None = items {
+            return Ok(vec![]);
+        }
+        let items = items.expect("Should handle none case");
+        let mut transactions = vec![];
+        for item in items {
+            let transaction: Result<UnproccessedTransaction, _> = item.clone().try_into();
+            if let Ok(transaction) = transaction {
+                transactions.push(transaction);
+            }
+        }
+        Ok(transactions)
+    }
+
+    async fn create(
+        &self,
+        transaction: UnproccessedTransactionCreationArgs,
+    ) -> Result<UnproccessedTransaction, FinError> {
+        let builder = self.client.put_item();
+        let transaction: UnproccessedTransaction = transaction.into();
+        let result = builder
+            .table_name(self.unprocessed_transactions_tablename.to_string())
+            .set_item(Some(transaction.clone().into()))
+            .condition_expression("attribute_not_exists(id)")
+            .send()
+            .await;
+
+        if let Err(SdkError::ServiceError(put_item_err)) = result {
+            let err = put_item_err.err();
+            if let PutItemError::ConditionalCheckFailedException(_) = err {
+                return Err(FinError::NotFound(format!(
+                    "UnproccessedTransaction with id {}",
+                    transaction.id
+                )));
+            }
+        }
+        Ok(transaction)
+    }
+    async fn delete(&self, id: &str) -> Result<UnproccessedTransaction, FinError> {
+        let builder = self.client.delete_item();
+        let result = builder
+            .table_name(self.unprocessed_transactions_tablename.to_string())
+            .key("id", AttributeValue::S(id.to_string()))
+            .return_values(ReturnValue::AllOld)
+            .send()
+            .await?;
+
+        let item = result.attributes.ok_or(FinError::NotFound(format!(
+            "UnproccessedTransaction with id {}",
+            id
+        )))?;
+
+        Ok(item.try_into()?)
     }
 }
