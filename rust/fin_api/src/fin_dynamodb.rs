@@ -60,10 +60,6 @@ impl From<UnproccessedTransaction> for HashMap<String, AttributeValue> {
             AttributeValue::S(item.description.to_string()),
         );
         map.insert("date".to_string(), AttributeValue::N(item.date.to_string()));
-
-        let month = get_timestamp_start_of_month(item.date);
-
-        map.insert("month".to_string(), AttributeValue::N(month.to_string()));
         map
     }
 }
@@ -401,29 +397,18 @@ impl ClassifyingRuleRepository for FinDynamoDb {
 
 #[async_trait]
 impl UnproccessedTransactionRepository for FinDynamoDb {
-    async fn get_all(&self, month: i64) -> Result<Vec<UnproccessedTransaction>, FinError> {
-        let builder = self.client.query();
-        let result = builder
-            .table_name(self.unprocessed_transactions_tablename.to_string())
-            .key_condition_expression("month = :month")
-            .expression_attribute_values(":month", AttributeValue::N(month.to_string()))
-            .scan_index_forward(false)
+    async fn get_all(&self) -> Result<Vec<UnproccessedTransaction>, FinError> {
+        let builder = self.client.scan();
+        let result: Result<Vec<HashMap<String, AttributeValue>>, _> = builder
+            .table_name(&self.unprocessed_transactions_tablename.to_string())
+            .into_paginator()
+            .items()
             .send()
-            .await?;
+            .collect()
+            .await;
 
-        let items = result.items();
-        if let None = items {
-            return Ok(vec![]);
-        }
-        let items = items.expect("Should handle none case");
-        let mut transactions = vec![];
-        for item in items {
-            let transaction: Result<UnproccessedTransaction, _> = item.clone().try_into();
-            if let Ok(transaction) = transaction {
-                transactions.push(transaction);
-            }
-        }
-        Ok(transactions)
+        let result = result?;
+        result.into_iter().map(|e| e.try_into()).collect()
     }
 
     async fn create(

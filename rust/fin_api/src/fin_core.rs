@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use base64::{engine, Engine as _};
-use chrono::{Datelike, NaiveDate, NaiveDateTime, Utc};
+use chrono::{Datelike, NaiveDate, NaiveDateTime};
 use thiserror::Error;
 
 pub fn get_timestamp_start_of_month(timestamp: i64) -> i64 {
@@ -117,8 +117,18 @@ impl From<UnproccessedTransactionCreationArgs> for UnproccessedTransaction {
 }
 
 #[async_trait]
+pub trait TransactionRepository {
+    async fn get_by_id(&self, id: &str) -> Result<Option<Transaction>, FinError>;
+    async fn get_by_month(
+        &self,
+        month: i64,
+    ) -> Result<Vec<Transaction>, FinError>;
+    async fn create(&self, transaction: Transaction) -> Result<Transaction, FinError>;
+}
+
+#[async_trait]
 pub trait UnproccessedTransactionRepository {
-    async fn get_all(&self, month: i64) -> Result<Vec<UnproccessedTransaction>, FinError>;
+    async fn get_all(&self) -> Result<Vec<UnproccessedTransaction>, FinError>;
     async fn create(
         &self,
         transaction: UnproccessedTransactionCreationArgs,
@@ -167,6 +177,9 @@ pub trait FinApi {
     async fn delete_rule(&self, id: &str) -> Result<ClassifyingRule, FinError>;
     async fn reorder_rule(&self, id: &str, after: &str) -> Result<ClassifyingRuleList, FinError>;
     async fn process(&self) -> Result<(), FinError>;
+    async fn get_all_unprocessed_transactions(
+        &self,
+    ) -> Result<Vec<UnproccessedTransaction>, FinError>;
 }
 
 pub struct FinApiService<Db> {
@@ -253,18 +266,22 @@ where
     }
 
     async fn process(&self) -> Result<(), FinError> {
-        let mut date_time = Utc::now();
         let rules = self.get_all_rules().await?;
-        if rules.is_empty() {
+        if rules.len() == 0 {
             return Ok(());
         }
-        // Incase it loops forever
-        for _ in 0..100000 {
-            // Get the timestamp for the start of the month
-            let month_ts = get_timestamp_start_of_month(date_time.timestamp());
-            let transactions =
-                UnproccessedTransactionRepository::get_all(&self.db, month_ts).await?;
+
+        let unprocessed_transactions = self.get_all_unprocessed_transactions().await?;
+        if unprocessed_transactions.len() == 0 {
+            return Ok(());
         }
+
         todo!()
+    }
+
+    async fn get_all_unprocessed_transactions(
+        &self,
+    ) -> Result<Vec<UnproccessedTransaction>, FinError> {
+        UnproccessedTransactionRepository::get_all(&self.db).await
     }
 }
