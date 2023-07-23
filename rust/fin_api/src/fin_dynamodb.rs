@@ -457,7 +457,15 @@ impl UnproccessedTransactionRepository for FinDynamoDb {
             .await;
 
         let result = result?;
-        result.into_iter().map(|e| e.try_into()).collect()
+        let mut transactions: Vec<UnproccessedTransaction> = Vec::new();
+        for item in result {
+            if let Ok(transaction) = item.try_into() {
+                transactions.push(transaction);
+            }
+        }
+        let transactions = transactions.sort();
+
+        Ok(transactions)
     }
 
     async fn create(
