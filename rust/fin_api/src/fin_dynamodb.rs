@@ -46,6 +46,55 @@ impl<E: Error> From<SdkError<E>> for FinError {
     }
 }
 
+impl From<Transaction> for HashMap<String, AttributeValue> {
+    fn from(item: Transaction) -> Self {
+        let mut map = HashMap::new();
+        map.insert("id".to_string(), AttributeValue::S(item.id.to_string()));
+        map.insert(
+            "transactionTypeId".to_string(),
+            AttributeValue::S(item.transaction_type_id.to_string()),
+        );
+        map.insert(
+            "amountCents".to_string(),
+            AttributeValue::N(item.amount_cents.to_string()),
+        );
+
+        map.insert(
+            "description".to_string(),
+            AttributeValue::S(item.description.to_string()),
+        );
+        map.insert("date".to_string(), AttributeValue::N(item.date.to_string()));
+        let month = get_timestamp_start_of_month(item.date);
+        map.insert("month".to_string(), AttributeValue::N(month.to_string()));
+        map
+    }
+}
+
+impl TryFrom<HashMap<String, AttributeValue>> for Transaction {
+    type Error = FinError;
+    fn try_from(value: HashMap<String, AttributeValue>) -> Result<Self, Self::Error> {
+        let id = get_string_key("id", value.clone())?;
+        let transaction_type_id = get_string_key("transactionTypeId", value.clone())?;
+
+        let amount_cents = get_string_key("amountCents", value.clone())?
+            .parse::<i64>()
+            .map_err(|e| FinError::DbError(format!("Could not parse amountCents: {}", e)))?;
+        let description = get_string_key("description", value.clone())?;
+
+        let date = get_string_key("date", value.clone())?
+            .parse::<i64>()
+            .map_err(|e| FinError::DbError(format!("Could not parse date: {}", e)))?;
+
+        Ok(Self {
+            id,
+            transaction_type_id,
+            amount_cents,
+            description,
+            date,
+        })
+    }
+}
+
 impl From<UnproccessedTransaction> for HashMap<String, AttributeValue> {
     fn from(item: UnproccessedTransaction) -> Self {
         let mut map = HashMap::new();
@@ -54,7 +103,6 @@ impl From<UnproccessedTransaction> for HashMap<String, AttributeValue> {
             "amountCents".to_string(),
             AttributeValue::N(item.amount_cents.to_string()),
         );
-
         map.insert(
             "description".to_string(),
             AttributeValue::S(item.description.to_string()),
@@ -134,6 +182,7 @@ pub struct FinDynamoDb {
     pub transaction_type_tablename: String,
     pub classifying_rules_tablename: String,
     pub unprocessed_transactions_tablename: String,
+    pub transactions_tablename: String,
 }
 
 #[async_trait]
@@ -450,5 +499,18 @@ impl UnproccessedTransactionRepository for FinDynamoDb {
         )))?;
 
         Ok(item.try_into()?)
+    }
+}
+
+#[async_trait]
+impl TransactionRepository for FinDynamoDb {
+    async fn get_by_id(&self, id: &str) -> Result<Option<Transaction>, FinError> {
+        todo!()
+    }
+    async fn get_by_month(&self, month: i64) -> Result<Vec<Transaction>, FinError> {
+        todo!()
+    }
+    async fn create(&self, transaction: Transaction) -> Result<Transaction, FinError> {
+        todo!()
     }
 }
