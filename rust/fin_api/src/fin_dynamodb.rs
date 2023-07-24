@@ -95,8 +95,8 @@ impl TryFrom<HashMap<String, AttributeValue>> for Transaction {
     }
 }
 
-impl From<UnproccessedTransaction> for HashMap<String, AttributeValue> {
-    fn from(item: UnproccessedTransaction) -> Self {
+impl From<UnprocessedTransaction> for HashMap<String, AttributeValue> {
+    fn from(item: UnprocessedTransaction) -> Self {
         let mut map = HashMap::new();
         map.insert("id".to_string(), AttributeValue::S(item.id.to_string()));
         map.insert(
@@ -112,7 +112,7 @@ impl From<UnproccessedTransaction> for HashMap<String, AttributeValue> {
     }
 }
 
-impl TryFrom<HashMap<String, AttributeValue>> for UnproccessedTransaction {
+impl TryFrom<HashMap<String, AttributeValue>> for UnprocessedTransaction {
     type Error = FinError;
     fn try_from(value: HashMap<String, AttributeValue>) -> Result<Self, Self::Error> {
         let id = get_string_key("id", value.clone())?;
@@ -127,7 +127,7 @@ impl TryFrom<HashMap<String, AttributeValue>> for UnproccessedTransaction {
             .parse::<i64>()
             .map_err(|_| FinError::DbError("Could not parse date".to_string()))?;
 
-        Ok(UnproccessedTransaction {
+        Ok(UnprocessedTransaction {
             id,
             amount_cents,
             description,
@@ -187,7 +187,10 @@ pub struct FinDynamoDb {
 
 #[async_trait]
 impl TransactionTypeRepository for FinDynamoDb {
-    async fn get_all(&self) -> Result<Vec<TransactionType>, FinError> {
+    async fn get_all(
+        &self,
+        _pagination: Option<PaginationDetails>,
+    ) -> Result<Vec<TransactionType>, FinError> {
         let scan_builder = self.client.scan();
         let result: Result<Vec<HashMap<String, AttributeValue>>, _> = scan_builder
             .table_name(&self.transaction_type_tablename)
@@ -342,7 +345,10 @@ impl FinDynamoDb {
 
 #[async_trait]
 impl ClassifyingRuleRepository for FinDynamoDb {
-    async fn get_all(&self) -> Result<ClassifyingRuleList, FinError> {
+    async fn get_all(
+        &self,
+        _pagination: Option<PaginationDetails>,
+    ) -> Result<ClassifyingRuleList, FinError> {
         let builder = self.client.get_item();
         let result = builder
             .table_name(&self.classifying_rules_tablename.to_string())
@@ -359,7 +365,7 @@ impl ClassifyingRuleRepository for FinDynamoDb {
     }
 
     async fn get_by_id(&self, id: &str) -> Result<Option<ClassifyingRule>, FinError> {
-        let rules = ClassifyingRuleRepository::get_all(self).await?;
+        let rules = ClassifyingRuleRepository::get_all(self, None).await?;
         Ok(rules.into_iter().find(|rule| rule.id == id))
     }
 
@@ -367,7 +373,7 @@ impl ClassifyingRuleRepository for FinDynamoDb {
         &self,
         classifying_rule: ClassifyingRuleCreationArgs,
     ) -> Result<ClassifyingRule, FinError> {
-        let mut current = ClassifyingRuleRepository::get_all(self).await?;
+        let mut current = ClassifyingRuleRepository::get_all(self, None).await?;
         let rule = classifying_rule.to_rule(Uuid::new_v4().to_string());
         current.insert(0, rule.clone());
         self.save_classifying_rules(current).await?;
@@ -378,7 +384,7 @@ impl ClassifyingRuleRepository for FinDynamoDb {
         &self,
         classifying_rule: ClassifyingRuleUpdateArgs,
     ) -> Result<ClassifyingRule, FinError> {
-        let mut rules = ClassifyingRuleRepository::get_all(self).await?;
+        let mut rules = ClassifyingRuleRepository::get_all(self, None).await?;
         let mut index: Option<usize> = None;
         for (i, rule) in rules.iter().enumerate() {
             if rule.id == classifying_rule.id {
@@ -398,7 +404,7 @@ impl ClassifyingRuleRepository for FinDynamoDb {
     }
 
     async fn delete(&self, id: &str) -> Result<ClassifyingRule, FinError> {
-        let rules = ClassifyingRuleRepository::get_all(self).await?;
+        let rules = ClassifyingRuleRepository::get_all(self, None).await?;
         let deleted_rule = rules
             .iter()
             .filter(|rule| rule.id == id)
@@ -411,7 +417,7 @@ impl ClassifyingRuleRepository for FinDynamoDb {
     }
 
     async fn reorder(&self, id: &str, after: &str) -> Result<ClassifyingRuleList, FinError> {
-        let mut rules = ClassifyingRuleRepository::get_all(self).await?;
+        let mut rules = ClassifyingRuleRepository::get_all(self, None).await?;
         if id == after {
             return Ok(rules);
         }
@@ -440,13 +446,16 @@ impl ClassifyingRuleRepository for FinDynamoDb {
             rules.insert(after_index + 1, rule);
         }
         self.save_classifying_rules(rules).await?;
-        Ok(ClassifyingRuleRepository::get_all(self).await?)
+        Ok(ClassifyingRuleRepository::get_all(self, None).await?)
     }
 }
 
 #[async_trait]
 impl UnproccessedTransactionRepository for FinDynamoDb {
-    async fn get_all(&self) -> Result<Vec<UnproccessedTransaction>, FinError> {
+    async fn get_all(
+        &self,
+        _pagination: Option<PaginationDetails>,
+    ) -> Result<Vec<UnprocessedTransaction>, FinError> {
         let builder = self.client.scan();
         let result: Result<Vec<HashMap<String, AttributeValue>>, _> = builder
             .table_name(&self.unprocessed_transactions_tablename.to_string())
@@ -457,23 +466,23 @@ impl UnproccessedTransactionRepository for FinDynamoDb {
             .await;
 
         let result = result?;
-        let mut transactions: Vec<UnproccessedTransaction> = Vec::new();
+        let mut transactions: Vec<UnprocessedTransaction> = Vec::new();
         for item in result {
             if let Ok(transaction) = item.try_into() {
                 transactions.push(transaction);
             }
         }
-        let transactions = transactions.sort();
-
+        transactions.sort();
+        transactions.reverse();
         Ok(transactions)
     }
 
     async fn create(
         &self,
         transaction: UnproccessedTransactionCreationArgs,
-    ) -> Result<UnproccessedTransaction, FinError> {
+    ) -> Result<UnprocessedTransaction, FinError> {
         let builder = self.client.put_item();
-        let transaction: UnproccessedTransaction = transaction.into();
+        let transaction: UnprocessedTransaction = transaction.into();
         let result = builder
             .table_name(self.unprocessed_transactions_tablename.to_string())
             .set_item(Some(transaction.clone().into()))
@@ -492,7 +501,7 @@ impl UnproccessedTransactionRepository for FinDynamoDb {
         }
         Ok(transaction)
     }
-    async fn delete(&self, id: &str) -> Result<UnproccessedTransaction, FinError> {
+    async fn delete(&self, id: &str) -> Result<UnprocessedTransaction, FinError> {
         let builder = self.client.delete_item();
         let result = builder
             .table_name(self.unprocessed_transactions_tablename.to_string())
@@ -515,7 +524,11 @@ impl TransactionRepository for FinDynamoDb {
     async fn get_by_id(&self, id: &str) -> Result<Option<Transaction>, FinError> {
         todo!()
     }
-    async fn get_by_month(&self, month: i64) -> Result<Vec<Transaction>, FinError> {
+    async fn get_by_month(
+        &self,
+        month: i64,
+        _pagination: Option<PaginationDetails>,
+    ) -> Result<Vec<Transaction>, FinError> {
         todo!()
     }
     async fn create(&self, transaction: Transaction) -> Result<Transaction, FinError> {
