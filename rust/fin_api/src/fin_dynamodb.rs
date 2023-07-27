@@ -416,9 +416,32 @@ impl ClassifyingRuleRepository for FinDynamoDb {
         Ok(deleted_rule)
     }
 
-    async fn reorder(&self, id: &str, after: &str) -> Result<ClassifyingRuleList, FinError> {
+    async fn reorder(
+        &self,
+        id: &str,
+        after: Option<&str>,
+    ) -> Result<ClassifyingRuleList, FinError> {
         let mut rules = ClassifyingRuleRepository::get_all(self, None).await?;
-        if id == after {
+
+        // If after is none, move it to the top
+        if let None = after {
+            let mut index: Option<usize> = None;
+            for (i, rule) in rules.iter().enumerate() {
+                if rule.id == id {
+                    index = Some(i);
+                    break;
+                }
+            }
+            let index = index.ok_or(FinError::NotFound(format!("Rule with id {}", id)))?;
+            let rule = rules.remove(index);
+            rules.insert(0, rule);
+            self.save_classifying_rules(rules).await?;
+            return Ok(ClassifyingRuleRepository::get_all(self, None).await?);
+        }
+
+        // Otherwise, move it after the specified "after rule"
+        let after = after.expect("Should handle none case");
+        if after == id {
             return Ok(rules);
         }
         let mut index: Option<usize> = None;

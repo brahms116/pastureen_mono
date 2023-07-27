@@ -197,7 +197,7 @@ pub trait ClassifyingRuleRepository {
     async fn create(&self, args: ClassifyingRuleCreationArgs) -> Result<ClassifyingRule, FinError>;
     async fn update(&self, rule: ClassifyingRuleUpdateArgs) -> Result<ClassifyingRule, FinError>;
     async fn delete(&self, id: &str) -> Result<ClassifyingRule, FinError>;
-    async fn reorder(&self, id: &str, after: &str) -> Result<ClassifyingRuleList, FinError>;
+    async fn reorder(&self, id: &str, after: Option<&str>) -> Result<ClassifyingRuleList, FinError>;
 }
 
 #[async_trait]
@@ -221,7 +221,7 @@ pub trait FinApi {
         rule: ClassifyingRuleUpdateArgs,
     ) -> Result<ClassifyingRule, FinError>;
     async fn delete_rule(&self, id: &str) -> Result<ClassifyingRule, FinError>;
-    async fn reorder_rule(&self, id: &str, after: &str) -> Result<ClassifyingRuleList, FinError>;
+    async fn reorder_rule(&self, id: &str, after: Option<&str>) -> Result<ClassifyingRuleList, FinError>;
     async fn process(&self) -> Result<(), FinError>;
     async fn get_all_unprocessed_transactions(
         &self, pagination:Option<PaginationDetails>
@@ -244,7 +244,8 @@ where
         + std::marker::Send
         + std::marker::Sync
         + ClassifyingRuleRepository
-        + UnproccessedTransactionRepository,
+        + UnproccessedTransactionRepository
+        +TransactionRepository
 {
     async fn get_all_transaction_types(&self, pagination: Option<PaginationDetails>) -> Result<Vec<TransactionType>, FinError> {
         TransactionTypeRepository::get_all(&self.db, pagination).await
@@ -307,7 +308,7 @@ where
         ClassifyingRuleRepository::delete(&self.db, id).await
     }
 
-    async fn reorder_rule(&self, id: &str, after: &str) -> Result<ClassifyingRuleList, FinError> {
+    async fn reorder_rule(&self, id: &str, after: Option<&str>) -> Result<ClassifyingRuleList, FinError> {
         ClassifyingRuleRepository::reorder(&self.db, id, after).await
     }
 
@@ -316,7 +317,6 @@ where
         if rules.len() == 0 {
             return Ok(());
         }
-
         let unprocessed_transactions = self.get_all_unprocessed_transactions(None).await?;
         if unprocessed_transactions.len() == 0 {
             return Ok(());
