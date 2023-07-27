@@ -24,13 +24,6 @@ docker build -t pastureen_build_output .
 docker create --name pastureen_build_output pastureen_build_output
 docker cp pastureen_build_output:/build ./build
 
-echo "Deploying artifacts"
-
-cd ./terraform/$env
-
-terraform init
-terraform apply --auto-approve
-
 echo "Cleanup"
 cd ../..
 docker rm pastureen_build_output
