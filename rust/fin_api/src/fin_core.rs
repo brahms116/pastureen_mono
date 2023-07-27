@@ -1,12 +1,18 @@
 use async_trait::async_trait;
 use base64::{engine, Engine as _};
 use chrono::{Datelike, NaiveDate, NaiveDateTime};
+use serde::Deserialize;
 use thiserror::Error;
 
+#[derive(Debug, Deserialize)]
 pub struct INGTransaction {
+    #[serde(rename = "Date")]
     pub date: String,
+    #[serde(rename = "Description")]
     pub description: String,
+    #[serde(default, rename = "Credit")]
     pub credit: f64,
+    #[serde(default, rename = "Debit")]
     pub debit: f64,
 }
 
@@ -258,6 +264,8 @@ pub trait FinApi {
         &self,
         pagination: Option<PaginationDetails>,
     ) -> Result<Vec<UnprocessedTransaction>, FinError>;
+
+    async fn process_ing_transactions(&self, transactions:&[INGTransaction]) -> Result<u32, FinError>;
 }
 
 pub struct FinApiService<Db> {
@@ -388,7 +396,7 @@ where
                 }
             }
             if !found {
-                break
+                break;
             }
         }
         Ok(created_count)
@@ -399,5 +407,13 @@ where
         pagination: Option<PaginationDetails>,
     ) -> Result<Vec<UnprocessedTransaction>, FinError> {
         UnproccessedTransactionRepository::get_all(&self.db, pagination).await
+    }
+
+    async fn process_ing_transactions(&self,transactions:&[INGTransaction]) -> Result<u32,FinError> {
+        for transaction in transactions {
+            let amount_cents: i64 = (transaction.debit * 10.0).trunc() as i64;
+        }
+        todo!()
+        
     }
 }
