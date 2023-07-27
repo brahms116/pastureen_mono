@@ -35,11 +35,11 @@ enum ClassifyingRulesSubcommand {
         #[clap(long)]
         id: String,
         #[clap(long)]
-        name: String,
+        name: Option<String>,
         #[clap(long)]
-        transaction_type_id: String,
+        transaction_type_id: Option<String>,
         #[clap(long)]
-        pattern: String,
+        pattern: Option<String>,
     },
     Delete {
         #[clap(long)]
@@ -49,7 +49,7 @@ enum ClassifyingRulesSubcommand {
         #[clap(long)]
         id: String,
         #[clap(long)]
-        after: String,
+        after: Option<String>,
     },
 }
 
@@ -118,12 +118,22 @@ fn print_transaction_types(transaction_types: &[TransactionType]) {
 }
 
 async fn classifying_rules<T: FinApi>(api: T, args: ClassifyingRules) {
-    match args.subcommand {
-        Some(ClassifyingRulesSubcommand::Add {
+    if let None = args.subcommand {
+        let result = api.get_all_rules(None).await;
+        if let Err(e) = result {
+            handle_error(e);
+            return;
+        }
+        let classifying_rules = result.unwrap();
+        print_classifying_rules(&classifying_rules);
+    }
+    let subcommand = args.subcommand.expect("Should handle none case");
+    match subcommand {
+        ClassifyingRulesSubcommand::Add {
             name,
             transaction_type_id,
             pattern,
-        }) => {
+        } => {
             let result = api
                 .create_rule(ClassifyingRuleCreationArgs {
                     name,
@@ -138,13 +148,13 @@ async fn classifying_rules<T: FinApi>(api: T, args: ClassifyingRules) {
             let classifying_rule = result.unwrap();
             print_classifying_rules(&[classifying_rule]);
         }
-        Some(ClassifyingRulesSubcommand::Update {
+        ClassifyingRulesSubcommand::Update {
             id,
             name,
             transaction_type_id,
             pattern,
-        }) => {
-            let classifying_rule = ClassifyingRule {
+        } => {
+            let classifying_rule = ClassifyingRuleUpdateArgs {
                 id: id.to_string(),
                 name,
                 transaction_type_id,
@@ -158,7 +168,7 @@ async fn classifying_rules<T: FinApi>(api: T, args: ClassifyingRules) {
             let classifying_rule = result.unwrap();
             print_classifying_rules(&[classifying_rule]);
         }
-        Some(ClassifyingRulesSubcommand::Delete { id }) => {
+        ClassifyingRulesSubcommand::Delete { id } => {
             let result = api.delete_rule(&id).await;
             if let Err(e) = result {
                 handle_error(e);
@@ -167,17 +177,8 @@ async fn classifying_rules<T: FinApi>(api: T, args: ClassifyingRules) {
             let classifying_rule = result.unwrap();
             print_classifying_rules(&[classifying_rule]);
         }
-        Some(ClassifyingRulesSubcommand::Reorder { id, after }) => {
-            let result = api.reorder_rule(&id, &after).await;
-            if let Err(e) = result {
-                handle_error(e);
-                return;
-            }
-            let classifying_rules = result.unwrap();
-            print_classifying_rules(&classifying_rules);
-        }
-        None => {
-            let result = api.get_all_rules().await;
+        ClassifyingRulesSubcommand::Reorder { id, after } => {
+            let result = api.reorder_rule(&id, after.as_deref()).await;
             if let Err(e) = result {
                 handle_error(e);
                 return;
@@ -189,8 +190,19 @@ async fn classifying_rules<T: FinApi>(api: T, args: ClassifyingRules) {
 }
 
 async fn transaction_types<T: FinApi>(api: T, args: TransactionTypes) {
-    match args.subcommand {
-        Some(TransactionTypesSubcommand::Add { name }) => {
+    if let None = args.subcommand {
+        let result = api.get_all_transaction_types(None).await;
+        if let Err(e) = result {
+            handle_error(e);
+            return;
+        }
+        let transaction_types = result.unwrap();
+        print_transaction_types(&transaction_types);
+        return;
+    }
+    let subcommand = args.subcommand.expect("Should handle none case");
+    match subcommand {
+        TransactionTypesSubcommand::Add { name } => {
             let result = api.create_transaction_type(&name).await;
             if let Err(e) = result {
                 handle_error(e);
@@ -199,7 +211,7 @@ async fn transaction_types<T: FinApi>(api: T, args: TransactionTypes) {
             let transaction_type = result.unwrap();
             print_transaction_types(&[transaction_type]);
         }
-        Some(TransactionTypesSubcommand::Update { id, name }) => {
+        TransactionTypesSubcommand::Update { id, name } => {
             let transaction_type = TransactionType {
                 id: id.to_string(),
                 name,
@@ -212,15 +224,6 @@ async fn transaction_types<T: FinApi>(api: T, args: TransactionTypes) {
             let transaction_type = result.unwrap();
             print_transaction_types(&[transaction_type]);
         }
-        None => {
-            let result = api.get_all_transaction_types().await;
-            if let Err(e) = result {
-                handle_error(e);
-                return;
-            }
-            let transaction_types = result.unwrap();
-            print_transaction_types(&transaction_types);
-        }
     }
 }
 
@@ -228,6 +231,8 @@ async fn transaction_types<T: FinApi>(api: T, args: TransactionTypes) {
 struct ApplicationConfig {
     transaction_type_tablename: String,
     classifying_rules_tablename: String,
+    transactions_tablename: String,
+    unprocessed_transactions_tablename: String,
 }
 
 fn get_default_config() -> ApplicationConfig {
@@ -235,9 +240,16 @@ fn get_default_config() -> ApplicationConfig {
         .expect("Env var FIN_CLI_TRANSACTION_TYPE_TABLE_NAME is missing");
     let classifying_rules_tablename = std::env::var("FIN_CLI_CLASSIFYING_RULES_TABLE_NAME")
         .expect("Env var FIN_CLI_CLASSIFYING_RULES_TABLE_NAME is missing");
+    let transactions_tablename = std::env::var("FIN_CLI_TRANSACTIONS_TABLE_NAME")
+        .expect("Env var FIN_CLI_TRANSACTIONS_TABLE_NAME is missing");
+    let unprocessed_transactions_tablename =
+        std::env::var("FIN_CLI_UNPROCESSED_TRANSACTIONS_TABLE_NAME")
+            .expect("Env var FIN_CLI_UNPROCESSED_TRANSACTIONS_TABLE_NAME is missing");
     ApplicationConfig {
         transaction_type_tablename,
         classifying_rules_tablename,
+        transactions_tablename,
+        unprocessed_transactions_tablename,
     }
 }
 
@@ -254,6 +266,8 @@ async fn main() {
         client,
         transaction_type_tablename: app_config.transaction_type_tablename,
         classifying_rules_tablename: app_config.classifying_rules_tablename,
+        transactions_tablename: app_config.transactions_tablename,
+        unprocessed_transactions_tablename: app_config.unprocessed_transactions_tablename,
     };
 
     let api = FinApiService::new(db);
