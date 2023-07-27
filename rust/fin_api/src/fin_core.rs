@@ -3,6 +3,13 @@ use base64::{engine, Engine as _};
 use chrono::{Datelike, NaiveDate, NaiveDateTime};
 use thiserror::Error;
 
+pub struct INGTransaction {
+    pub date: String,
+    pub description: String,
+    pub credit: f64,
+    pub debit: f64,
+}
+
 pub struct PaginationDetails {
     pub page: Option<i32>,
     pub limit: i32,
@@ -168,13 +175,20 @@ impl From<UnproccessedTransactionCreationArgs> for UnprocessedTransaction {
 #[async_trait]
 pub trait TransactionRepository {
     async fn get_by_id(&self, id: &str) -> Result<Option<Transaction>, FinError>;
-    async fn get_by_month(&self, month: i64, pagintaion: Option<PaginationDetails>) -> Result<Vec<Transaction>, FinError>;
+    async fn get_by_month(
+        &self,
+        month: i64,
+        pagintaion: Option<PaginationDetails>,
+    ) -> Result<Vec<Transaction>, FinError>;
     async fn create(&self, transaction: Transaction) -> Result<Transaction, FinError>;
 }
 
 #[async_trait]
 pub trait UnproccessedTransactionRepository {
-    async fn get_all(&self, pagination:Option<PaginationDetails>) -> Result<Vec<UnprocessedTransaction>, FinError>;
+    async fn get_all(
+        &self,
+        pagination: Option<PaginationDetails>,
+    ) -> Result<Vec<UnprocessedTransaction>, FinError>;
     async fn create(
         &self,
         transaction: UnproccessedTransactionCreationArgs,
@@ -184,7 +198,10 @@ pub trait UnproccessedTransactionRepository {
 
 #[async_trait]
 pub trait TransactionTypeRepository {
-    async fn get_all(&self, pagination:Option<PaginationDetails>) -> Result<Vec<TransactionType>, FinError>;
+    async fn get_all(
+        &self,
+        pagination: Option<PaginationDetails>,
+    ) -> Result<Vec<TransactionType>, FinError>;
     async fn get_by_id(&self, id: &str) -> Result<Option<TransactionType>, FinError>;
     async fn create(&self, name: &str) -> Result<TransactionType, FinError>;
     async fn update(&self, transaction_type: TransactionType) -> Result<TransactionType, FinError>;
@@ -192,17 +209,24 @@ pub trait TransactionTypeRepository {
 
 #[async_trait]
 pub trait ClassifyingRuleRepository {
-    async fn get_all(&self, pagination:Option<PaginationDetails>) -> Result<ClassifyingRuleList, FinError>;
+    async fn get_all(
+        &self,
+        pagination: Option<PaginationDetails>,
+    ) -> Result<ClassifyingRuleList, FinError>;
     async fn get_by_id(&self, id: &str) -> Result<Option<ClassifyingRule>, FinError>;
     async fn create(&self, args: ClassifyingRuleCreationArgs) -> Result<ClassifyingRule, FinError>;
     async fn update(&self, rule: ClassifyingRuleUpdateArgs) -> Result<ClassifyingRule, FinError>;
     async fn delete(&self, id: &str) -> Result<ClassifyingRule, FinError>;
-    async fn reorder(&self, id: &str, after: Option<&str>) -> Result<ClassifyingRuleList, FinError>;
+    async fn reorder(&self, id: &str, after: Option<&str>)
+        -> Result<ClassifyingRuleList, FinError>;
 }
 
 #[async_trait]
 pub trait FinApi {
-    async fn get_all_transaction_types(&self, pagination:Option<PaginationDetails>) -> Result<Vec<TransactionType>, FinError>;
+    async fn get_all_transaction_types(
+        &self,
+        pagination: Option<PaginationDetails>,
+    ) -> Result<Vec<TransactionType>, FinError>;
     async fn get_transaction_type(&self, id: &str) -> Result<Option<TransactionType>, FinError>;
     async fn create_transaction_type(&self, name: &str) -> Result<TransactionType, FinError>;
     async fn update_transaction_type(
@@ -210,7 +234,10 @@ pub trait FinApi {
         transaction_type: TransactionType,
     ) -> Result<TransactionType, FinError>;
 
-    async fn get_all_rules(&self, pagination:Option<PaginationDetails>) -> Result<ClassifyingRuleList, FinError>;
+    async fn get_all_rules(
+        &self,
+        pagination: Option<PaginationDetails>,
+    ) -> Result<ClassifyingRuleList, FinError>;
     async fn get_rule(&self, id: &str) -> Result<Option<ClassifyingRule>, FinError>;
     async fn create_rule(
         &self,
@@ -221,10 +248,15 @@ pub trait FinApi {
         rule: ClassifyingRuleUpdateArgs,
     ) -> Result<ClassifyingRule, FinError>;
     async fn delete_rule(&self, id: &str) -> Result<ClassifyingRule, FinError>;
-    async fn reorder_rule(&self, id: &str, after: Option<&str>) -> Result<ClassifyingRuleList, FinError>;
-    async fn process(&self) -> Result<(), FinError>;
+    async fn reorder_rule(
+        &self,
+        id: &str,
+        after: Option<&str>,
+    ) -> Result<ClassifyingRuleList, FinError>;
+    async fn process(&self) -> Result<u32, FinError>;
     async fn get_all_unprocessed_transactions(
-        &self, pagination:Option<PaginationDetails>
+        &self,
+        pagination: Option<PaginationDetails>,
     ) -> Result<Vec<UnprocessedTransaction>, FinError>;
 }
 
@@ -245,9 +277,12 @@ where
         + std::marker::Sync
         + ClassifyingRuleRepository
         + UnproccessedTransactionRepository
-        +TransactionRepository
+        + TransactionRepository,
 {
-    async fn get_all_transaction_types(&self, pagination: Option<PaginationDetails>) -> Result<Vec<TransactionType>, FinError> {
+    async fn get_all_transaction_types(
+        &self,
+        pagination: Option<PaginationDetails>,
+    ) -> Result<Vec<TransactionType>, FinError> {
         TransactionTypeRepository::get_all(&self.db, pagination).await
     }
 
@@ -266,7 +301,10 @@ where
         TransactionTypeRepository::update(&self.db, transaction_type).await
     }
 
-    async fn get_all_rules(&self, pagination: Option<PaginationDetails>) -> Result<ClassifyingRuleList, FinError> {
+    async fn get_all_rules(
+        &self,
+        pagination: Option<PaginationDetails>,
+    ) -> Result<ClassifyingRuleList, FinError> {
         ClassifyingRuleRepository::get_all(&self.db, pagination).await
     }
 
@@ -308,25 +346,57 @@ where
         ClassifyingRuleRepository::delete(&self.db, id).await
     }
 
-    async fn reorder_rule(&self, id: &str, after: Option<&str>) -> Result<ClassifyingRuleList, FinError> {
+    async fn reorder_rule(
+        &self,
+        id: &str,
+        after: Option<&str>,
+    ) -> Result<ClassifyingRuleList, FinError> {
         ClassifyingRuleRepository::reorder(&self.db, id, after).await
     }
 
-    async fn process(&self) -> Result<(), FinError> {
+    async fn process(&self) -> Result<u32, FinError> {
         let rules = self.get_all_rules(None).await?;
         if rules.len() == 0 {
-            return Ok(());
+            return Ok(0);
         }
         let unprocessed_transactions = self.get_all_unprocessed_transactions(None).await?;
         if unprocessed_transactions.len() == 0 {
-            return Ok(());
+            return Ok(0);
         }
 
-        todo!()
+        let mut created_count: u32 = 0;
+
+        for unprocessed_transaction in &unprocessed_transactions {
+            let mut found = false;
+            for rule in &rules {
+                if unprocessed_transaction.description.contains(&rule.pattern) {
+                    let transaction = Transaction {
+                        id: unprocessed_transaction.id.clone(),
+                        transaction_type_id: rule.transaction_type_id.clone(),
+                        amount_cents: unprocessed_transaction.amount_cents,
+                        description: unprocessed_transaction.description.clone(),
+                        date: unprocessed_transaction.date,
+                    };
+                    TransactionRepository::create(&self.db, transaction).await?;
+                    UnproccessedTransactionRepository::delete(
+                        &self.db,
+                        &unprocessed_transaction.id,
+                    )
+                    .await?;
+                    created_count += 1;
+                    found = true;
+                }
+            }
+            if !found {
+                break
+            }
+        }
+        Ok(created_count)
     }
 
     async fn get_all_unprocessed_transactions(
-        &self, pagination:Option<PaginationDetails>
+        &self,
+        pagination: Option<PaginationDetails>,
     ) -> Result<Vec<UnprocessedTransaction>, FinError> {
         UnproccessedTransactionRepository::get_all(&self.db, pagination).await
     }
