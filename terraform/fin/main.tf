@@ -34,8 +34,12 @@ resource "aws_dynamodb_table" "unprocessed_transactions_table" {
 resource "aws_dynamodb_table" "transactions_table" {
   name            = "fin_transactions_${var.environment}"
   billing_mode    = "PAY_PER_REQUEST"
-  hash_key        = "month"
-  range_key       = "date"
+  hash_key        = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
 
   attribute {
     name = "month"
@@ -45,6 +49,13 @@ resource "aws_dynamodb_table" "transactions_table" {
   attribute {
     name = "date"
     type = "N"
+  }
+  
+  global_secondary_index {
+    name               = "month-date-index"
+    hash_key           = "month"
+    range_key          = "date"
+    projection_type    = "ALL"
   }
 }
 
