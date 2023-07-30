@@ -560,14 +560,46 @@ impl UnprocessedTransactionRepository for FinDynamoDb {
 #[async_trait]
 impl TransactionRepository for FinDynamoDb {
     async fn get_by_id(&self, id: &str) -> Result<Option<Transaction>, FinError> {
-        todo!()
+        let builder = self.client.get_item();
+        let result = builder
+            .table_name(self.transactions_tablename.to_string())
+            .key("id", AttributeValue::S(id.to_string()))
+            .send()
+            .await?;
+        let attributes = result.item;
+        if let Some(attributes) = attributes {
+            Ok(Some(attributes.try_into()?))
+        } else {
+            Ok(None)
+        }
     }
     async fn get_by_month(
         &self,
         month: i64,
         _pagination: Option<PaginationDetails>,
     ) -> Result<Vec<Transaction>, FinError> {
-        todo!()
+        let query_builder = self.client.query();
+        let result: Result<Vec<HashMap<String,AttributeValue>>, _> = 
+            query_builder.table_name(self.transactions_tablename.to_string())
+            .key_condition_expression("month = :month")
+            .index_name("month-date-index")
+            .expression_attribute_values("month", AttributeValue::N(month.to_string()))
+            .into_paginator()
+            .items()
+            .send()
+            .collect()
+            .await;
+
+        let result = result?;
+        let mut transactions: Vec<Transaction> = Vec::new();
+        for item in result {
+            if let Ok(transaction) = item.try_into() {
+                transactions.push(transaction);
+            }
+        }
+        transactions.sort();
+        transactions.reverse();
+        Ok(transactions)
     }
     async fn create(&self, transaction: Transaction) -> Result<Transaction, FinError> {
         let builder = self.client.put_item();

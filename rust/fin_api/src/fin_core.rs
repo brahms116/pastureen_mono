@@ -1,9 +1,17 @@
 use async_trait::async_trait;
 use base64::{engine, Engine as _};
-use chrono::{Datelike, NaiveDate, NaiveDateTime};
+use chrono::{Datelike, Months, NaiveDate, NaiveDateTime};
 use serde::Deserialize;
-use std::fmt::{Display, Formatter};
+use std::{
+    collections::HashMap,
+    fmt::{Display, Formatter},
+};
 use thiserror::Error;
+
+fn format_cents(amount_cents: i64) -> String {
+    let amount = amount_cents as f64 / 100.0;
+    format!("{:.2}", amount)
+}
 
 #[derive(Debug)]
 pub struct ProcessTransactionsResult {
@@ -19,6 +27,13 @@ impl Display for ProcessTransactionsResult {
             self.processed, self.successfully_classified
         )
     }
+}
+
+pub struct Report {
+    pub start_date: i64,
+    pub end_date: i64,
+    pub by_type: HashMap<String, String>,
+    pub total: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -287,6 +302,15 @@ pub trait FinApi {
         &self,
         transactions: &[INGTransaction],
     ) -> Result<ProcessTransactionsResult, FinError>;
+
+    async fn list_transactions(
+        &self,
+        start_date: i64,
+        end_date: i64,
+        _pagination: Option<PaginationDetails>,
+    ) -> Result<Vec<Transaction>, FinError>;
+
+    async fn generate_report(&self, start_date: i64, end_date: i64) -> Result<Report, FinError>;
 }
 
 pub struct FinApiService<Db> {
@@ -522,6 +546,107 @@ where
         Ok(ProcessTransactionsResult {
             processed: processed_count,
             successfully_classified: classified_count,
+        })
+    }
+
+    async fn list_transactions(
+        &self,
+        start_date: i64,
+        end_date: i64,
+        _pagination: Option<PaginationDetails>,
+    ) -> Result<Vec<Transaction>, FinError> {
+        let mut result = Vec::new();
+        if start_date >= end_date {
+            return Ok(result);
+        }
+        let start_datetime = NaiveDateTime::from_timestamp_opt(start_date, 0);
+        let end_datetime = NaiveDateTime::from_timestamp_opt(end_date, 0);
+
+        if start_datetime.is_none() || end_datetime.is_none() {
+            return Ok(result);
+        }
+        let start_datetime = start_datetime.expect("should handle invalid");
+        let end_datetime = end_datetime.expect("should handle invalid");
+
+        let start_month = NaiveDate::from_ymd_opt(start_datetime.year(), start_datetime.month(), 1)
+            .expect("should be valid date")
+            .and_hms_opt(0, 0, 0)
+            .expect("should be valid time");
+
+        let end_month = NaiveDate::from_ymd_opt(end_datetime.year(), end_datetime.month(), 1)
+            .expect("should be valid date")
+            .and_hms_opt(0, 0, 0)
+            .expect("should be valid time");
+
+        let retrieved_transactions =
+            TransactionRepository::get_by_month(&self.db, end_month.timestamp(), None).await?;
+
+        if start_month == end_month {
+            result.extend(retrieved_transactions.into_iter().filter(|t| {
+                t.date >= start_datetime.timestamp() && t.date <= end_datetime.timestamp()
+            }));
+            return Ok(result);
+        }
+
+        result.extend(
+            retrieved_transactions
+                .into_iter()
+                .filter(|t| t.date <= end_datetime.timestamp()),
+        );
+
+        let mut current_month = end_month - Months::new(1);
+        while current_month > start_month {
+            let retrieved_transactions =
+                TransactionRepository::get_by_month(&self.db, current_month.timestamp(), None)
+                    .await?;
+            result.extend(retrieved_transactions.into_iter());
+            current_month = current_month - Months::new(1);
+        }
+        let retrieved_transactions =
+            TransactionRepository::get_by_month(&self.db, end_month.timestamp(), None).await?;
+
+        result.extend(
+            retrieved_transactions
+                .into_iter()
+                .filter(|t| t.date >= start_datetime.timestamp()),
+        );
+        return Ok(result);
+    }
+
+    async fn generate_report(&self, start_date: i64, end_date: i64) -> Result<Report, FinError> {
+        let transactions = self.list_transactions(start_date, end_date, None).await?;
+
+        let mut by_type_total = HashMap::<String, i64>::new();
+        let mut total: i64 = 0;
+
+        let types = TransactionTypeRepository::get_all(&self.db, None).await?;
+
+        let types = types
+            .into_iter()
+            .map(|t| (t.id, t.name))
+            .collect::<HashMap<String, String>>();
+
+        for transaction in transactions {
+            let amount = transaction.amount_cents;
+            let transaction_type = transaction.transaction_type_id;
+            let transaction_type_name = types.get(&transaction_type).unwrap();
+            by_type_total
+                .entry(transaction_type_name.to_string())
+                .and_modify(|e| *e += amount)
+                .or_insert(amount);
+            total += amount;
+        }
+
+        let by_type: HashMap<String, String> = by_type_total
+            .into_iter()
+            .map(|(k, v)| (k, format_cents(v)))
+            .collect();
+
+        Ok(Report {
+            total: format_cents(total),
+            start_date,
+            end_date,
+            by_type,
         })
     }
 }
