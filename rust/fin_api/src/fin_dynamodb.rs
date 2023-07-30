@@ -474,7 +474,7 @@ impl ClassifyingRuleRepository for FinDynamoDb {
 }
 
 #[async_trait]
-impl UnproccessedTransactionRepository for FinDynamoDb {
+impl UnprocessedTransactionRepository for FinDynamoDb {
     async fn get_all(
         &self,
         _pagination: Option<PaginationDetails>,
@@ -502,10 +502,9 @@ impl UnproccessedTransactionRepository for FinDynamoDb {
 
     async fn create(
         &self,
-        transaction: UnproccessedTransactionCreationArgs,
+        transaction: UnprocessedTransaction,
     ) -> Result<UnprocessedTransaction, FinError> {
         let builder = self.client.put_item();
-        let transaction: UnprocessedTransaction = transaction.into();
         let result = builder
             .table_name(self.unprocessed_transactions_tablename.to_string())
             .set_item(Some(transaction.clone().into()))
@@ -516,7 +515,7 @@ impl UnproccessedTransactionRepository for FinDynamoDb {
         if let Err(SdkError::ServiceError(put_item_err)) = result {
             let err = put_item_err.err();
             if let PutItemError::ConditionalCheckFailedException(_) = err {
-                return Err(FinError::NotFound(format!(
+                return Err(FinError::AlreadyExists(format!(
                     "UnproccessedTransaction with id {}",
                     transaction.id
                 )));
@@ -540,6 +539,22 @@ impl UnproccessedTransactionRepository for FinDynamoDb {
 
         Ok(item.try_into()?)
     }
+
+    async fn get_by_id(&self, id: &str) -> Result<Option<UnprocessedTransaction>, FinError> {
+        let builder = self.client.get_item();
+        let result = builder
+            .table_name(self.unprocessed_transactions_tablename.to_string())
+            .key("id", AttributeValue::S(id.to_string()))
+            .send()
+            .await?;
+
+        let item = result.item;
+        if let Some(item) = item {
+            Ok(Some(item.try_into()?))
+        } else {
+            Ok(None)
+        }
+    }
 }
 
 #[async_trait]
@@ -555,6 +570,23 @@ impl TransactionRepository for FinDynamoDb {
         todo!()
     }
     async fn create(&self, transaction: Transaction) -> Result<Transaction, FinError> {
-        todo!()
+        let builder = self.client.put_item();
+        let result = builder
+            .table_name(self.transactions_tablename.to_string())
+            .set_item(Some(transaction.clone().into()))
+            .condition_expression("attribute_not_exists(id)")
+            .send()
+            .await;
+
+        if let Err(SdkError::ServiceError(put_item_err)) = result {
+            let err = put_item_err.err();
+            if let PutItemError::ConditionalCheckFailedException(_) = err {
+                return Err(FinError::AlreadyExists(format!(
+                    "Transaction with id {}",
+                    transaction.id
+                )));
+            }
+        }
+        Ok(transaction)
     }
 }

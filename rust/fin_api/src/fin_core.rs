@@ -2,7 +2,24 @@ use async_trait::async_trait;
 use base64::{engine, Engine as _};
 use chrono::{Datelike, NaiveDate, NaiveDateTime};
 use serde::Deserialize;
+use std::fmt::{Display, Formatter};
 use thiserror::Error;
+
+#[derive(Debug)]
+pub struct ProcessTransactionsResult {
+    pub processed: u32,
+    pub successfully_classified: u32,
+}
+
+impl Display for ProcessTransactionsResult {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Processed {} transactions, {} successfully classified",
+            self.processed, self.successfully_classified
+        )
+    }
+}
 
 #[derive(Debug, Deserialize)]
 pub struct INGTransaction {
@@ -62,6 +79,12 @@ pub enum FinError {
     NotFound(String),
     #[error("Item already exists: {0}")]
     AlreadyExists(String),
+    #[error("Incorrect format for type {0}: {1}")]
+    InvalidFormat(String, String),
+    #[error(
+        "Transaction with description {1} has already been processed. Processed {0} transactions"
+    )]
+    TransactionAlreadyProcessed(ProcessTransactionsResult, String),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -146,6 +169,19 @@ pub struct UnprocessedTransaction {
     pub description: String,
 }
 
+impl UnprocessedTransaction {
+    pub fn new(amount_cents: i64, date: i64, description: String) -> Self {
+        let string = format!("{}{}{}", amount_cents, date, description);
+        let id = engine::general_purpose::STANDARD_NO_PAD.encode(string.as_bytes());
+        Self {
+            id,
+            amount_cents,
+            date,
+            description,
+        }
+    }
+}
+
 impl PartialOrd for UnprocessedTransaction {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         self.date.partial_cmp(&other.date)
@@ -155,26 +191,6 @@ impl PartialOrd for UnprocessedTransaction {
 impl Ord for UnprocessedTransaction {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.date.cmp(&other.date)
-    }
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct UnproccessedTransactionCreationArgs {
-    pub amount_cents: i64,
-    pub date: i64,
-    pub description: String,
-}
-
-impl From<UnproccessedTransactionCreationArgs> for UnprocessedTransaction {
-    fn from(args: UnproccessedTransactionCreationArgs) -> Self {
-        let string = format!("{}{}{}", args.amount_cents, args.date, args.description);
-        let id = engine::general_purpose::STANDARD_NO_PAD.encode(string.as_bytes());
-        Self {
-            id,
-            amount_cents: args.amount_cents,
-            date: args.date,
-            description: args.description,
-        }
     }
 }
 
@@ -190,16 +206,18 @@ pub trait TransactionRepository {
 }
 
 #[async_trait]
-pub trait UnproccessedTransactionRepository {
+pub trait UnprocessedTransactionRepository {
     async fn get_all(
         &self,
         pagination: Option<PaginationDetails>,
     ) -> Result<Vec<UnprocessedTransaction>, FinError>;
     async fn create(
         &self,
-        transaction: UnproccessedTransactionCreationArgs,
+        transaction: UnprocessedTransaction,
     ) -> Result<UnprocessedTransaction, FinError>;
     async fn delete(&self, id: &str) -> Result<UnprocessedTransaction, FinError>;
+
+    async fn get_by_id(&self, id: &str) -> Result<Option<UnprocessedTransaction>, FinError>;
 }
 
 #[async_trait]
@@ -265,7 +283,10 @@ pub trait FinApi {
         pagination: Option<PaginationDetails>,
     ) -> Result<Vec<UnprocessedTransaction>, FinError>;
 
-    async fn process_ing_transactions(&self, transactions:&[INGTransaction]) -> Result<u32, FinError>;
+    async fn process_ing_transactions(
+        &self,
+        transactions: &[INGTransaction],
+    ) -> Result<ProcessTransactionsResult, FinError>;
 }
 
 pub struct FinApiService<Db> {
@@ -277,6 +298,56 @@ impl<Db> FinApiService<Db> {
     }
 }
 
+fn classify_description<'a>(
+    description: &str,
+    rules: &'a [ClassifyingRule],
+) -> Option<&'a ClassifyingRule> {
+    for rule in rules {
+        if rule.pattern.contains(description) {
+            return Some(rule);
+        }
+    }
+    None
+}
+
+fn classify_transaction<'a>(
+    transaction: &UnprocessedTransaction,
+    rules: &'a [ClassifyingRule],
+) -> Option<&'a ClassifyingRule> {
+    classify_description(&transaction.description, rules)
+}
+
+impl<Db> FinApiService<Db>
+where
+    Db: TransactionTypeRepository
+        + std::marker::Send
+        + std::marker::Sync
+        + ClassifyingRuleRepository
+        + UnprocessedTransactionRepository
+        + TransactionRepository,
+{
+    async fn process_transaction_with_rules(
+        &self,
+        unprocessed_transaction: &UnprocessedTransaction,
+        rules: &[ClassifyingRule],
+    ) -> Result<Option<Transaction>, FinError> {
+        let mut rule = classify_transaction(unprocessed_transaction, rules);
+        if let Some(rule) = rule.take() {
+            let transaction = Transaction {
+                id: unprocessed_transaction.id.clone(),
+                transaction_type_id: rule.transaction_type_id.clone(),
+                amount_cents: unprocessed_transaction.amount_cents,
+                description: unprocessed_transaction.description.clone(),
+                date: unprocessed_transaction.date,
+            };
+            let transaction = TransactionRepository::create(&self.db, transaction).await?;
+            UnprocessedTransactionRepository::delete(&self.db, &unprocessed_transaction.id).await?;
+            return Ok(Some(transaction));
+        }
+        Ok(None)
+    }
+}
+
 #[async_trait]
 impl<Db> FinApi for FinApiService<Db>
 where
@@ -284,7 +355,7 @@ where
         + std::marker::Send
         + std::marker::Sync
         + ClassifyingRuleRepository
-        + UnproccessedTransactionRepository
+        + UnprocessedTransactionRepository
         + TransactionRepository,
 {
     async fn get_all_transaction_types(
@@ -376,24 +447,12 @@ where
 
         for unprocessed_transaction in &unprocessed_transactions {
             let mut found = false;
-            for rule in &rules {
-                if unprocessed_transaction.description.contains(&rule.pattern) {
-                    let transaction = Transaction {
-                        id: unprocessed_transaction.id.clone(),
-                        transaction_type_id: rule.transaction_type_id.clone(),
-                        amount_cents: unprocessed_transaction.amount_cents,
-                        description: unprocessed_transaction.description.clone(),
-                        date: unprocessed_transaction.date,
-                    };
-                    TransactionRepository::create(&self.db, transaction).await?;
-                    UnproccessedTransactionRepository::delete(
-                        &self.db,
-                        &unprocessed_transaction.id,
-                    )
-                    .await?;
-                    created_count += 1;
-                    found = true;
-                }
+            let result = self
+                .process_transaction_with_rules(unprocessed_transaction, &rules)
+                .await?;
+            if let Some(_) = result {
+                created_count += 1;
+                found = true;
             }
             if !found {
                 break;
@@ -406,14 +465,63 @@ where
         &self,
         pagination: Option<PaginationDetails>,
     ) -> Result<Vec<UnprocessedTransaction>, FinError> {
-        UnproccessedTransactionRepository::get_all(&self.db, pagination).await
+        UnprocessedTransactionRepository::get_all(&self.db, pagination).await
     }
 
-    async fn process_ing_transactions(&self,transactions:&[INGTransaction]) -> Result<u32,FinError> {
+    async fn process_ing_transactions(
+        &self,
+        transactions: &[INGTransaction],
+    ) -> Result<ProcessTransactionsResult, FinError> {
+        let mut processed_count: u32 = 0;
+        let mut classified_count: u32 = 0;
         for transaction in transactions {
             let amount_cents: i64 = (transaction.debit * 10.0).trunc() as i64;
+
+            // convert date to chrono
+            let date = NaiveDate::parse_from_str(&transaction.date, "%e/%m/Y").map_err(|_| {
+                FinError::InvalidFormat(
+                    "INGTransaction.date".to_string(),
+                    transaction.date.to_string(),
+                )
+            })?;
+
+            let date = date.and_hms_opt(0, 0, 0).expect("Should be valid time");
+            let ts = date.timestamp();
+
+            let unprocessed_transaction =
+                UnprocessedTransaction::new(amount_cents, ts, transaction.description.clone());
+
+            let possible_transaction =
+                UnprocessedTransactionRepository::get_by_id(&self.db, &unprocessed_transaction.id)
+                    .await?;
+
+            if possible_transaction.is_some() {
+                return Err(FinError::TransactionAlreadyProcessed(
+                    ProcessTransactionsResult {
+                        processed: processed_count,
+                        successfully_classified: classified_count,
+                    },
+                    unprocessed_transaction.description.to_string(),
+                ));
+            }
+
+            let rules = ClassifyingRuleRepository::get_all(&self.db, None).await?;
+            // if it passes create a transaction
+            let processed_transaction = self
+                .process_transaction_with_rules(&unprocessed_transaction, &rules)
+                .await?;
+
+            if processed_transaction.is_some() {
+                classified_count += 1;
+            } else {
+                // create an unprocessed transaction
+                UnprocessedTransactionRepository::create(&self.db, unprocessed_transaction).await?;
+            }
+            processed_count += 1;
         }
-        todo!()
-        
+        Ok(ProcessTransactionsResult {
+            processed: processed_count,
+            successfully_classified: classified_count,
+        })
     }
 }
