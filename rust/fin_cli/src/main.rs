@@ -266,6 +266,7 @@ async fn classifying_rules<T: FinApi>(api: T, args: ClassifyingRules) {
         }
         let classifying_rules = result.unwrap();
         print_classifying_rules(&classifying_rules);
+        return
     }
     let subcommand = args.subcommand.expect("Should handle none case");
     match subcommand {
@@ -367,6 +368,18 @@ async fn transaction_types<T: FinApi>(api: T, args: TransactionTypes) {
     }
 }
 
+
+async fn process<T: FinApi>(api: T) {
+    let result = api.process().await;
+    if let Err(e) = result {
+        handle_error(e);
+        return;
+    }
+    let result = result.expect("Should handle error case");
+    println!("Processed count: {result}")
+}
+
+
 #[derive(Clone, Debug)]
 struct ApplicationConfig {
     transaction_type_tablename: String,
@@ -416,10 +429,10 @@ async fn main() {
 
     match command {
         FinSubcommand::Process => {
-            println!("Process");
+            process(api).await;
         }
         FinSubcommand::Unprocessed => {
-            println!("Unprocessed");
+            println!("Unimplemented");
         }
         FinSubcommand::Types(args) => {
             transaction_types(api, args).await;

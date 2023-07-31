@@ -23,6 +23,20 @@ fn get_string_key(key: &str, map: HashMap<String, AttributeValue>) -> Result<Str
     Ok(value.clone())
 }
 
+fn get_number_key(key: &str, map: HashMap<String, AttributeValue>) -> Result<String, FinError> {
+    let value = map.get(key).ok_or(FinError::DbError(format!(
+        "Could not find field {} in dynamodb object",
+        key
+    )))?;
+    let value = value.as_n().map_err(|_| {
+        FinError::DbError(format!(
+            "Could not convert {} to number in dynamodb object",
+            key
+        ))
+    })?;
+    Ok(value.clone())
+}
+
 fn get_list_key(
     key: &str,
     map: HashMap<String, AttributeValue>,
@@ -76,7 +90,7 @@ impl TryFrom<HashMap<String, AttributeValue>> for Transaction {
         let id = get_string_key("id", value.clone())?;
         let transaction_type_id = get_string_key("transactionTypeId", value.clone())?;
 
-        let amount_cents = get_string_key("amountCents", value.clone())?
+        let amount_cents = get_number_key("amountCents", value.clone())?
             .parse::<i64>()
             .map_err(|e| FinError::DbError(format!("Could not parse amountCents: {}", e)))?;
         let description = get_string_key("description", value.clone())?;
@@ -116,7 +130,7 @@ impl TryFrom<HashMap<String, AttributeValue>> for UnprocessedTransaction {
     type Error = FinError;
     fn try_from(value: HashMap<String, AttributeValue>) -> Result<Self, Self::Error> {
         let id = get_string_key("id", value.clone())?;
-        let amount_cents = get_string_key("amountCents", value.clone())?;
+        let amount_cents = get_number_key("amountCents", value.clone())?;
         let amount_cents = amount_cents
             .parse::<i64>()
             .map_err(|_| FinError::DbError("Could not parse amountCents".to_string()))?;

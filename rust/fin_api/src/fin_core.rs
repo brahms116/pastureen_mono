@@ -43,9 +43,9 @@ pub struct INGTransaction {
     #[serde(rename = "Description")]
     pub description: String,
     #[serde(default, rename = "Credit")]
-    pub credit: f64,
+    pub credit: Option<f64>,
     #[serde(default, rename = "Debit")]
-    pub debit: f64,
+    pub debit: Option<f64>,
 }
 
 pub struct PaginationDetails {
@@ -327,7 +327,7 @@ fn classify_description<'a>(
     rules: &'a [ClassifyingRule],
 ) -> Option<&'a ClassifyingRule> {
     for rule in rules {
-        if rule.pattern.contains(description) {
+        if description.contains(&rule.pattern) {
             return Some(rule);
         }
     }
@@ -499,10 +499,11 @@ where
         let mut processed_count: u32 = 0;
         let mut classified_count: u32 = 0;
         for transaction in transactions {
-            let amount_cents: i64 = (transaction.debit * 10.0).trunc() as i64;
+            let total_amount = transaction.credit.unwrap_or(0.0) + transaction.debit.unwrap_or(0.0);
+            let amount_cents: i64 = (total_amount * 100.0).trunc() as i64;
 
             // convert date to chrono
-            let date = NaiveDate::parse_from_str(&transaction.date, "%e/%m/Y").map_err(|_| {
+            let date = NaiveDate::parse_from_str(&transaction.date, "%e/%m/%Y").map_err(|_| {
                 FinError::InvalidFormat(
                     "INGTransaction.date".to_string(),
                     transaction.date.to_string(),
