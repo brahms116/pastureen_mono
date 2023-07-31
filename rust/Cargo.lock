@@ -732,7 +732,9 @@ version = "0.1.0"
 dependencies = [
  "aws-config",
  "aws-sdk-dynamodb",
+ "chrono",
  "clap",
+ "csv_iterator",
  "fin_api",
  "print_table",
  "tokio",
