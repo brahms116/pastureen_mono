@@ -95,7 +95,7 @@ impl TryFrom<HashMap<String, AttributeValue>> for Transaction {
             .map_err(|e| FinError::DbError(format!("Could not parse amountCents: {}", e)))?;
         let description = get_string_key("description", value.clone())?;
 
-        let date = get_string_key("date", value.clone())?
+        let date = get_number_key("date", value.clone())?
             .parse::<i64>()
             .map_err(|e| FinError::DbError(format!("Could not parse date: {}", e)))?;
 
@@ -136,7 +136,7 @@ impl TryFrom<HashMap<String, AttributeValue>> for UnprocessedTransaction {
             .map_err(|_| FinError::DbError("Could not parse amountCents".to_string()))?;
 
         let description = get_string_key("description", value.clone())?;
-        let date = get_string_key("date", value.clone())?;
+        let date = get_number_key("date", value.clone())?;
         let date = date
             .parse::<i64>()
             .map_err(|_| FinError::DbError("Could not parse date".to_string()))?;

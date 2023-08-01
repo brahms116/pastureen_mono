@@ -365,7 +365,12 @@ where
                 date: unprocessed_transaction.date,
             };
             let transaction = TransactionRepository::create(&self.db, transaction).await?;
-            UnprocessedTransactionRepository::delete(&self.db, &unprocessed_transaction.id).await?;
+            let existing =
+                UnprocessedTransactionRepository::get_by_id(&self.db, &unprocessed_transaction.id)
+                    .await?;
+            if let Some(_) = existing {
+                UnprocessedTransactionRepository::delete(&self.db, &unprocessed_transaction.id).await?;
+            }
             return Ok(Some(transaction));
         }
         Ok(None)
