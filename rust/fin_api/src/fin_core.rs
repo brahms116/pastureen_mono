@@ -364,7 +364,8 @@ where
                 description: unprocessed_transaction.description.clone(),
                 date: unprocessed_transaction.date,
             };
-            let transaction = TransactionRepository::create(&self.db, transaction).await?;
+            // Ignore error
+            let _result = TransactionRepository::create(&self.db, transaction.clone()).await;
             let existing =
                 UnprocessedTransactionRepository::get_by_id(&self.db, &unprocessed_transaction.id)
                     .await?;
@@ -538,12 +539,16 @@ where
                 .await?;
 
             if processed_transaction.is_some() {
+                processed_count += 1;
                 classified_count += 1;
             } else {
                 // create an unprocessed transaction
-                UnprocessedTransactionRepository::create(&self.db, unprocessed_transaction).await?;
+                let result = UnprocessedTransactionRepository::create(&self.db, unprocessed_transaction).await;
+                //leave error for now
+                if let Ok(_) = result {
+                    processed_count += 1;
+                }
             }
-            processed_count += 1;
         }
         Ok(ProcessTransactionsResult {
             processed: processed_count,
