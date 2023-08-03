@@ -475,16 +475,11 @@ where
         let mut created_count: u32 = 0;
 
         for unprocessed_transaction in &unprocessed_transactions {
-            let mut found = false;
             let result = self
                 .process_transaction_with_rules(unprocessed_transaction, &rules)
                 .await?;
             if let Some(_) = result {
                 created_count += 1;
-                found = true;
-            }
-            if !found {
-                break;
             }
         }
         Ok(created_count)
@@ -526,13 +521,14 @@ where
                     .await?;
 
             if possible_transaction.is_some() {
-                return Err(FinError::TransactionAlreadyProcessed(
-                    ProcessTransactionsResult {
-                        processed: processed_count,
-                        successfully_classified: classified_count,
-                    },
-                    unprocessed_transaction.description.to_string(),
-                ));
+                // return Err(FinError::TransactionAlreadyProcessed(
+                //     ProcessTransactionsResult {
+                //         processed: processed_count,
+                //         successfully_classified: classified_count,
+                //     },
+                //     unprocessed_transaction.description.to_string(),
+                // ));
+                continue;
             }
 
             let rules = ClassifyingRuleRepository::get_all(&self.db, None).await?;
@@ -609,7 +605,7 @@ where
             current_month = current_month - Months::new(1);
         }
         let retrieved_transactions =
-            TransactionRepository::get_by_month(&self.db, end_month.timestamp(), None).await?;
+            TransactionRepository::get_by_month(&self.db, start_month.timestamp(), None).await?;
 
         result.extend(
             retrieved_transactions
@@ -626,7 +622,6 @@ where
         let mut total: i64 = 0;
 
         let types = TransactionTypeRepository::get_all(&self.db, None).await?;
-
         let types = types
             .into_iter()
             .map(|t| (t.id, t.name))

@@ -595,9 +595,10 @@ impl TransactionRepository for FinDynamoDb {
         let query_builder = self.client.query();
         let result: Result<Vec<HashMap<String,AttributeValue>>, _> = 
             query_builder.table_name(self.transactions_tablename.to_string())
-            .key_condition_expression("month = :month")
+            .key_condition_expression("#month_field = :month_selected")
             .index_name("month-date-index")
-            .expression_attribute_values("month", AttributeValue::N(month.to_string()))
+            .expression_attribute_names("#month_field", "month")
+            .expression_attribute_values(":month_selected", AttributeValue::N(month.to_string()))
             .into_paginator()
             .items()
             .send()
