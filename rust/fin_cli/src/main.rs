@@ -171,6 +171,26 @@ fn print_transaction_types(transaction_types: &[TransactionType]) {
     }
 }
 
+fn unprocessed_transactions_to_row(transaction: &UnprocessedTransaction) -> [String; 3] {
+    [
+        transaction.date.to_string(),
+        transaction.amount_cents.to_string(),
+        transaction.description.to_string(),
+    ]
+}
+
+fn print_unprocessed_transactions(transacitons: &[UnprocessedTransaction]) {
+    let headers: [&str; 3] = ["Date", "Amount", "Description"];
+    let rows: Vec<[String; 3]> = transacitons
+        .iter()
+        .map(unprocessed_transactions_to_row)
+        .collect();
+    let output_rows = print_table::print_table(&rows, &headers);
+    for row in output_rows {
+        println!("{}", row);
+    }
+}
+
 async fn report<T: FinApi>(api: T, from: String, to: String) {
     let from = NaiveDate::parse_from_str(&from, "%d/%m/%Y");
     if let Err(e) = from {
@@ -199,6 +219,16 @@ async fn report<T: FinApi>(api: T, from: String, to: String) {
     }
     let report = result.expect("Should handle error case");
     print_report(&report);
+}
+
+async fn unprocessed<T: FinApi>(api: T) {
+    let result = api.get_all_unprocessed_transactions(None).await;
+    if let Err(e) = result {
+        handle_error(e);
+        return;
+    }
+    let unprocessed_transactions = result.expect("Should handle error case");
+    print_unprocessed_transactions(&unprocessed_transactions);
 }
 
 async fn list<T: FinApi>(api: T, from: String, to: String) {
@@ -432,7 +462,7 @@ async fn main() {
             process(api).await;
         }
         FinSubcommand::Unprocessed => {
-            println!("Unimplemented");
+            unprocessed(api).await;
         }
         FinSubcommand::Types(args) => {
             transaction_types(api, args).await;
