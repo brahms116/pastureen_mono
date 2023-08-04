@@ -16,11 +16,8 @@ WORKDIR /
 
 RUN mkdir zip
 RUN mkdir out
-RUN cp /app/target/release/router_service /zip/bootstrap
-RUN zip -j /out/router_service.zip /zip/bootstrap
-
-RUN cp /app/target/release/router_service /zip/bootstrap
-RUN zip -j  /out/router_service_double.zip /zip/bootstrap
+RUN cp /app/target/release/actix_poc /zip/bootstrap
+RUN zip -j /out/actix_poc.zip /zip/bootstrap
 
 FROM alpine:3
 COPY --from=rust_lambda_builder /out /build/rust_lambda/

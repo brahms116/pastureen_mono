@@ -10,5 +10,6 @@ members = [
   "router_service",
   "fin_api",
   "fin_cli",
-  "cli"
+  "cli",
+  "actix_poc"
 ]

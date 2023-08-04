@@ -1,18 +1,5 @@
 #!/bin/bash
 
-env=$1
-
-if [ "$env" = "dev" ]; then
-    echo "Deploying to dev"
-    # Deploy to dev
-elif [ "$env" = "prod" ]; then
-    echo "Deploying to prod"
-    # Deploy to prod
-else
-    echo "Invalid environment"
-    exit 1
-fi
-
 echo "Clearing artifacts"
 
 rm -rf ./build 2> /dev/null

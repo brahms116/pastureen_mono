@@ -15,6 +15,12 @@ variable "lambda_environment_variables" {
   default     = {}
 }
 
+variable "http_adapter" {
+  type = bool
+  description = "Whether to use the http adapter or not"
+  default = false
+}
+
 variable "zip_location" {
   type        = string
   description = "Location of the zip package"
