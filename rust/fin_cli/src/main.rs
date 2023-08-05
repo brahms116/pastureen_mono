@@ -445,7 +445,7 @@ async fn main() {
 
     let app_config = get_default_config();
 
-    let db = FinDynamoDb {
+    let _db = FinDynamoDb {
         client,
         transaction_type_tablename: app_config.transaction_type_tablename,
         classifying_rules_tablename: app_config.classifying_rules_tablename,
@@ -453,7 +453,9 @@ async fn main() {
         unprocessed_transactions_tablename: app_config.unprocessed_transactions_tablename,
     };
 
-    let api = FinApiService::new(db);
+    let postgres = FinPostgres::new().await.expect("Should be able to create postgres");
+
+    let api = FinApiService::new(postgres);
 
     let command = args.command;
 

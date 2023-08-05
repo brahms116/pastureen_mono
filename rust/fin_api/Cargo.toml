@@ -14,4 +14,9 @@ uuid = { version = "1.4.0", features = ["v4"] }
 tokio-stream = { version = "0.1.4" }
 base64 = "^0.21.2"
 serde = { version = "1.0.176", features = ["derive"] }
-
+sqlx = { version = "0.7", features = [
+  "runtime-tokio",
+  "tls-native-tls",
+  "postgres",
+  "uuid"
+] }
