@@ -15,7 +15,7 @@ resource "aws_lambda_function" "lambda" {
 
 
 resource "aws_iam_role" "lambda_role" {
-  name = "${var.lambda_function_name}-role"
+  name = "${var.lambda_function_name}_role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
