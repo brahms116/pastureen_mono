@@ -1,0 +1,16 @@
+name: Build and deploy for development
+
+on:
+  push: 
+    branches:
+      - 'DEV'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: build
+      run: sh ./build_everything.sh
+
+
