@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO transaction (\n                id, amount_cents, description, date, transaction_type_id\n            ) \n            VALUES ($1, $2, $3, $4, $5::text::uuid)\n            RETURNING \n                id,\n                amount_cents,\n                description,\n                date,\n                transaction_type_id::text as \"transaction_type_id!\"\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "amount_cents",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "date",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 4,
+        "name": "transaction_type_id!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int4",
+        "Text",
+        "Int4",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "e7a576554630cfe109f443e7d55794582f102de1c98fe1d471bbb801ce4914cd"
+}

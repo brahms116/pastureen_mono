@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT \n                id::text as \"id!\",\n                name,\n                match_string as \"pattern\",\n                transaction_type_id::text as \"transaction_type_id!\"\n            FROM match_rule ORDER BY order_index ASC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "pattern",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "transaction_type_id!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "67698bc545dd66dd4b73ae37e03f9ba4ff737325757a11bea30917e239c95ad1"
+}

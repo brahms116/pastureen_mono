@@ -180,7 +180,7 @@ fn unprocessed_transactions_to_row(transaction: &UnprocessedTransaction) -> [Str
 }
 
 fn print_unprocessed_transactions(transacitons: &[UnprocessedTransaction]) {
-    let headers: [&str; 3] = ["Date", "Amount", "Description"];
+    let headers: [&str; 3] = ["Date Timestamp", "Amount", "Description"];
     let rows: Vec<[String; 3]> = transacitons
         .iter()
         .map(unprocessed_transactions_to_row)
