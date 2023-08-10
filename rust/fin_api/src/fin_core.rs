@@ -52,103 +52,134 @@ pub enum FinError {
 
 #[async_trait]
 pub trait FinApi {
-    async fn create_transaction_type(
-        &self,
-        input: CreateTransactionTypeInput,
-    ) -> Result<CreateTransactionTypeOutput, FinError>;
+    async fn create_transaction_type(&self, name: &str) -> Result<TransactionType, FinError>;
 
-    async fn get_transaction_types(
-        &self,
-        input: GetTransactionTypesInput,
-    ) -> Result<GetTransactionTypesOutput, FinError>;
+    async fn get_transaction_type(&self, id: &str) -> Result<Option<TransactionType>, FinError>;
 
-    async fn get_transaction_type(
+    async fn get_transaction_types<T>(
         &self,
-        input: GetTransactionTypeInput,
-    ) -> Result<GetTransactionTypeOutput, FinError>;
+        pagination: T,
+    ) -> Result<PaginatedResult<Vec<TransactionType>>, FinError>
+    where
+        T: Into<Pagination> + Send + Sync;
 
     async fn update_transaction_type(
         &self,
-        input: UpdateTransactionTypeInput,
-    ) -> Result<UpdateTransactionTypeOutput, FinError>;
-
-    async fn create_rule(
-        &self,
-        input: CreateClassifyingRuleInput,
-    ) -> Result<CreateClassifyingRuleOutput, FinError>;
-
-    async fn get_classifying_rules(
-        &self,
-        input: GetClassifyingRulesInput,
-    ) -> Result<GetClassifyingRulesOutput, FinError>;
-
-    async fn get_rule(
-        &self,
-        input: GetClassifyingRuleInput,
-    ) -> Result<GetClassifyingRuleOutput, FinError>;
-
-    async fn update_rule(
-        &self,
-        input: UpdateClassifyingRuleInput,
-    ) -> Result<UpdateTransactionTypeOutput, FinError>;
-
-    async fn delete_rule(
-        &self,
-        input: DeleteClassifyingRuleInput,
-    ) -> Result<DeleteClassifyingRuleOutput, FinError>;
-
-    async fn created_unclassified_transaction(
-        &self,
-        input: CreateUnclassifiedTransactionInput,
-    );
-
-    async fn get_unclassified_transactions(
-        &self,
-        input: GetUnclassifiedTransactionsInput,
-    ) -> Result<GetUnclassifiedTransactionsOutput, FinError>;
-
-    async fn get_unclassified_transaction(
-        &self,
-        input: GetUnclassifiedTransactionInput,
-    ) -> Result<GetUnclassifiedTransactionOutput, FinError>;
-
-    async fn update_unclassified_transaction(
-        &self,
-        input: UpdateUnclassifiedTransactionInput,
-    ) -> Result<UpdateUnclassifiedTransactionOutput, FinError>;
-
-    async fn delete_unclassified_transaction(
-        &self,
-        input: DeleteUnclassifiedTransactionInput,
-    ) -> Result<DeleteUnclassifiedTransactionOutput, FinError>;
+        id: &str,
+        name: &str,
+    ) -> Result<TransactionType, FinError>;
 
     async fn create_transaction(
         &self,
-        input: CreateTransactionInput,
-    ) -> Result<CreateTransactionOutput, FinError>;
+        data: CreateTransactionData,
+    ) -> Result<Transaction, FinError>;
 
-    async fn get_transactions(
-        &self,
-        input: GetTransactionsInput,
-    ) -> Result<GetTransactionsOutput, FinError>;
+    async fn get_transaction(&self, id: &str) -> Result<Option<Transaction>, FinError>;
 
-    async fn get_transaction(
+    async fn get_transactions<T>(
         &self,
-        input: GetTransactionInput,
-    ) -> Result<GetTransactionOutput, FinError>;
+        pagination: T,
+    ) -> Result<PaginatedResult<Vec<Transaction>>, FinError>
+    where
+        T: Into<Pagination> + Send + Sync;
 
     async fn update_transaction(
         &self,
-        input: UpdateTransactionInput,
-    ) -> Result<UpdateTransactionOutput, FinError>;
+        id: &str,
+        data: UpdateTransactionData,
+    ) -> Result<Transaction, FinError>;
 
-    async fn delete_transaction(
+    async fn delete_transaction(&self, id: &str) -> Result<Transaction, FinError>;
+
+    async fn query_transactions_by_date_range<T>(
         &self,
-        input: DeleteTransactionInput,
-    ) -> Result<DeleteTransactionOutput, FinError>;
+        start_date: i64,
+        end_date: i64,
+        pagination: T,
+    ) -> Result<PaginatedResult<Vec<Transaction>>, FinError>
+    where
+        T: Into<Pagination> + Send + Sync;
+
+    async fn create_unclassified_transaction(
+        &self,
+        data: CreateUnclassifiedTransactionData,
+    ) -> Result<UnclassifiedTransaction, FinError>;
+
+    async fn get_unclassified_transaction(
+        &self,
+        id: &str,
+    ) -> Result<Option<UnclassifiedTransaction>, FinError>;
+
+    async fn get_unclassified_transactions<T>(
+        &self,
+        pagination: T,
+    ) -> Result<PaginatedResult<Vec<UnclassifiedTransaction>>, FinError>
+    where
+        T: Into<Pagination> + Send + Sync;
+
+    async fn update_unclassified_transaction(
+        &self,
+        id: &str,
+        data: UpdateUnclassifiedTransactionData,
+    ) -> Result<UnclassifiedTransaction, FinError>;
+
+    async fn delete_unclassified_transaction(
+        &self,
+        id: &str,
+    ) -> Result<UnclassifiedTransaction, FinError>;
+
+    async fn create_classifying_rule(
+        &self,
+        data: CreateClassifyingRuleData<'_>,
+    ) -> Result<ClassifyingRule, FinError>;
+
+    async fn reorder_classifying_rules(
+        &self,
+        source_id: &str,
+        target_id: Option<&str>,
+    ) -> Result<u32, FinError>;
+
+    async fn get_classifying_rule(&self, id: &str) -> Result<Option<ClassifyingRule>, FinError>;
+
+    async fn get_classifying_rules<T>(
+        &self,
+        pagination: T,
+    ) -> Result<PaginatedResult<Vec<ClassifyingRule>>, FinError>
+    where
+        T: Into<Pagination> + Send + Sync;
+
+    async fn update_classifying_rule(
+        &self,
+        id: &str,
+        data: UpdateClassifyingRuleData,
+    ) -> Result<ClassifyingRule, FinError>;
+
+    async fn delete_classifying_rule(&self, id: &str) -> Result<ClassifyingRule, FinError>;
+
+    async fn classify_transactions<T>(
+        &self,
+        transactions: T,
+        stop_condition: ClassifyTransactionStopCondition,
+        store_unclassified: bool,
+    ) -> Result<TransactionClassificationResult, FinError>
+    where
+        T: IntoIterator<Item = UnclassifiedTransaction> + Send + Sync;
+
+    async fn classify_stored_transactions(
+        &self,
+        stop_condition: ClassifyTransactionStopCondition,
+    ) -> Result<TransactionClassificationResult, FinError>;
+
+    async fn generate_report(&self, start_date: i64, end_date: i64) -> Result<Report, FinError>;
 }
 
 // ---- CONTRACTS ----
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PaginatedResult<T> {
+    pub data: T,
+    pub pagination: OutputPagination,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -194,282 +225,395 @@ impl Default for OutputPagination {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetTransactionTypesInput {
-    #[serde(default)]
-    pub pagination: Pagination,
+pub enum ClassifyTransactionStopCondition {
+    AlreadyExists,
+    Limit(u32),
+    Date(i64),
+    None,
+}
+
+impl Default for ClassifyTransactionStopCondition {
+    fn default() -> Self {
+        Self::None
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetTransactionTypesOutput {
-    pub transaction_types: Vec<TransactionType>,
-    pub pagination: OutputPagination,
+pub enum ClassifiyStoredTransactionStopCondition {
+    Limit(u32),
+    Date(i64),
+    None,
+}
+
+impl Default for ClassifiyStoredTransactionStopCondition {
+    fn default() -> Self {
+        Self::None
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetTransactionTypeInput {
-    pub id: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GetTransactionTypeOutput {
-    pub transaction_type: Option<TransactionType>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CreateTransactionTypeInput {
-    pub name: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CreateTransactionTypeOutput {
-    pub created_transaction_type: TransactionType,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UpdateTransactionTypeInput {
-    pub id: String,
-    pub name: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UpdateTransactionTypeOutput {
-    pub updated_transaction_type: TransactionType,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GetClassifyingRulesInput {
-    #[serde(default)]
-    pub pagination: Pagination,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GetClassifyingRuleInput {
-    pub id: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GetClassifyingRuleOutput {
-    pub classifying_rule: Option<ClassifyingRule>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GetClassifyingRulesOutput {
-    pub classifying_rules: Vec<ClassifyingRule>,
-    pub pagination: OutputPagination,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CreateClassifyingRuleInput {
-    #[serde(default)]
-    pub description: String,
-    pub pattern: String,
-    pub name: String,
-    pub transaction_type_id: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CreateClassifyingRuleOutput {
-    pub created_classifying_rule: ClassifyingRule,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UpdateClassifyingRuleInput {
-    pub id: String,
-    #[serde(default)]
-    pub description: Option<String>,
-
-    #[serde(default)]
-    pub pattern: Option<String>,
-
-    #[serde(default)]
-    pub name: Option<String>,
-
-    #[serde(default)]
-    pub transaction_type_id: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UpdateClassifyingRuleOutput {
-    pub updated_classifying_rule: ClassifyingRule,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DeleteClassifyingRuleInput {
-    pub id: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DeleteClassifyingRuleOutput {
-    pub deleted_classifying_rule: ClassifyingRule,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ReorderClassifyingRulesInput {
-    pub source_id: String,
-    pub after_id: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ReorderClassifyingRulesOutput {
-    pub new_position_index: u32,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GetUnclassifiedTransactionsInput {
-    #[serde(default)]
-    pub pagination: Pagination,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GetUnclassifiedTransactionsOutput {
-    pub unclassified_transactions: Vec<UnclassifiedTransaction>,
-    pub pagination: OutputPagination,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GetUnclassifiedTransactionInput {
-    pub id: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GetUnclassifiedTransactionOutput {
-    pub unclassified_transaction: Option<UnclassifiedTransaction>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CreateUnclassifiedTransactionInput {
+pub struct CreateTransactionData<'a> {
+    pub transaction_type_id: &'a str,
     pub cents: i64,
-    pub description: String,
-    pub date: String,
+    pub date: i64,
+    pub description: &'a str,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CreateUnclassifiedTransactionOutput {
-    pub created_unclassified_transaction: UnclassifiedTransaction,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UpdateUnclassifiedTransactionInput {
-    pub id: String,
-    #[serde(default)]
+pub struct UpdateTransactionData<'a> {
+    pub transaction_type_id: Option<&'a str>,
     pub cents: Option<i64>,
-    #[serde(default)]
-    pub description: Option<String>,
-    #[serde(default)]
-    pub date: Option<String>,
+    pub date: Option<i64>,
+    pub description: Option<&'a str>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct UpdateUnclassifiedTransactionOutput {
-    pub updated_unclassified_transaction: UnclassifiedTransaction,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DeleteUnclassifiedTransactionInput {
-    pub id: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DeleteUnclassifiedTransactionOutput {
-    pub deleted_unclassified_transaction: UnclassifiedTransaction,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CreateTransactionInput {
+pub struct CreateUnclassifiedTransactionData<'a> {
     pub cents: i64,
-    pub description: String,
-    pub date: String,
-    pub transaction_type_id: String,
-}
-
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CreateTransactionOutput {
-    pub created_transaction: Transaction,
+    pub date: i64,
+    pub description: &'a str,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetTransactionsInput {
-    #[serde(default)]
-    pub pagination: Pagination,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GetTransactionsOutput {
-    pub transactions: Vec<Transaction>,
-    pub pagination: OutputPagination,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GetTransactionInput {
-    pub id: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GetTransactionOutput {
-    pub transaction: Option<Transaction>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UpdateTransactionInput {
-    pub id: String,
+pub struct UpdateUnclassifiedTransactionData<'a> {
     pub cents: Option<i64>,
-    pub description: Option<String>,
-    pub date: Option<String>,
-    pub transaction_type_id: Option<String>,
+    pub date: Option<i64>,
+    pub description: Option<&'a str>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct UpdateTransactionOutput {
-    pub updated_transaction: Transaction,
+pub struct CreateClassifyingRuleData<'a> {
+    pub transaction_type_id: &'a str,
+    pub description: &'a str,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DeleteTransactionInput {
-    pub id: String,
+pub struct UpdateClassifyingRuleData<'a> {
+    pub transaction_type_id: Option<&'a str>,
+    pub description: Option<&'a str>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DeleteTransactionOutput {
-    pub deleted_transaction: Transaction,
+// ---- REPOSITORY_TRAITS ----
+
+#[async_trait]
+pub trait TransactionTypeRepository {
+    async fn create_transaction_type(&self, name: &str) -> Result<TransactionType, FinError>;
+
+    async fn get_transaction_type(&self, id: &str) -> Result<Option<TransactionType>, FinError>;
+
+    async fn get_transaction_types<T>(
+        &self,
+        pagination: T,
+    ) -> Result<PaginatedResult<Vec<TransactionType>>, FinError>
+    where
+        T: Into<Pagination>;
+
+    async fn update_transaction_type(
+        &self,
+        id: &str,
+        name: &str,
+    ) -> Result<TransactionType, FinError>;
+
+    async fn delete_transaction_type(&self, id: &str) -> Result<TransactionType, FinError>;
 }
 
+#[async_trait]
+pub trait ClassifyingRuleRepository {
+    async fn create_classifying_rule(
+        &self,
+        data: CreateClassifyingRuleData,
+    ) -> Result<ClassifyingRule, FinError>;
+
+    async fn get_classifying_rule(&self, id: &str) -> Result<Option<ClassifyingRule>, FinError>;
+
+    async fn get_classifying_rules<T>(
+        &self,
+        pagination: T,
+    ) -> Result<PaginatedResult<Vec<ClassifyingRule>>, FinError>
+    where
+        T: Into<Pagination>;
+
+    async fn update_classifying_rule(
+        &self,
+        id: &str,
+        data: UpdateClassifyingRuleData,
+    ) -> Result<ClassifyingRule, FinError>;
+
+    async fn delete_classifying_rule(&self, id: &str) -> Result<ClassifyingRule, FinError>;
+
+    async fn reorder_classifying_rules(
+        &self,
+        source_id: &str,
+        target_id: Option<&str>,
+    ) -> Result<u32, FinError>;
+}
+
+#[async_trait]
+pub trait UnclassifiedTransactionRepository {
+    async fn create_unclassified_transaction(
+        &self,
+        data: CreateUnclassifiedTransactionData,
+    ) -> Result<UnclassifiedTransaction, FinError>;
+
+    async fn get_unclassified_transaction(
+        &self,
+        id: &str,
+    ) -> Result<Option<UnclassifiedTransaction>, FinError>;
+
+    async fn get_unclassified_transactions<T>(
+        &self,
+        pagination: T,
+    ) -> Result<PaginatedResult<Vec<UnclassifiedTransaction>>, FinError>
+    where
+        T: Into<Pagination>;
+
+    async fn update_unclassified_transaction(
+        &self,
+        id: &str,
+        data: UpdateUnclassifiedTransactionData,
+    ) -> Result<UnclassifiedTransaction, FinError>;
+
+    async fn delete_unclassified_transaction(
+        &self,
+        id: &str,
+    ) -> Result<UnclassifiedTransaction, FinError>;
+}
+
+#[async_trait]
+pub trait TransactionRepository {
+    async fn create_transaction(
+        &self,
+        data: CreateTransactionData,
+    ) -> Result<Transaction, FinError>;
+
+    async fn get_transaction(&self, id: &str) -> Result<Option<Transaction>, FinError>;
+
+    async fn get_transactions<T>(
+        &self,
+        pagination: T,
+    ) -> Result<PaginatedResult<Vec<Transaction>>, FinError>
+    where
+        T: Into<Pagination>;
+
+    async fn update_transaction(
+        &self,
+        id: &str,
+        data: UpdateTransactionData,
+    ) -> Result<Transaction, FinError>;
+
+    async fn delete_transaction(&self, id: &str) -> Result<Transaction, FinError>;
+
+    async fn query_transactions_by_date_range<T>(
+        &self,
+        start_date: i64,
+        end_date: i64,
+        pagination: T,
+    ) -> Result<PaginatedResult<Vec<Transaction>>, FinError>
+    where
+        T: Into<Pagination>;
+}
+
+// ---- API_IMPL ----
+
+pub struct Api<T> {
+    db: T,
+}
+
+impl<T> Api<T> {
+    pub fn new(db: T) -> Self {
+        Self { db }
+    }
+}
+
+#[async_trait]
+impl<T> FinApi for Api<T>
+where
+    T: TransactionRepository
+        + UnclassifiedTransactionRepository
+        + ClassifyingRuleRepository
+        + TransactionTypeRepository
+        + Send
+        + Sync,
+{
+    async fn create_transaction_type(&self, name: &str) -> Result<TransactionType, FinError> {
+        todo!()
+    }
+
+    async fn get_transaction_type(&self, id: &str) -> Result<Option<TransactionType>, FinError> {
+        todo!()
+    }
+
+    async fn get_transaction_types<K>(
+        &self,
+        pagination: K,
+    ) -> Result<PaginatedResult<Vec<TransactionType>>, FinError>
+    where
+        K: Into<Pagination> + Send + Sync,
+    {
+        todo!()
+    }
+
+    async fn update_transaction_type(
+        &self,
+        id: &str,
+        name: &str,
+    ) -> Result<TransactionType, FinError> {
+        todo!()
+    }
+
+    async fn create_transaction(
+        &self,
+        data: CreateTransactionData,
+    ) -> Result<Transaction, FinError> {
+        todo!()
+    }
+
+    async fn get_transaction(&self, id: &str) -> Result<Option<Transaction>, FinError> {
+        todo!()
+    }
+
+    async fn get_transactions<K>(
+        &self,
+        pagination: K,
+    ) -> Result<PaginatedResult<Vec<Transaction>>, FinError>
+    where
+        K: Into<Pagination> + Send + Sync,
+    {
+        todo!()
+    }
+
+    async fn update_transaction(
+        &self,
+        id: &str,
+        data: UpdateTransactionData,
+    ) -> Result<Transaction, FinError> {
+        todo!()
+    }
+
+    async fn delete_transaction(&self, id: &str) -> Result<Transaction, FinError> {
+        todo!()
+    }
+
+    async fn query_transactions_by_date_range<K>(
+        &self,
+        start_date: i64,
+        end_date: i64,
+        pagination: K,
+    ) -> Result<PaginatedResult<Vec<Transaction>>, FinError>
+    where
+        K: Into<Pagination> + Send + Sync,
+    {
+        todo!()
+    }
+
+    async fn create_unclassified_transaction(
+        &self,
+        data: CreateUnclassifiedTransactionData,
+    ) -> Result<UnclassifiedTransaction, FinError> {
+        todo!()
+    }
+
+    async fn get_unclassified_transaction(
+        &self,
+        id: &str,
+    ) -> Result<Option<UnclassifiedTransaction>, FinError> {
+        todo!()
+    }
+
+    async fn get_unclassified_transactions<K>(
+        &self,
+        pagination: K,
+    ) -> Result<PaginatedResult<Vec<UnclassifiedTransaction>>, FinError>
+    where
+        K: Into<Pagination> + Send + Sync,
+    {
+        todo!()
+    }
+
+    async fn update_unclassified_transaction(
+        &self,
+        id: &str,
+        data: UpdateUnclassifiedTransactionData,
+    ) -> Result<UnclassifiedTransaction, FinError> {
+        todo!()
+    }
+
+    async fn delete_unclassified_transaction(
+        &self,
+        id: &str,
+    ) -> Result<UnclassifiedTransaction, FinError> {
+        todo!()
+    }
+
+    async fn create_classifying_rule(
+        &self,
+        data: CreateClassifyingRuleData<'_>,
+    ) -> Result<ClassifyingRule, FinError> {
+        todo!()
+    }
+
+    async fn reorder_classifying_rules(
+        &self,
+        source_id: &str,
+        target_id: Option<&str>,
+    ) -> Result<u32, FinError> {
+        todo!()
+    }
+
+    async fn get_classifying_rule(&self, id: &str) -> Result<Option<ClassifyingRule>, FinError> {
+        todo!()
+    }
+
+    async fn get_classifying_rules<K>(
+        &self,
+        pagination: K,
+    ) -> Result<PaginatedResult<Vec<ClassifyingRule>>, FinError>
+    where
+        K: Into<Pagination> + Send + Sync,
+    {
+        todo!()
+    }
+
+    async fn update_classifying_rule(
+        &self,
+        id: &str,
+        data: UpdateClassifyingRuleData,
+    ) -> Result<ClassifyingRule, FinError> {
+        todo!()
+    }
+
+    async fn delete_classifying_rule(&self, id: &str) -> Result<ClassifyingRule, FinError> {
+        todo!()
+    }
+
+    async fn classify_transactions<K>(
+        &self,
+        transactions: K,
+        stop_condition: ClassifyTransactionStopCondition,
+        store_unclassified: bool,
+    ) -> Result<TransactionClassificationResult, FinError>
+    where
+        K: IntoIterator<Item = UnclassifiedTransaction> + Send + Sync,
+    {
+        todo!()
+    }
+
+    async fn classify_stored_transactions(
+        &self,
+        stop_condition: ClassifyTransactionStopCondition,
+    ) -> Result<TransactionClassificationResult, FinError>
+    {
+        todo!()
+    }
+
+    async fn generate_report(&self, start_date: i64, end_date: i64) -> Result<Report, FinError> {
+        todo!()
+    }
+}
