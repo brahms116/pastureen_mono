@@ -4,7 +4,6 @@ use std::collections::HashMap;
 use thiserror::Error;
 
 // ---- ENTITIES ----
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransactionType {
     pub id: String,
@@ -21,7 +20,7 @@ pub struct Transaction {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UnprocessedTransaction {
+pub struct UnclassifiedTransaction {
     pub id: String,
     pub cents: f64,
     pub date: i64,
@@ -34,7 +33,6 @@ pub struct ClassifyingRule {
     pub transaction_type: TransactionType,
     pub description: String,
 }
-
 
 // ---- ERRORS ----
 
@@ -50,6 +48,106 @@ pub enum FinError {
     InvalidFormat(String, String),
 }
 
+// ---- API_TRAIT ----
+
+#[async_trait]
+pub trait FinApi {
+    async fn create_transaction_type(
+        &self,
+        input: CreateTransactionTypeInput,
+    ) -> Result<CreateTransactionTypeOutput, FinError>;
+
+    async fn get_transaction_types(
+        &self,
+        input: GetTransactionTypesInput,
+    ) -> Result<GetTransactionTypesOutput, FinError>;
+
+    async fn get_transaction_type(
+        &self,
+        input: GetTransactionTypeInput,
+    ) -> Result<GetTransactionTypeOutput, FinError>;
+
+    async fn update_transaction_type(
+        &self,
+        input: UpdateTransactionTypeInput,
+    ) -> Result<UpdateTransactionTypeOutput, FinError>;
+
+    async fn create_rule(
+        &self,
+        input: CreateClassifyingRuleInput,
+    ) -> Result<CreateClassifyingRuleOutput, FinError>;
+
+    async fn get_classifying_rules(
+        &self,
+        input: GetClassifyingRulesInput,
+    ) -> Result<GetClassifyingRulesOutput, FinError>;
+
+    async fn get_rule(
+        &self,
+        input: GetClassifyingRuleInput,
+    ) -> Result<GetClassifyingRuleOutput, FinError>;
+
+    async fn update_rule(
+        &self,
+        input: UpdateClassifyingRuleInput,
+    ) -> Result<UpdateTransactionTypeOutput, FinError>;
+
+    async fn delete_rule(
+        &self,
+        input: DeleteClassifyingRuleInput,
+    ) -> Result<DeleteClassifyingRuleOutput, FinError>;
+
+    async fn created_unclassified_transaction(
+        &self,
+        input: CreateUnclassifiedTransactionInput,
+    );
+
+    async fn get_unclassified_transactions(
+        &self,
+        input: GetUnclassifiedTransactionsInput,
+    ) -> Result<GetUnclassifiedTransactionsOutput, FinError>;
+
+    async fn get_unclassified_transaction(
+        &self,
+        input: GetUnclassifiedTransactionInput,
+    ) -> Result<GetUnclassifiedTransactionOutput, FinError>;
+
+    async fn update_unclassified_transaction(
+        &self,
+        input: UpdateUnclassifiedTransactionInput,
+    ) -> Result<UpdateUnclassifiedTransactionOutput, FinError>;
+
+    async fn delete_unclassified_transaction(
+        &self,
+        input: DeleteUnclassifiedTransactionInput,
+    ) -> Result<DeleteUnclassifiedTransactionOutput, FinError>;
+
+    async fn create_transaction(
+        &self,
+        input: CreateTransactionInput,
+    ) -> Result<CreateTransactionOutput, FinError>;
+
+    async fn get_transactions(
+        &self,
+        input: GetTransactionsInput,
+    ) -> Result<GetTransactionsOutput, FinError>;
+
+    async fn get_transaction(
+        &self,
+        input: GetTransactionInput,
+    ) -> Result<GetTransactionOutput, FinError>;
+
+    async fn update_transaction(
+        &self,
+        input: UpdateTransactionInput,
+    ) -> Result<UpdateTransactionOutput, FinError>;
+
+    async fn delete_transaction(
+        &self,
+        input: DeleteTransactionInput,
+    ) -> Result<DeleteTransactionOutput, FinError>;
+}
+
 // ---- CONTRACTS ----
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -60,7 +158,6 @@ pub struct Report {
     pub by_type: HashMap<String, String>,
     pub total: String,
 }
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -85,95 +182,96 @@ impl Default for Pagination {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
-pub enum ResponsePagination {
+pub enum OutputPagination {
     None,
 }
 
-impl Default for ResponsePagination {
+impl Default for OutputPagination {
     fn default() -> Self {
         Self::None
     }
 }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetTransactionTypesRequest {
+pub struct GetTransactionTypesInput {
     #[serde(default)]
     pub pagination: Pagination,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetTransactionTypesResponse {
+pub struct GetTransactionTypesOutput {
     pub transaction_types: Vec<TransactionType>,
-    pub pagination: ResponsePagination,
+    pub pagination: OutputPagination,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetTransactionTypeRequest {
+pub struct GetTransactionTypeInput {
     pub id: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetTransactionTypeResponse {
+pub struct GetTransactionTypeOutput {
     pub transaction_type: Option<TransactionType>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CreateTransactionTypeRequest {
+pub struct CreateTransactionTypeInput {
     pub name: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CreateTransactionTypeResponse {
+pub struct CreateTransactionTypeOutput {
     pub created_transaction_type: TransactionType,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct UpdateTransactionTypeRequest {
+pub struct UpdateTransactionTypeInput {
     pub id: String,
     pub name: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct UpdateTransactionTypeResponse {
+pub struct UpdateTransactionTypeOutput {
     pub updated_transaction_type: TransactionType,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetClassifyingRulesRequest {
+pub struct GetClassifyingRulesInput {
     #[serde(default)]
     pub pagination: Pagination,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetClassifyingRuleRequest {
+pub struct GetClassifyingRuleInput {
     pub id: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetClassifyingRuleResponse {
+pub struct GetClassifyingRuleOutput {
     pub classifying_rule: Option<ClassifyingRule>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetClassifyingRulesResponse {
+pub struct GetClassifyingRulesOutput {
     pub classifying_rules: Vec<ClassifyingRule>,
-    pub pagination: ResponsePagination,
+    pub pagination: OutputPagination,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CreateClassifyingRuleRequest {
+pub struct CreateClassifyingRuleInput {
     #[serde(default)]
     pub description: String,
     pub pattern: String,
@@ -183,13 +281,13 @@ pub struct CreateClassifyingRuleRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CreateClassifyingRuleResponse {
+pub struct CreateClassifyingRuleOutput {
     pub created_classifying_rule: ClassifyingRule,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct UpdateClassifyingRuleRequest {
+pub struct UpdateClassifyingRuleInput {
     pub id: String,
     #[serde(default)]
     pub description: Option<String>,
@@ -206,64 +304,64 @@ pub struct UpdateClassifyingRuleRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct UpdateClassifyingRuleResponse {
+pub struct UpdateClassifyingRuleOutput {
     pub updated_classifying_rule: ClassifyingRule,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DeleteClassifyingRuleRequest {
+pub struct DeleteClassifyingRuleInput {
     pub id: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DeleteClassifyingRuleResponse {
+pub struct DeleteClassifyingRuleOutput {
     pub deleted_classifying_rule: ClassifyingRule,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ReorderClassifyingRulesRequest {
+pub struct ReorderClassifyingRulesInput {
     pub source_id: String,
     pub after_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ReorderClassifyingRulesResponse {
+pub struct ReorderClassifyingRulesOutput {
     pub new_position_index: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetUnprocessedTransactionsRequest {
+pub struct GetUnclassifiedTransactionsInput {
     #[serde(default)]
     pub pagination: Pagination,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetUnprocessedTransactionsResponse {
-    pub unprocessed_transactions: Vec<UnprocessedTransaction>,
-    pub pagination: ResponsePagination,
+pub struct GetUnclassifiedTransactionsOutput {
+    pub unclassified_transactions: Vec<UnclassifiedTransaction>,
+    pub pagination: OutputPagination,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetUnprocessedTransactionRequest {
+pub struct GetUnclassifiedTransactionInput {
     pub id: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GetUnprocessedTransactionResponse {
-    pub unprocessed_transaction: Option<UnprocessedTransaction>,
+pub struct GetUnclassifiedTransactionOutput {
+    pub unclassified_transaction: Option<UnclassifiedTransaction>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CreateUnprocessedTransactionRequest {
+pub struct CreateUnclassifiedTransactionInput {
     pub cents: i64,
     pub description: String,
     pub date: String,
@@ -271,13 +369,13 @@ pub struct CreateUnprocessedTransactionRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CreateUnprocessedTransactionResponse {
-    pub created_unprocessed_transaction: UnprocessedTransaction,
+pub struct CreateUnclassifiedTransactionOutput {
+    pub created_unclassified_transaction: UnclassifiedTransaction,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct UpdateUnprocessedTransactionRequest {
+pub struct UpdateUnclassifiedTransactionInput {
     pub id: String,
     #[serde(default)]
     pub cents: Option<i64>,
@@ -289,146 +387,89 @@ pub struct UpdateUnprocessedTransactionRequest {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct UpdateUnprocessedTransactionResponse {
-    pub updated_unprocessed_transaction: UnprocessedTransaction,
+pub struct UpdateUnclassifiedTransactionOutput {
+    pub updated_unclassified_transaction: UnclassifiedTransaction,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DeleteUnprocessedTransactionRequest {
+pub struct DeleteUnclassifiedTransactionInput {
     pub id: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DeleteUnprocessedTransactionResponse {
-    pub deleted_unprocessed_transaction: UnprocessedTransaction,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag="type", rename_all = "camelCase")]
-pub enum ClassificationStopCondition {
-    None,
-    DuplicateTransaction,
-    FirstFailMatch
-}
-
-impl Default for ClassificationStopCondition {
-    fn default() -> Self {
-        ClassificationStopCondition::None
-    }
+pub struct DeleteUnclassifiedTransactionOutput {
+    pub deleted_unclassified_transaction: UnclassifiedTransaction,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ClassifyStoredTransactionsRequest {
-    #[serde(default)]
-    pub max_count: Option<u32>,
+pub struct CreateTransactionInput {
+    pub cents: i64,
+    pub description: String,
+    pub date: String,
+    pub transaction_type_id: String,
+}
 
-    #[serde(default)]
-    pub stop_condition: ClassificationStopCondition,
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateTransactionOutput {
+    pub created_transaction: Transaction,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ClassifyStoredTransactionsResponse {
-    pub classification_result: TransactionClassificationResult,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ClassifyTransactionsRequest {
-    pub unprocessed_transactions: Vec<UnprocessedTransaction>,
-    #[serde(default)]
-    pub stop_condition: ClassificationStopCondition,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ClassifyTransactionsResponse {
-    pub classification_result: TransactionClassificationResult,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct GetTransactionsRequest {
+pub struct GetTransactionsInput {
     #[serde(default)]
     pub pagination: Pagination,
 }
 
-// ---- API_TRAIT ----
-
-#[async_trait]
-pub trait FinApi {
-    async fn get_transaction_types(
-        &self,
-        request: GetTransactionTypesRequest,
-    ) -> Result<GetTransactionTypesResponse, FinError>;
-
-    async fn get_transaction_type(
-        &self,
-        request: GetTransactionTypeRequest,
-    ) -> Result<GetTransactionTypeResponse, FinError>;
-
-    async fn create_transaction_type(
-        &self,
-        request: CreateTransactionTypeRequest,
-    ) -> Result<CreateTransactionTypeResponse, FinError>;
-
-    async fn update_transaction_type(
-        &self,
-        request: UpdateTransactionTypeRequest,
-    ) -> Result<UpdateTransactionTypeResponse, FinError>;
-
-    async fn get_classifying_rules(
-        &self,
-        request: GetClassifyingRulesRequest,
-    ) -> Result<GetClassifyingRulesResponse, FinError>;
-
-    async fn get_rule(
-        &self,
-        request: GetClassifyingRuleRequest,
-    ) -> Result<GetClassifyingRuleResponse, FinError>;
-
-    async fn create_rule(
-        &self,
-        request: CreateClassifyingRuleRequest,
-    ) -> Result<CreateClassifyingRuleResponse, FinError>;
-
-    async fn update_rule(
-        &self,
-        request: UpdateClassifyingRuleRequest,
-    ) -> Result<UpdateTransactionTypeResponse, FinError>;
-
-    async fn delete_rule(
-        &self,
-        request: DeleteClassifyingRuleRequest,
-    ) -> Result<DeleteClassifyingRuleResponse, FinError>;
-
-    async fn reorder_rule(
-        &self,
-        id: &str,
-        after: Option<&str>,
-    ) -> Result<ReorderClassifyingRulesResponse, FinError>;
-
-    async fn process(&self) -> Result<u32, FinError>;
-
-    async fn get_all_unprocessed_transactions(
-        &self,
-        pagination: Option<PaginationDetails>,
-    ) -> Result<Vec<UnprocessedTransaction>, FinError>;
-
-    async fn process_ing_transactions(
-        &self,
-        transactions: &[INGTransaction],
-    ) -> Result<ProcessTransactionsResult, FinError>;
-
-    async fn list_transactions(
-        &self,
-        start_date: i64,
-        end_date: i64,
-        _pagination: Option<PaginationDetails>,
-    ) -> Result<Vec<Transaction>, FinError>;
-
-    async fn generate_report(&self, start_date: i64, end_date: i64) -> Result<Report, FinError>;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetTransactionsOutput {
+    pub transactions: Vec<Transaction>,
+    pub pagination: OutputPagination,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetTransactionInput {
+    pub id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GetTransactionOutput {
+    pub transaction: Option<Transaction>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateTransactionInput {
+    pub id: String,
+    pub cents: Option<i64>,
+    pub description: Option<String>,
+    pub date: Option<String>,
+    pub transaction_type_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateTransactionOutput {
+    pub updated_transaction: Transaction,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeleteTransactionInput {
+    pub id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeleteTransactionOutput {
+    pub deleted_transaction: Transaction,
+}
+
