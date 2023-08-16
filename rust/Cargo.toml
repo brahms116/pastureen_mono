@@ -3,5 +3,6 @@ members = [
   "print_table",
   "csv_iterator",
   "cli",
-  "actix_poc"
+  "actix_poc",
+  "auth_service"
 ]
