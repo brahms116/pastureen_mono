@@ -1,15 +1,7 @@
 [workspace]
 members = [
   "print_table",
-  "prpc_client",
-  "prpc_server",
-  "prpc_core",
   "csv_iterator",
-  "prpc_server_lambda_wrapper",
-  "prpc_server_hyper_wrapper",
-  "router_service",
-  "fin_api",
-  "fin_cli",
   "cli",
   "actix_poc"
 ]
