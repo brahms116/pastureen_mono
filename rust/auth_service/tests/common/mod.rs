@@ -1,5 +1,4 @@
 use auth_service::Claims;
-use jsonwebtoken::{decode, DecodingKey, Validation, EncodingKey, Header, encode};
 use sqlx::postgres::PgPool;
 use sqlx::Row;
 use uuid::Uuid;
@@ -34,8 +33,16 @@ pub async fn get_api() -> auth_service::AuthApi {
     auth_service::AuthApi::from_env().await.unwrap()
 }
 
+fn get_connection_string() -> String {
+    std::env::var("AUTH_SERVICE_DB_CONN_STR").unwrap()
+}
+
+fn get_secret() -> String {
+    std::env::var("AUTH_SERVICE_SECRET").unwrap()
+}
+
 pub async fn insert_user(email: &str, password: &str) -> String {
-    let pool = PgPool::connect(&std::env::var("AUTH_SERVICE_DB_CONN_STR").unwrap())
+    let pool = PgPool::connect(get_connection_string().as_str())
         .await
         .unwrap();
 
@@ -49,8 +56,9 @@ pub async fn insert_user(email: &str, password: &str) -> String {
     id.to_string()
 }
 
+
 pub async fn delete_user(id: &str) {
-    let pool = PgPool::connect(&std::env::var("AUTH_SERVICE_DB_CONN_STR").unwrap())
+    let pool = PgPool::connect(get_connection_string().as_str())
         .await
         .unwrap();
 
@@ -62,45 +70,27 @@ pub async fn delete_user(id: &str) {
 }
 
 pub fn get_expired_access_token(email: &str) -> String {
-    encode(
-        &Header::default(),
-        &Claims {
-            sub: email.to_string(),
-            token_type: "access".to_string(),
-            iat: 0,
-            exp: 0,
-            id: Uuid::new_v4().to_string()
-        },
-        &EncodingKey::from_secret(
-            std::env::var("AUTH_SERVICE_SECRET").unwrap().as_bytes(),
-        ),
-    )
-    .unwrap()
+    let claims = Claims {
+        sub: email.to_string(),
+        token_type: "access".to_string(),
+        iat: 0,
+        exp: 0,
+        id: Uuid::new_v4().to_string()
+    };
+    claims.encode(&get_secret())
 }
 
 pub fn get_expired_refresh_token(email: &str) -> String {
-    encode(
-        &Header::default(),
-        &Claims {
-            sub: email.to_string(),
-            token_type: "access".to_string(),
-            iat: 0,
-            exp: 0,
-            id: Uuid::new_v4().to_string()
-        },
-        &EncodingKey::from_secret(
-            std::env::var("AUTH_SERVICE_SECRET").unwrap().as_bytes(),
-        ),
-    )
-    .unwrap()
+    let claims = Claims {
+        sub: email.to_string(),
+        token_type: "refresh".to_string(),
+        iat: 0,
+        exp: 0,
+        id: Uuid::new_v4().to_string()
+    };
+    claims.encode(&get_secret())
 }
 
 pub fn decode_token(token: &str) -> Claims {
-    let token_data = decode::<Claims>(
-        token,
-        &DecodingKey::from_secret(std::env::var("AUTH_SERVICE_SECRET").unwrap().as_bytes()),
-        &Validation::default(),
-    )
-    .unwrap();
-    token_data.claims
+    Claims::from_token(token, &get_secret()).unwrap()
 }

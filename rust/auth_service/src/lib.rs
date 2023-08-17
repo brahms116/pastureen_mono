@@ -22,7 +22,6 @@ pub enum AuthApiError {
     EmailAlreadyExists,
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
     pub id: String,
@@ -37,7 +36,28 @@ pub struct Claims {
     pub exp: u64,
     pub iat: u64,
     pub token_type: String,
-    pub id: String
+    pub id: String,
+}
+
+impl Claims {
+    pub fn encode(&self, secret: &str) -> String {
+        encode(
+            &Header::default(),
+            &self,
+            &EncodingKey::from_secret(secret.as_bytes()),
+        )
+        .expect("failed to encode token")
+    }
+
+    pub fn from_token(token: &str, secret: &str) -> Result<Self, AuthApiError> {
+        let token_data = decode::<Claims>(
+            token,
+            &DecodingKey::from_secret(secret.as_bytes()),
+            &Validation::default(),
+        )
+        .map_err(|_| AuthApiError::InvalidToken)?;
+        Ok(token_data.claims)
+    }
 }
 
 pub struct AuthApi {
@@ -57,47 +77,36 @@ pub struct TokenPair {
     pub refresh_token: String,
 }
 
+fn get_epoch() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards")
+        .as_secs()
+}
+
 impl AuthApi {
     fn create_access_token(&self, id: &str) -> String {
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("Time went backwards");
-
+        let now = get_epoch();
         let claim = Claims {
             sub: id.to_string(),
-            exp: now.as_secs() + 60 * 60,
-            iat: now.as_secs(),
+            exp: now + 60 * 10,
+            iat: now,
             token_type: "access".to_string(),
-            id: Uuid::new_v4().to_string()
+            id: Uuid::new_v4().to_string(),
         };
-
-        encode(
-            &Header::default(),
-            &claim,
-            &EncodingKey::from_secret(self.secret.as_bytes()),
-        )
-        .expect("Failed to encode token")
+        claim.encode(&self.secret)
     }
 
     fn create_refresh_token(&self, id: &str) -> String {
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("Time went backwards");
-
+        let now = get_epoch();
         let claim = Claims {
             sub: id.to_string(),
-            exp: now.as_secs() + 60 * 60 * 24 * 30,
-            iat: now.as_secs(),
+            exp: now + 60 * 60 * 24 * 30,
+            iat: now,
             token_type: "refresh".to_string(),
-            id: Uuid::new_v4().to_string()
+            id: Uuid::new_v4().to_string(),
         };
-
-        encode(
-            &Header::default(),
-            &claim,
-            &EncodingKey::from_secret(self.secret.as_bytes()),
-        )
-        .expect("Failed to encode token")
+        claim.encode(&self.secret)
     }
 
     /// Create an AuthApi configured from environment variables
@@ -133,27 +142,27 @@ impl AuthApi {
     }
 
     pub async fn get_user(&self, token: &str) -> Result<User, AuthApiError> {
-        let val = Validation::default();
-        let token_data = decode::<Claims>(
-            token,
-            &DecodingKey::from_secret(self.secret.as_bytes()),
-            &val,
-        )
-        .map_err(|_| AuthApiError::InvalidToken)?;
+        let token_data = Claims::from_token(token, &self.secret)?;
 
-        if token_data.claims.token_type != "access" {
+        if token_data.token_type != "access" {
             return Err(AuthApiError::InvalidToken);
         }
 
-        let id = token_data.claims.sub;
+        let id = token_data.sub;
 
-        let query_result = sqlx::query("SELECT * FROM pastureen_user WHERE id = $1::uuid")
-            .bind(id)
-            .fetch_one(&self.db)
-            .await?;
+        let query_result = sqlx::query(
+            "SELECT 
+                id::text as id,
+                fname,
+                lname,
+                email
+            FROM pastureen_user WHERE id = $1::uuid",
+        )
+        .bind(id)
+        .fetch_one(&self.db)
+        .await?;
 
-        let id: Uuid = query_result.try_get("id")?;
-        let id = id.to_string();
+        let id: String = query_result.try_get("id")?;
         let fname: Option<String> = query_result.try_get("fname")?;
         let lname: Option<String> = query_result.try_get("lname")?;
         let email: String = query_result.try_get("email")?;
@@ -167,10 +176,15 @@ impl AuthApi {
     }
 
     pub async fn login(&self, email: &str, password: &str) -> Result<TokenPair, AuthApiError> {
-        let query_result = sqlx::query("SELECT * FROM pastureen_user WHERE email = $1")
-            .bind(email)
-            .fetch_optional(&self.db)
-            .await?;
+        let query_result = sqlx::query(
+            "SELECT 
+                id::text as id,
+                password
+             FROM pastureen_user WHERE email = $1",
+        )
+        .bind(email)
+        .fetch_optional(&self.db)
+        .await?;
 
         let result = query_result.ok_or(AuthApiError::InvalidCredentials)?;
 
@@ -185,18 +199,19 @@ impl AuthApi {
             return Err(AuthApiError::InvalidCredentials);
         }
 
-        let id: Uuid = result.try_get("id")?;
-        let id = id.to_string();
+        let id: String = result.try_get("id")?;
 
         let access_token = self.create_access_token(&id);
         let refresh_token = self.create_refresh_token(&id);
 
-        sqlx::query("INSERT INTO refresh_token (token, user_id, root_token) VALUES ($1, $2::uuid, $3)")
-            .bind(&refresh_token)
-            .bind(&id)
-            .bind(&refresh_token)
-            .execute(&self.db)
-            .await?;
+        sqlx::query(
+            "INSERT INTO refresh_token (token, user_id, root_token) VALUES ($1, $2::uuid, $3)",
+        )
+        .bind(&refresh_token)
+        .bind(&id)
+        .bind(&refresh_token)
+        .execute(&self.db)
+        .await?;
 
         Ok(TokenPair {
             access_token,
@@ -259,12 +274,14 @@ impl AuthApi {
         let access_token = self.create_access_token(&user_id);
         let refresh_token = self.create_refresh_token(&user_id);
 
-        sqlx::query("INSERT INTO refresh_token (token, user_id, root_token) VALUES ($1, $2::uuid, $3)")
-            .bind(&refresh_token)
-            .bind(&user_id)
-            .bind(&root_token)
-            .execute(&self.db)
-            .await?;
+        sqlx::query(
+            "INSERT INTO refresh_token (token, user_id, root_token) VALUES ($1, $2::uuid, $3)",
+        )
+        .bind(&refresh_token)
+        .bind(&user_id)
+        .bind(&root_token)
+        .execute(&self.db)
+        .await?;
 
         Ok(TokenPair {
             access_token,
