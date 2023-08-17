@@ -12,6 +12,8 @@ CREATE TABLE pastureen_user(
 DROP TABLE IF EXISTS refresh_token CASCADE;
 CREATE TABLE refresh_token(
   token TEXT UNIQUE PRIMARY KEY NOT NULL,
-  user_id UUID NOT NULL REFERENCES pastureen_user(id) ON DELETE CASCADE
+  user_id UUID NOT NULL REFERENCES pastureen_user(id) ON DELETE CASCADE,
+  root_token TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
