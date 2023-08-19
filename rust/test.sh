@@ -1,3 +1,5 @@
 #!/bin/bash
 
-./auth_service/test.sh
+cd auth_service
+./test.sh
+cd ..
