@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS pastureen_user CASCADE;
+DROP TABLE IF EXISTS refresh_token CASCADE;
