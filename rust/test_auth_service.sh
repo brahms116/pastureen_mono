@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -o allexport
-source ./auth_service/.test.env
+. ./auth_service/.test.env
 set +o allexport
 
 cargo test -p auth_service
