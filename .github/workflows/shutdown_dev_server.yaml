@@ -9,6 +9,8 @@ jobs:
   turn_server_off:
     runs-on: ubuntu-latest
     steps:
+      - name: checkout
+        uses: actions/checkout@v3
       - name: Turn off server
         env:
           DEV_SERVER_INSTANCE_ID: ${{ secrets.DEV_SERVER_INSTANCE_ID }}
