@@ -1,2 +1,7 @@
 #!/bin/bash
-./auth_service/setup_db.sh test
+#
+set -o allexport
+. ./auth_service/.test.env
+set +o allexport
+
+psql $AUTH_SERVICE_DB_CONN_STR -f ./schema.sql
