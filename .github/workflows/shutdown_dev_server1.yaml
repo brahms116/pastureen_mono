@@ -3,6 +3,7 @@ name: Shutdown my dev server
 on:
   schedule:
     - cron: '0 13 * * *'
+  workflow_dispatch:
 
 jobs:
   turn_server_off:
