@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 status=$(aws ec2 describe-instances --instance-ids $DEV_SERVER_INSTANCE_ID --query 'Reservations[0].Instances[0].State.Code')
 
 if [[ $status -eq 16 ]]; then
