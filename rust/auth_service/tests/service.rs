@@ -1,32 +1,32 @@
 mod common;
 use common::*;
+use auth_service::*;
 
 #[tokio::test]
 async fn login() {
     let api = get_api().await;
     let SetupTokenPairOutput {
-        user_id,
         access_token,
         refresh_token,
+        email,
         ..
     } = setup_token_pair(&api).await;
 
     let access_token = decode_token(&access_token);
-    assert_eq!(access_token.sub, user_id);
-    assert_eq!(access_token.token_type, "access");
+    assert_eq!(access_token.sub, email);
+    assert_eq!(access_token.token_type, TokenType::Access);
 
     let refresh_token = decode_token(&refresh_token);
-    assert_eq!(refresh_token.sub, user_id);
-    assert_eq!(refresh_token.token_type, "refresh");
+    assert_eq!(refresh_token.sub, email);
+    assert_eq!(refresh_token.token_type, TokenType::Refresh);
 
-    delete_user(&user_id).await;
+    delete_user(&email).await;
 }
 
 #[tokio::test]
 async fn get_user() {
     let api = get_api().await;
     let SetupTokenPairOutput {
-        user_id,
         access_token,
         refresh_token,
         email,
@@ -34,7 +34,6 @@ async fn get_user() {
     } = setup_token_pair(&api).await;
 
     let user = api.get_user(&access_token).await.unwrap();
-    assert_eq!(user.id, user_id);
     assert_eq!(user.email, email);
 
     // Blatantly incorrect token
@@ -42,7 +41,7 @@ async fn get_user() {
     assert!(incorrect.is_err());
     assert!(matches!(
         incorrect.unwrap_err(),
-        auth_service::AuthApiError::InvalidToken
+        AuthApiError::InvalidToken
     ));
 
     // Expired token
@@ -51,17 +50,16 @@ async fn get_user() {
     assert!(expired.is_err());
     assert!(matches!(
         expired.unwrap_err(),
-        auth_service::AuthApiError::InvalidToken
+        AuthApiError::InvalidToken
     ));
 
-    delete_user(&user_id).await;
+    delete_user(&email).await;
 }
 
 #[tokio::test]
 async fn refresh() {
     let api = get_api().await;
     let SetupTokenPairOutput {
-        user_id,
         access_token,
         refresh_token,
         email,
@@ -73,7 +71,7 @@ async fn refresh() {
     assert!(incorrect.is_err());
     assert!(matches!(
         incorrect.unwrap_err(),
-        auth_service::AuthApiError::InvalidToken
+        AuthApiError::InvalidToken
     ));
 
     // expired refresh token
@@ -82,20 +80,20 @@ async fn refresh() {
     assert!(expired.is_err());
     assert!(matches!(
         expired.unwrap_err(),
-        auth_service::AuthApiError::InvalidToken
+        AuthApiError::InvalidToken
     ));
 
     // correct refresh token
     let correct_res = api.refresh(&refresh_token).await.unwrap();
     let access_token = decode_token(&correct_res.access_token);
-    assert_eq!(access_token.sub, user_id);
+    assert_eq!(access_token.sub, email);
 
     // using the old refresh token
     let res2 = api.refresh(&refresh_token).await;
     assert!(res2.is_err());
     assert!(matches!(
         res2.unwrap_err(),
-        auth_service::AuthApiError::InvalidToken
+        AuthApiError::InvalidToken
     ));
 
     // using the new refresh token
@@ -103,8 +101,8 @@ async fn refresh() {
     assert!(res3.is_err());
     assert!(matches!(
         res3.unwrap_err(),
-        auth_service::AuthApiError::InvalidToken
+        AuthApiError::InvalidToken
     ));
 
-    delete_user(&user_id).await;
+    delete_user(&email).await;
 }

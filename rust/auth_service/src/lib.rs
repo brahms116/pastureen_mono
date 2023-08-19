@@ -8,38 +8,71 @@ use uuid::Uuid;
 
 use serde::{Deserialize, Serialize};
 
+/// Errors that can occur when using the AuthApi
 #[derive(Error, Debug)]
 pub enum AuthApiError {
+    /// An Env var is missing
     #[error("Missing Environment Variable {0}")]
     ConfigruationMissing(String),
+
+    /// An invalid token was provided, this can happen if
+    /// - The token is not a valid JWT
+    /// - The token is not signed with the correct secret
+    /// - The token is of an incorrect type
+    /// - The token is expired
     #[error("Invalid Token")]
     InvalidToken,
+
+    /// An internal database related error
     #[error("Database Error: {0}")]
     DatabaseError(#[from] sqlx::Error),
+
+    /// The wrong credentials were provided for retrieving a token
     #[error("Invalid credentials")]
     InvalidCredentials,
+
+    /// This occurs when attempting to sign up with an email that already exists
     #[error("Email already exists")]
     EmailAlreadyExists,
 }
 
+/// A user representation in the Auth Service
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
-    pub id: String,
-    pub fname: Option<String>,
-    pub lname: Option<String>,
+    /// The first name of the user
+    pub fname: String,
+    /// The last name of the user
+    pub lname: String,
+    /// A unique email address for the user
     pub email: String,
 }
 
+/// Type of token issued by the Auth Service
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+pub enum TokenType {
+    #[serde(rename = "ACCESS")]
+    Access,
+    #[serde(rename = "REFRESH")]
+    Refresh,
+}
+
+/// A representation of the claims the tokens provided by the Auth Service
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
+    /// The subject of the token, this is the user email
     pub sub: String,
+    /// The expiration time of the token
     pub exp: u64,
+    /// The time the token was issued
     pub iat: u64,
-    pub token_type: String,
+    /// The type of the token
+    pub token_type: TokenType,
+    /// A unique identifier for the token, this is currently just to make tokens unique and serves no other purpose
     pub id: String,
 }
 
 impl Claims {
+    /// Encode the claims with a secret into a JWT, using the JWT default settings
     pub fn encode(&self, secret: &str) -> String {
         encode(
             &Header::default(),
@@ -49,6 +82,7 @@ impl Claims {
         .expect("failed to encode token")
     }
 
+    /// Decode a JWT into a Claims struct by passing a secret, using the default JWT validation settings
     pub fn from_token(token: &str, secret: &str) -> Result<Self, AuthApiError> {
         let token_data = decode::<Claims>(
             token,
@@ -60,55 +94,32 @@ impl Claims {
     }
 }
 
-pub struct AuthApi {
-    secret: String,
-    db: PgPool,
-}
-
+/// Configuration for the AuthApi
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AuthApiConfig {
+    /// The secret used to sign JWTs
     pub secret: String,
+    /// The postgres connection string
     pub db_conn_str: String,
 }
 
+/// A pair of tokens, an access token and a refresh token
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TokenPair {
     pub access_token: String,
     pub refresh_token: String,
 }
 
-fn get_epoch() -> u64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards")
-        .as_secs()
+/// The AuthApi
+///
+/// This is the main interface for the Auth Service
+/// It is used to retrieve user information and to login
+pub struct AuthApi {
+    secret: String,
+    db: PgPool,
 }
 
 impl AuthApi {
-    fn create_access_token(&self, id: &str) -> String {
-        let now = get_epoch();
-        let claim = Claims {
-            sub: id.to_string(),
-            exp: now + 60 * 10,
-            iat: now,
-            token_type: "access".to_string(),
-            id: Uuid::new_v4().to_string(),
-        };
-        claim.encode(&self.secret)
-    }
-
-    fn create_refresh_token(&self, id: &str) -> String {
-        let now = get_epoch();
-        let claim = Claims {
-            sub: id.to_string(),
-            exp: now + 60 * 60 * 24 * 30,
-            iat: now,
-            token_type: "refresh".to_string(),
-            id: Uuid::new_v4().to_string(),
-        };
-        claim.encode(&self.secret)
-    }
-
     /// Create an AuthApi configured from environment variables
     ///
     /// The following environment variables are used:
@@ -141,44 +152,57 @@ impl AuthApi {
         })
     }
 
+    /// Retreives user information from a token
+    ///
+    /// If the token is invalid, a [AuthApiError::InvalidToken] is returned. Please see
+    /// [AuthApiError] for more information
+    ///
+    /// # Arguments
+    /// * `token` - The token to retrieve user information from
     pub async fn get_user(&self, token: &str) -> Result<User, AuthApiError> {
         let token_data = Claims::from_token(token, &self.secret)?;
 
-        if token_data.token_type != "access" {
+        if token_data.token_type != TokenType::Access {
             return Err(AuthApiError::InvalidToken);
         }
 
-        let id = token_data.sub;
+        let email = token_data.sub;
 
         let query_result = sqlx::query(
             "SELECT 
-                id::text as id,
                 fname,
                 lname,
                 email
-            FROM pastureen_user WHERE id = $1::uuid",
+            FROM pastureen_user WHERE email = $1",
         )
-        .bind(id)
+        .bind(email)
         .fetch_one(&self.db)
         .await?;
 
-        let id: String = query_result.try_get("id")?;
-        let fname: Option<String> = query_result.try_get("fname")?;
-        let lname: Option<String> = query_result.try_get("lname")?;
+        let fname: String = query_result.try_get("fname")?;
+        let lname: String = query_result.try_get("lname")?;
         let email: String = query_result.try_get("email")?;
 
         Ok(User {
-            id,
             fname,
             lname,
             email,
         })
     }
 
+    /// Login a user and return a pair of tokens
+    ///
+    /// If the credentials are invalid, a [AuthApiError::InvalidCredentials] is returned. Please see
+    /// [AuthApiError] for more information
+    ///
+    /// # Arguments
+    /// * `email` - The email of the user
+    /// * `password` - The password of the user
+    ///
     pub async fn login(&self, email: &str, password: &str) -> Result<TokenPair, AuthApiError> {
         let query_result = sqlx::query(
             "SELECT 
-                id::text as id,
+                email,
                 password
              FROM pastureen_user WHERE email = $1",
         )
@@ -199,16 +223,16 @@ impl AuthApi {
             return Err(AuthApiError::InvalidCredentials);
         }
 
-        let id: String = result.try_get("id")?;
+        let email: String = result.try_get("email")?;
 
-        let access_token = self.create_access_token(&id);
-        let refresh_token = self.create_refresh_token(&id);
+        let access_token = self.create_access_token(&email);
+        let refresh_token = self.create_refresh_token(&email);
 
         sqlx::query(
-            "INSERT INTO refresh_token (token, user_id, root_token) VALUES ($1, $2::uuid, $3)",
+            "INSERT INTO refresh_token (token, user_email, root_token) VALUES ($1, $2, $3)",
         )
         .bind(&refresh_token)
-        .bind(&id)
+        .bind(&email)
         .bind(&refresh_token)
         .execute(&self.db)
         .await?;
@@ -219,6 +243,16 @@ impl AuthApi {
         })
     }
 
+    /// Generates a new token pair from a refresh token
+    ///
+    /// The refresh token is rotated, meaning that the old refresh token will no longer be valid.
+    /// In an attempt to use the old refresh token, all tokens generated from it will be invalidated as well
+    ///
+    /// If the refresh token is invalid, a [AuthApiError::InvalidToken] is returned. Please see
+    /// [AuthApiError] for more information
+    ///
+    /// # Arguments
+    /// * `refresh_token` - The refresh token to use
     pub async fn refresh(&self, refresh_token: &str) -> Result<TokenPair, AuthApiError> {
         let val = Validation::default();
 
@@ -229,7 +263,7 @@ impl AuthApi {
         )
         .map_err(|_| AuthApiError::InvalidToken)?;
 
-        if token_data.claims.token_type != "refresh" {
+        if token_data.claims.token_type != TokenType::Refresh {
             return Err(AuthApiError::InvalidToken);
         }
 
@@ -248,12 +282,8 @@ impl AuthApi {
         .fetch_optional(&self.db)
         .await?;
 
-        if most_recent_token.is_none() {
-            return Err(AuthApiError::InvalidToken);
-        }
-
         let most_recent_token_string: String = most_recent_token
-            .unwrap()
+            .ok_or(AuthApiError::InvalidToken)?
             .try_get("token")
             .map_err(|_| AuthApiError::InvalidToken)?;
 
@@ -265,20 +295,19 @@ impl AuthApi {
             return Err(AuthApiError::InvalidToken);
         }
 
-        let user_id: Uuid = row.try_get("user_id")?;
-        let user_id = user_id.to_string();
-        if user_id != token_data.claims.sub {
+        let user_email: String = row.try_get("user_email")?;
+        if user_email != token_data.claims.sub {
             return Err(AuthApiError::InvalidToken);
         }
 
-        let access_token = self.create_access_token(&user_id);
-        let refresh_token = self.create_refresh_token(&user_id);
+        let access_token = self.create_access_token(&user_email);
+        let refresh_token = self.create_refresh_token(&user_email);
 
         sqlx::query(
-            "INSERT INTO refresh_token (token, user_id, root_token) VALUES ($1, $2::uuid, $3)",
+            "INSERT INTO refresh_token (token, user_email, root_token) VALUES ($1, $2, $3)",
         )
         .bind(&refresh_token)
-        .bind(&user_id)
+        .bind(&user_email)
         .bind(&root_token)
         .execute(&self.db)
         .await?;
@@ -288,4 +317,35 @@ impl AuthApi {
             refresh_token,
         })
     }
+
+    fn create_access_token(&self, id: &str) -> String {
+        let now = get_epoch();
+        let claim = Claims {
+            sub: id.to_string(),
+            exp: now + 60 * 10,
+            iat: now,
+            token_type: TokenType::Access,
+            id: Uuid::new_v4().to_string(),
+        };
+        claim.encode(&self.secret)
+    }
+
+    fn create_refresh_token(&self, id: &str) -> String {
+        let now = get_epoch();
+        let claim = Claims {
+            sub: id.to_string(),
+            exp: now + 60 * 60 * 24 * 30,
+            iat: now,
+            token_type: TokenType::Refresh,
+            id: Uuid::new_v4().to_string(),
+        };
+        claim.encode(&self.secret)
+    }
+}
+
+fn get_epoch() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards")
+        .as_secs()
 }

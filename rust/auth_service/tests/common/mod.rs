@@ -1,4 +1,4 @@
-use auth_service::Claims;
+use auth_service::*;
 use sqlx::postgres::PgPool;
 use sqlx::Row;
 use uuid::Uuid;
@@ -6,15 +6,14 @@ use uuid::Uuid;
 
 pub struct SetupTokenPairOutput {
     pub email: String,
-    pub user_id: String,
     pub password: String,
     pub access_token: String,
     pub refresh_token: String,
 }
 
-pub async fn setup_token_pair(api: &auth_service::AuthApi)-> SetupTokenPairOutput {
+pub async fn setup_token_pair(api: &AuthApi)-> SetupTokenPairOutput {
     let email = format!("{}@login.com", Uuid::new_v4().to_string());
-    let id = insert_user(&email, "password").await;
+    insert_user(&email, "password").await;
     let res = api.login(&email, "password").await.unwrap();
 
     let access_token = res.access_token;
@@ -22,15 +21,14 @@ pub async fn setup_token_pair(api: &auth_service::AuthApi)-> SetupTokenPairOutpu
 
     SetupTokenPairOutput {
         email,
-        user_id: id,
         password: "password".to_string(),
         access_token,
         refresh_token,
     }
 }
 
-pub async fn get_api() -> auth_service::AuthApi {
-    auth_service::AuthApi::from_env().await.unwrap()
+pub async fn get_api() -> AuthApi {
+    AuthApi::from_env().await.unwrap()
 }
 
 fn get_connection_string() -> String {
@@ -46,24 +44,26 @@ pub async fn insert_user(email: &str, password: &str) -> String {
         .await
         .unwrap();
 
-    let result = sqlx::query("INSERT INTO pastureen_user (email, password) VALUES ($1, $2) RETURNING id")
+    let result = sqlx::query("INSERT INTO pastureen_user (email, password, fname, lname) VALUES ($1, $2, $3, $4) RETURNING email")
         .bind(email)
         .bind(password)
+        .bind("fname")
+        .bind("lname")
         .fetch_one(&pool)
         .await
         .unwrap();
-    let id:Uuid = result.get("id");
-    id.to_string()
+
+    result.try_get("email").unwrap()
 }
 
 
-pub async fn delete_user(id: &str) {
+pub async fn delete_user(email: &str) {
     let pool = PgPool::connect(get_connection_string().as_str())
         .await
         .unwrap();
 
-    sqlx::query("DELETE FROM pastureen_user WHERE id = $1::uuid")
-        .bind(id)
+    sqlx::query("DELETE FROM pastureen_user WHERE email = $1")
+        .bind(email)
         .execute(&pool)
         .await
         .unwrap();
@@ -72,7 +72,7 @@ pub async fn delete_user(id: &str) {
 pub fn get_expired_access_token(email: &str) -> String {
     let claims = Claims {
         sub: email.to_string(),
-        token_type: "access".to_string(),
+        token_type: TokenType::Access,
         iat: 0,
         exp: 0,
         id: Uuid::new_v4().to_string()
@@ -83,7 +83,7 @@ pub fn get_expired_access_token(email: &str) -> String {
 pub fn get_expired_refresh_token(email: &str) -> String {
     let claims = Claims {
         sub: email.to_string(),
-        token_type: "refresh".to_string(),
+        token_type: TokenType::Refresh,
         iat: 0,
         exp: 0,
         id: Uuid::new_v4().to_string()
