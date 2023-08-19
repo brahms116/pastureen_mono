@@ -14,5 +14,5 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
-        runs: ./cron/shutdown_dev_server.sh
+        run: ./cron/shutdown_dev_server.sh
 
