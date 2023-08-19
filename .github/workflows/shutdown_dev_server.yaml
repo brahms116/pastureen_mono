@@ -1,0 +1,18 @@
+name: Shutdown my dev server
+
+on:
+  schedule:
+    - cron: '0 13 * * *'
+
+jobs:
+  turn_server_off:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Turn off server
+        env:
+          DEV_SERVER_INSTANCE_ID: ${{ secrets.DEV_SERVER_INSTANCE_ID }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        runs: ./cron/shutdown_dev_server.sh
+
