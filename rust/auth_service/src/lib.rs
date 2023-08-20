@@ -36,6 +36,18 @@ pub enum AuthApiError {
     EmailAlreadyExists,
 }
 
+impl AuthApiError {
+    pub fn error_type(&self) -> String {
+        match self {
+            AuthApiError::ConfigruationMissing(_) => "ConfigurationError".to_string(),
+            AuthApiError::InvalidToken => "InvalidToken".to_string(),
+            AuthApiError::DatabaseError(_) => "DatabaseError".to_string(),
+            AuthApiError::InvalidCredentials => "InvalidCredentials".to_string(),
+            AuthApiError::EmailAlreadyExists => "EmailAlreadyExists".to_string(),
+        }
+    }
+}
+
 /// A user representation in the Auth Service
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
@@ -114,6 +126,7 @@ pub struct TokenPair {
 ///
 /// This is the main interface for the Auth Service
 /// It is used to retrieve user information and to login
+#[derive(Debug, Clone)]
 pub struct AuthApi {
     secret: String,
     db: PgPool,
