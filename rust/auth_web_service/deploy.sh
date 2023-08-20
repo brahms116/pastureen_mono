@@ -45,15 +45,12 @@ aws lambda update-function-configuration --function-name auth_service_dev --envi
 
 echo "Deploying to test environment"
 set -a
-. ../.dev.env
+. ../.test.env
 set +a
-aws lambda update-function-code --function-name auth_service_dev --zip-file fileb://.lambda.zip
-aws lambda update-function-configuration --function-name auth_service_dev --environment \
+aws lambda update-function-code --function-name auth_service_test --zip-file fileb://./lambda.zip
+aws lambda update-function-configuration --function-name auth_service_test --environment \
   Variables="{\
     AUTH_SERVICE_SECRET=$AUTH_SERVICE_SECRET,\
     AUTH_SERVICE_DB_CONN_STR=$AUTH_SERVICE_DB_CONN_STR,\
     AUTH_WEB_SERVICE_LISTEN_ADDR=$AUTH_WEB_SERVICE_LISTEN_ADDR\
   }"
-
-
-
