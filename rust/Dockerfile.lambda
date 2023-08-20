@@ -1,0 +1,21 @@
+FROM public.ecr.aws/lambda/provided:al2.2023.07.10.09
+
+ARG PROJECT_NAME
+
+RUN yum install -y jq openssl-devel gcc zip
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+    | CARGO_HOME=/cargo RUSTUP_HOME=/rustup sh -s -- -y --profile minimal --default-toolchain stable \
+    && source /cargo/env \
+    && rustup default stable
+
+WORKDIR /app
+COPY . .
+
+RUN source /cargo/env \
+    && cargo build --release -p ${PROJECT_NAME}
+
+RUN mkdir /app/lambda_build
+RUN cp /app/target/release/${PROJECT_NAME} /app/lambda_build/bootstrap
+RUN zip -j /app/lambda_build/lambda.zip /app/lambda_build/bootstrap
+RUN rm /app/lambda_build/bootstrap
+
