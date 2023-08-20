@@ -26,10 +26,12 @@ cd ..
 docker build -t auth_service_lambda -f ./Dockerfile.lambda . --build-arg PROJECT_NAME=auth_web_service
 
 docker create --name auth_service_lambda auth_service_lambda
-docker cp auth_service_lambda:/app/lambda_build/lambda.zip ./auth_service/lambda.zip
+docker cp auth_service_lambda:/app/lambda_build/lambda.zip ./auth_web_service/lambda.zip
 docker rm auth_service_lambda
 
-cd auth_service
+cd auth_web_service
+
+
 
 
 
