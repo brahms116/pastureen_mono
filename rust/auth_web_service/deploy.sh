@@ -4,7 +4,7 @@ set -e
 
 env=$1
 
-if [[ "$env" != "prod" && "$env" != "dev" && "$env" != "test"]]; then
+if [[ "$env" != "prod" && "$env" != "dev" && "$env" != "test" ]]; then
   echo "Please provide a valid environment name (prod, test or dev)"
   exit 1
 fi
