@@ -1,8 +1,7 @@
 name: Deploy auth service (dev)
 
 on:
-  schedule:
-    workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
   deploy_auth_service:
