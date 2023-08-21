@@ -1,7 +1,5 @@
 FROM public.ecr.aws/lambda/provided:al2.2023.07.10.09
 
-ARG PROJECT_NAME
-
 RUN yum install -y jq openssl-devel gcc zip
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
     | CARGO_HOME=/cargo RUSTUP_HOME=/rustup sh -s -- -y --profile minimal --default-toolchain stable \
@@ -10,7 +8,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
 
 WORKDIR /build
 
-COPY . .
+COPY build.sh .
 
 WORKDIR /app
 
