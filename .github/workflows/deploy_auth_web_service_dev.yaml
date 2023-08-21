@@ -18,5 +18,5 @@ jobs:
           AUTH_SERVICE_SECRET: ${{ secrets.AUTH_SERVICE_SECRET }}
           AUTH_SERVICE_DB_CONN_STR: ${{ secrets.AUTH_SERVICE_DB_CONN_STR }}
           AUTH_WEB_SERVICE_LISTEN_ADDR: ${{ secrets.AUTH_WEB_SERVICE_LISTEN_ADDR }}
-        run: cd rust/auth_web_service && ./deploy.sh
+        run: cd rust/auth_web_service && ./deploy.sh dev
 
