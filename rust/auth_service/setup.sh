@@ -14,5 +14,5 @@ set -a
 . ../.$env.env
 set +a
 
-psql $AUTH_SERVICE_DB_CONN_STR -f ../auth_service/schema.sql
+psql $AUTH_API_DB_CONN_STR -f ../auth_api/schema.sql
 

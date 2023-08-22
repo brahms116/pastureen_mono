@@ -1,5 +1,5 @@
 #!/bin/bash
 
-cd auth_service
+cd auth_api
 ./test.sh
 cd ..

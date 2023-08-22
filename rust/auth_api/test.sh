@@ -4,6 +4,6 @@ set -o allexport
 . ./.test.env
 set +o allexport
 
-cargo test -p auth_service
+cargo test -p auth_api
 
 

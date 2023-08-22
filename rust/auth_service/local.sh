@@ -10,6 +10,6 @@ set -a
 . ../.$env.env
 set +a
 
-cargo run -p auth_web_service
+cargo run -p auth_service
 
 
