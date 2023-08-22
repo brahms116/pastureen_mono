@@ -4,6 +4,6 @@ members = [
   "csv_iterator",
   "cli",
   "actix_poc",
-  "auth_service",
+  "auth_api",
   "auth_web_service"
 ]
