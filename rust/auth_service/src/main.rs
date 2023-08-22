@@ -6,7 +6,7 @@ use actix_web::{
     web::{scope, Data, Json},
     App, HttpRequest, HttpResponse, HttpServer, Responder,
 };
-use auth_service::*;
+use auth_api::*;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
