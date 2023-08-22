@@ -1,7 +1,7 @@
 resource "aws_lambda_function" "lambda" {
   function_name    = var.lambda_function_name
   role             = aws_iam_role.lambda_role.arn
-  architectures    = ["arm64"]
+  architectures    = ["x86_64"]
   package_type     = "Zip"
   handler          = "bootstrap"
   runtime          = "provided.al2"
