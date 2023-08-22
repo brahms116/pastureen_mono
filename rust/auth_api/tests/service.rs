@@ -1,6 +1,6 @@
 mod common;
 use common::*;
-use auth_service::*;
+use auth_api::*;
 
 #[tokio::test]
 async fn login() {
