@@ -1,4 +1,4 @@
-use auth_service::*;
+use auth_api::*;
 use sqlx::postgres::PgPool;
 use sqlx::Row;
 use uuid::Uuid;
@@ -32,11 +32,11 @@ pub async fn get_api() -> AuthApi {
 }
 
 fn get_connection_string() -> String {
-    std::env::var("AUTH_SERVICE_DB_CONN_STR").unwrap()
+    std::env::var("AUTH_API_DB_CONN_STR").unwrap()
 }
 
 fn get_secret() -> String {
-    std::env::var("AUTH_SERVICE_SECRET").unwrap()
+    std::env::var("AUTH_API_SECRET").unwrap()
 }
 
 pub async fn insert_user(email: &str, password: &str) -> String {

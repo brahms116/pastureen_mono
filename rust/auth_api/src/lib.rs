@@ -48,7 +48,7 @@ impl AuthApiError {
     }
 }
 
-/// A user representation in the Auth Service
+/// A user representation in the Auth Api
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
     /// The first name of the user
@@ -59,7 +59,7 @@ pub struct User {
     pub email: String,
 }
 
-/// Type of token issued by the Auth Service
+/// Type of token issued by the Auth Api
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TokenType {
     #[serde(rename = "ACCESS")]
@@ -68,7 +68,7 @@ pub enum TokenType {
     Refresh,
 }
 
-/// A representation of the claims the tokens provided by the Auth Service
+/// A representation of the claims the tokens provided by the Auth Api
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     /// The subject of the token, this is the user email
@@ -124,7 +124,7 @@ pub struct TokenPair {
 
 /// The AuthApi
 ///
-/// This is the main interface for the Auth Service
+/// This is the main interface for the Auth Api
 /// It is used to retrieve user information and to login
 #[derive(Debug, Clone)]
 pub struct AuthApi {
@@ -136,13 +136,13 @@ impl AuthApi {
     /// Create an AuthApi configured from environment variables
     ///
     /// The following environment variables are used:
-    /// - AUTH_SERVICE_SECRET, the secret used to sign JWTs
-    /// - AUTH_SERVICE_DB_CONN_STR, the connection string of the database
+    /// - AUTH_API_SECRET, the secret used to sign JWTs
+    /// - AUTH_API_DB_CONN_STR, the connection string of the database
     pub async fn from_env() -> Result<Self, AuthApiError> {
-        let api_secret = std::env::var("AUTH_SERVICE_SECRET")
-            .map_err(|_| AuthApiError::ConfigruationMissing("AUTH_SERVICE_SECRET".to_string()))?;
-        let db_conn_str = std::env::var("AUTH_SERVICE_DB_CONN_STR").map_err(|_| {
-            AuthApiError::ConfigruationMissing("AUTH_SERVICE_DB_CONN_STR".to_string())
+        let api_secret = std::env::var("AUTH_API_SECRET")
+            .map_err(|_| AuthApiError::ConfigruationMissing("AUTH_API_SECRET".to_string()))?;
+        let db_conn_str = std::env::var("AUTH_API_DB_CONN_STR").map_err(|_| {
+            AuthApiError::ConfigruationMissing("AUTH_API_DB_CONN_STR".to_string())
         })?;
 
         Self::from_config(AuthApiConfig {

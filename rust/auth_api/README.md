@@ -1,7 +1,7 @@
 
-# Auth Api Service
+# Auth Api
 
-An authentication service for Pastureen, it exposes a rust struct `AuthApi` to interact with. It is currently designed to serve a hobby capacity and missing many features.
+A rust authentication api for Pastureen, it exposes a rust struct `AuthApi` to interact with. It is currently designed to serve a hobby capacity and missing many features.
 
 It is currently backed by a postgres database.
 
