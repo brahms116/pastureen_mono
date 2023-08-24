@@ -41,5 +41,11 @@ async fn main() -> Result<(), Error> {
 }
 
 async fn reverse_proxy(_req: Request<Body>) -> Result<Response<Body>, Error> {
-    Ok(Response::new(Body::from("Hello World")))
+    let response = Response::builder()
+        .status(200)
+        .header("content-type", "text/html")
+        .body(Body::from("Hello World"))
+        .unwrap();
+
+    Ok(response)
 }
