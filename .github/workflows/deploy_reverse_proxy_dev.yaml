@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy_auth_service:
+  deploy_reverse_proxy:
     runs-on: ubuntu-latest
     environment: dev
     steps:
