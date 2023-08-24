@@ -1,4 +1,5 @@
 
 locals {
-  service = "auth_service"
+  service = "reverse_proxy"
+  path_prefix = var.environment == "prod" ? "" : "${var.environment}."
 }

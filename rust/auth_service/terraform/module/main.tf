@@ -1,12 +1,12 @@
 
 module "function" {
   source               = "../../../terraform/aws_lambda"
-  lambda_function_name = "auth_service_${var.environment}"
+  lambda_function_name = "${local.service}_${var.environment}"
   http_adapter         = true
 }
 
 resource "aws_lambda_function_url" "lambda_url" {
-  function_name      = "auth_service_${var.environment}"
+  function_name      = "${local.service}_${var.environment}"
   authorization_type = "NONE"
 
   depends_on = [
@@ -17,8 +17,8 @@ resource "aws_lambda_function_url" "lambda_url" {
     allow_credentials = true
     allow_origins     = ["*"]
     allow_methods     = ["*"]
-    allow_headers     = ["date", "keep-alive"]
-    expose_headers    = ["keep-alive", "date"]
+    allow_headers     = ["*"]
+    expose_headers    = ["*"]
     max_age           = 86400
   }
 }
