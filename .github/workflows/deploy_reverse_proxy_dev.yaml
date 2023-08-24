@@ -1,4 +1,4 @@
-name: Deploy auth service (dev)
+name: Deploy reverse proxy (dev)
 
 on:
   workflow_dispatch:
@@ -10,13 +10,11 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
-      - name: Deploy auth service
+      - name: Deploy reverse proxy
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
-          AUTH_API_SECRET: ${{ secrets.AUTH_API_SECRET }}
-          AUTH_API_DB_CONN_STR: ${{ secrets.AUTH_API_DB_CONN_STR }}
-          AUTH_SERVICE_LISTEN_ADDR: ${{ vars.LAMBDA_LISTEN_ADDR }}
-        run: cd rust/auth_service && ./deploy.sh dev
+          REVERSE_PROXY_LISTEN_ADDR: ${{ vars.LAMBDA_LISTEN_ADDR }}
+        run: cd rust/reverse_proxy && ./deploy.sh dev
 

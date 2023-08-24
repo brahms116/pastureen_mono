@@ -14,8 +14,8 @@ pub struct ReverseProxyConfig {
 
 impl ReverseProxyConfig {
     pub fn from_env() -> Result<Self, ReverseProxyError> {
-        let listen_addr = std::env::var("LISTEN_ADDR")
-            .map_err(|_| ReverseProxyError::MissingConfiguration("LISTEN_ADDR".to_string()))?;
+        let listen_addr = std::env::var("REVERSE_PROXY_LISTEN_ADDR")
+            .map_err(|_| ReverseProxyError::MissingConfiguration("REVERSE_PROXY_LISTEN_ADDR".to_string()))?;
 
         Ok(Self { listen_addr })
     }
