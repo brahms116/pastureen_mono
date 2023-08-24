@@ -5,5 +5,6 @@ members = [
   "cli",
   "actix_poc",
   "auth_api",
-  "auth_service"
+  "auth_service",
+  "reverse_proxy"
 ]
