@@ -1,0 +1,88 @@
+{{ define "layout" }}
+<html>
+
+<head>
+  <title>{{ .Title }}</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background: '#222222',
+            backgroundHighlight: '#2D2D2D',
+            onBackground: '#7B896E',
+            onBackgroundHighlight: '#B8CBA7',
+            onBackgroundSubdued: '#515949',
+            secondary: '#7B896E',
+            onSecondaryHighlight: '#425842',
+            secondaryHighlight: '#B8CBA7',
+            secondarySubdued: '#515948',
+            onSecondarySubdued: '#5E615D',
+            onSecondary: '#363D36',
+            primary: '#4B692F',
+            primarySubdued: '#394929',
+            primaryHighlight: '#759B51',
+            onPrimary: '#BDCCAE',
+            onPrimaryHighlight: '#FFFFFF',
+            onPrimarySubdued: '#96A786',
+          },
+          fontFamily: {
+            sans: 'Poppins, sans-serif',
+          }
+        }
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+      html {
+        @apply font-sans;
+      }
+      body {
+        @apply bg-background text-onBackground;
+      }
+      h1 {
+        font-size: 3.5rem;
+      }
+      h2 {
+        font-size: 2rem;
+      }
+      h3 {
+        font-size: 1.5rem;
+      }
+      h4 {
+        font-size: 1.375rem;
+      }
+      h5 {
+        font-size: 1.25rem;
+      }
+      h6 {
+        font-size: 1.125rem;
+      }
+    }
+    @layer layout {
+      .content {
+        @apply mx-8 sm:mx-16 md:mx-auto max-w-[56rem];
+      }
+    }
+    @layer components {
+    }
+  </style>
+</head>
+
+<body>
+  {{ template "topbar" . }}
+  {{ block "body" . }}
+
+  {{ end }}
+</body>
+
+</html>
+{{ end }}
