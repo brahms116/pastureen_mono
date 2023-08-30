@@ -5,29 +5,31 @@
     <h3 class="ml-2 translate-y-[0.125rem]">PastureenDesign</h3>
   </a>
   <div class="cursor-pointer">
-    <!-- <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" -->
-    <!--   class="w-8 h-8 stroke-onBackground hover:stroke-onBackgroundHighlight"> -->
-    <!--   <path stroke-linecap="round" stroke-linejoin="round" -->
-    <!--     d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" /> -->
-    <!-- </svg> -->
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" 
+    {{ if .MenuOpen }}
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
       class="w-8 h-8 stroke-onBackground hover:stroke-onBackgroundHighlight">
       <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
     </svg>
+    {{ else }}
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+      class="w-8 h-8 stroke-onBackground hover:stroke-onBackgroundHighlight">
+      <path stroke-linecap="round" stroke-linejoin="round"
+        d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" />
+    </svg>
+    {{ end }}
   </div>
 </div>
 <div class="bg-background top-0 left-0 min-h-screen w-full fixed z-10">
   <div class="content mt-[10rem]">
     <h2 class="mb-8 px-2">Menu</h2>
     <div class="flex flex-col h-full">
+      {{ range $i, $e := .NavItems }}
       <a href="/"
         class="hover:bg-backgroundHighlight px-2 py-8 cursor-pointer text-onBackgroundHighlight transition-transform">
-        <h5>Home</h5>
+        <h5>{{$i}}</h5>
       </a>
       <div class="w-full h-px bg-backgroundHighlight"></div>
-      <a href="/" class="hover:bg-backgroundHighlight px-2 py-8 cursor-pointer">
-        <h5>Somewhere else</h5>
-      </a>
+      {{ end }}
     </div>
   </div>
 </div>

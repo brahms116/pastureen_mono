@@ -19,7 +19,7 @@ type NavItem struct {
 	Id   string
 }
 
-type TopBarProps struct {
+type TopbarProps struct {
 	LogoProps     LogoProps
 	NavItems      []NavItem
 	MenuOpen      bool
@@ -28,14 +28,15 @@ type TopBarProps struct {
 
 type LayoutProps struct {
 	Title string
+  TopbarProps TopbarProps
 }
 
 type IndexProps struct {
 	LayoutProps LayoutProps
 }
 
-func GetTopBarProps (pageId string) (TopBarProps) {
-  return TopBarProps{
+func GetTopbarProps (pageId string) (TopbarProps) {
+  return TopbarProps{
     LogoProps: LogoProps{
       LogoText: "Logo",
       LogoLink: "/",
@@ -72,9 +73,11 @@ func main() {
 	r.StaticFS("/static", http.FS(assetsFS))
 
 	r.GET("/", func(c *gin.Context) {
+    props := GetTopbarProps("home")
 		c.HTML(http.StatusOK, "index.html", IndexProps{
 			LayoutProps: LayoutProps{
 				Title: "Hello World",
+        TopbarProps: props,
 			},
 		})
 	})
