@@ -7,6 +7,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script src="https://unpkg.com/htmx.org@1.9.5"
+    integrity="sha384-xcuj3WpfgjlKF+FXhSQFQ0ZNr39ln+hwjN3npfM9VBnUskLolQAcN80McRIVOPuO"
+    crossorigin="anonymous"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap"
     rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -69,7 +72,7 @@
     }
     @layer layout {
       .content {
-        @apply mx-8 sm:mx-16 md:mx-auto max-w-[56rem];
+        @apply mx-8 sm:mx-16 lg:mx-auto lg:w-[56rem] max-w-[56rem];
       }
     }
     @layer components {

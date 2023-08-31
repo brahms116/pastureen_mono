@@ -13,49 +13,51 @@ type LogoProps struct {
 	LogoLink string
 }
 
-type NavItem struct {
-	Link string
-	Text string
-	Id   string
+type NavItemProps struct {
+	Link              string
+	Text              string
+	Id                string
+	ShouldHaveDivider bool
+	ShouldBeActive    bool
 }
 
 type TopbarProps struct {
 	LogoProps     LogoProps
-	NavItems      []NavItem
+	NavItems      []NavItemProps
 	MenuOpen      bool
 	CurrentPageId string
 }
 
 type LayoutProps struct {
-	Title string
-  TopbarProps TopbarProps
+	Title       string
+	TopbarProps TopbarProps
 }
 
 type IndexProps struct {
 	LayoutProps LayoutProps
 }
 
-func GetTopbarProps (pageId string) (TopbarProps) {
-  return TopbarProps{
-    LogoProps: LogoProps{
-      LogoText: "Logo",
-      LogoLink: "/",
-    },
-    NavItems: []NavItem{
-      {
-        Link: "/",
-        Text: "Home",
-        Id: "home",
-      },
-      {
-        Link: "/about",
-        Text: "About",
-        Id: "about",
-      },
-    },
-    MenuOpen: false,
-    CurrentPageId: pageId,
-  }
+func GetTopbarProps(page string, menuOpen bool) TopbarProps {
+	return TopbarProps{
+		LogoProps: LogoProps{
+			LogoText: "Logo",
+			LogoLink: "/",
+		},
+		NavItems: []NavItemProps{
+			{
+				Link:              "/",
+				Text:              "Home",
+				ShouldHaveDivider: true,
+				ShouldBeActive:    page == "home",
+			},
+			{
+				Link:           "/about",
+				Text:           "About",
+				ShouldBeActive: page == "about",
+			},
+		},
+		MenuOpen: menuOpen,
+	}
 }
 
 //go:embed templates/*
@@ -73,13 +75,19 @@ func main() {
 	r.StaticFS("/static", http.FS(assetsFS))
 
 	r.GET("/", func(c *gin.Context) {
-    props := GetTopbarProps("home")
+		props := GetTopbarProps("home", false)
 		c.HTML(http.StatusOK, "index.html", IndexProps{
 			LayoutProps: LayoutProps{
-				Title: "Hello World",
-        TopbarProps: props,
+				Title:       "Hello World",
+				TopbarProps: props,
 			},
 		})
+	})
+
+	r.GET("/htmx/topbar", func(c *gin.Context) {
+		isOpen := c.Query("state") == "open"
+		props := GetTopbarProps("home", isOpen)
+		c.HTML(http.StatusOK, "topbar.html", props)
 	})
 
 	r.Run()
