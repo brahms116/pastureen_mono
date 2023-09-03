@@ -38,7 +38,7 @@ type IndexProps struct {
 	LayoutProps LayoutProps
 }
 
-func GetTopbarProps(page string, menuOpen bool) TopbarProps {
+func GetTopbarProps(page string) TopbarProps {
 	return TopbarProps{
 		LogoProps: LogoProps{
 			LogoText: "Logo",
@@ -57,7 +57,6 @@ func GetTopbarProps(page string, menuOpen bool) TopbarProps {
 				ShouldBeActive: page == "forms",
 			},
 		},
-		MenuOpen: menuOpen,
 	}
 }
 
@@ -76,7 +75,7 @@ func main() {
 	r.StaticFS("/static", http.FS(assetsFS))
 
 	r.GET("/", func(c *gin.Context) {
-		props := GetTopbarProps("home", false)
+		props := GetTopbarProps("home")
 		var buffer bytes.Buffer
 		if err := indexTemplate.ExecuteTemplate(&buffer, "index.html", IndexProps{
 			LayoutProps: LayoutProps{
@@ -90,7 +89,7 @@ func main() {
 	})
 
 	r.GET("/forms", func(c *gin.Context) {
-		props := GetTopbarProps("forms", false)
+		props := GetTopbarProps("forms")
 		var buffer bytes.Buffer
 		if err := formsTemplate.ExecuteTemplate(&buffer, "forms.html", IndexProps{
 			LayoutProps: LayoutProps{

@@ -19,6 +19,7 @@
       theme: {
         extend: {
           colors: {
+            error: '#E83A3A',
             background: '#222222',
             backgroundHighlight: '#2D2D2D',
             onBackground: '#7B896E',
@@ -105,9 +106,13 @@
         @apply focus:ring-transparent focus:ring-0 focus:ring-offset-0 appearance-none;
       }
 
-    [type='submit'] {
-      @apply mt-8 w-full;
-    }
+      input.error {
+        @apply border-error;
+      }
+
+      [type='submit'] {
+        @apply mt-8 w-full;
+      }
 
       input::placeholder {
         @apply text-onBackgroundSubdued opacity-50;
@@ -136,6 +141,9 @@
       }
       .form-item label {
         @apply mb-4 transform translate-x-1 uppercase;
+      }
+      .error-message {
+        @apply text-error text-[0.875rem] mt-4 translate-x-1;
       }
     }
   </style>
