@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"github.com/gin-gonic/gin"
 )
 
@@ -51,9 +52,9 @@ func GetTopbarProps(page string, menuOpen bool) TopbarProps {
 				ShouldBeActive:    page == "home",
 			},
 			{
-				Link:           "/about",
-				Text:           "About",
-				ShouldBeActive: page == "about",
+				Link:           "/forms",
+				Text:           "Forms",
+				ShouldBeActive: page == "forms",
 			},
 		},
 		MenuOpen: menuOpen,
@@ -69,25 +70,37 @@ var assetsFS embed.FS
 func main() {
 	r := gin.Default()
 
-	html := template.Must(template.ParseFS(f, "templates/**/*"))
-	r.SetHTMLTemplate(html)
+	indexTemplate := template.Must(template.ParseFS(f, "templates/pages/index.html", "templates/layout/*.html", "templates/components/*.html"))
+	formsTemplate := template.Must(template.ParseFS(f, "templates/pages/forms.html", "templates/layout/*.html", "templates/components/*.html"))
 
 	r.StaticFS("/static", http.FS(assetsFS))
 
 	r.GET("/", func(c *gin.Context) {
 		props := GetTopbarProps("home", false)
-		c.HTML(http.StatusOK, "index.html", IndexProps{
+		var buffer bytes.Buffer
+		if err := indexTemplate.ExecuteTemplate(&buffer, "index.html", IndexProps{
 			LayoutProps: LayoutProps{
-				Title:       "Hello World",
+				Title:       "Home",
 				TopbarProps: props,
 			},
-		})
+		}); err != nil {
+			c.Error(err)
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", buffer.Bytes())
 	})
 
-	r.GET("/htmx/topbar", func(c *gin.Context) {
-		isOpen := c.Query("state") == "open"
-		props := GetTopbarProps("home", isOpen)
-		c.HTML(http.StatusOK, "topbar.html", props)
+	r.GET("/forms", func(c *gin.Context) {
+		props := GetTopbarProps("forms", false)
+		var buffer bytes.Buffer
+		if err := formsTemplate.ExecuteTemplate(&buffer, "forms.html", IndexProps{
+			LayoutProps: LayoutProps{
+				Title:       "Forms",
+				TopbarProps: props,
+			},
+		}); err != nil {
+			c.Error(err)
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", buffer.Bytes())
 	})
 
 	r.Run()

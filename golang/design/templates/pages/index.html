@@ -1,19 +1,30 @@
 {{ template "layout" .LayoutProps }}
 {{ define "body" }}
-<div class="content mt-[6rem]">
-  <h2>Login Screen</h2>
-  <form class="w-1/2">
-    <div class="flex flex-col space-y-2">
-      <label for="email">Email</label>
-      <input type="email" id="email" name="email" />
-    </div>
-    <div class="flex flex-col space-y-2">
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" />
-    </div>
-    <div class="flex flex-col space-y-2">
-      <button type="submit">Login</button>
-    </div>
-  </form>
+<div class="content-wrapper min-h-screen">
+  <div class="content-custom flex flex-col items-center justify-center text-center">
+    <img src="/static/assets/light.png" alt="logo" class="min-h-[12rem] mt-[10rem]" />
+    <h1 class="mt-20 mb-16">Pastureen <br /> Design System</h1>
+    <a class="mb-20">
+      <button class="btn">View System</button>
+    </a>
+  </div>
+</div>
+<div class="content-wrapper mb-[16rem] mt-[8rem]">
+  <div class="content prose">
+    <h1>What is this?</h1>
+    <p class="mb-16">
+      This is an honest and humble attempt at making a design system for pastureen.
+      I am currently hoping to use this system across my personal projects to enable them to have a consistent look and
+      feel to them.
+      I honestly believe that this will require multiple iterations of design, but I am committed to seeing this
+      through.
+      As this is a hobby project, many of the important design system elements will be missing initially or just "not
+      yet" documented.
+      As elements and themes become clearer, I will be adding them to this site.
+    </p>
+    <a>
+      <button class="btn">Explore</button>
+    </a>
+  </div>
 </div>
 {{ end }}

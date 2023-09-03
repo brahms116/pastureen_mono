@@ -1,24 +1,20 @@
 {{ block "topbar" . }}
-<div id="pastureen-topbar">
-  <div class="flex flex-row justify-between items-center p-4 sm:p-8 relative z-20 w-full">
+<div id="pastureen-topbar" x-data="{open: false}">
+  <div class="flex flex-row top-0 left-0 justify-between items-center p-4 sm:p-8 md:absolute z-20 w-full" :class="open ? 'fixed' : 'absolute'">
     <a class="text-primary flex flex-row items-center cursor-pointer" href="https://google.com">
       <img src="/static/assets/logo.png" alt="logo" class="h-12">
       <h3 class="ml-2 translate-y-[0.125rem]">PastureenDesign</h3>
     </a>
-    <div class="cursor-pointer md:hidden" hx-target="#pastureen-topbar"
-      hx-get="/htmx/topbar?state={{if .MenuOpen}}close{{else}}open{{end}}" hx-swap="outerHTML">
-      {{ if .MenuOpen }}
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+    <div @click="open = !open" class="cursor-pointer md:hidden">
+      <svg x-show="open" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
         class="w-8 h-8 stroke-onBackground hover:stroke-onBackgroundHighlight">
         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
       </svg>
-      {{ else }}
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+      <svg x-show="!open" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
         class="w-8 h-8 stroke-onBackground hover:stroke-onBackgroundHighlight">
         <path stroke-linecap="round" stroke-linejoin="round"
           d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" />
       </svg>
-      {{ end }}
     </div>
     <div class="hidden md:flex flex-row items-center">
       {{ range .NavItems }}
@@ -34,25 +30,27 @@
     </div>
   </div>
   <div id="pastureen-mobile-menu"
-    class="md:hidden bg-background transition-transform top-0 left-0 min-h-screen w-full fixed z-10"
-    style="transform: translateX({{if .MenuOpen}}0{{else}}100{{end}}%)">
-    <div class="content mt-[10rem]">
-      <h2 class="mb-8 px-2">Menu</h2>
-      <div class="flex flex-col h-full">
-        {{ range .NavItems }}
-        <a href="{{.Link}}" class="
+    class="md:hidden bg-background transition-transform top-0 left-[100%] min-h-screen w-full fixed z-10"
+    :style="open ? 'transform: translateX(-100%);' : 'transform: translateX(0%);'">
+    <div class="content-wrapper mt-[10rem]">
+      <div class="content">
+        <h2 class="mb-8 px-2">Menu</h2>
+        <div class="flex flex-col h-full">
+          {{ range .NavItems }}
+          <a href="{{.Link}}" class="
         hover:bg-backgroundHighlight
         px-2 
         py-8 
         cursor-pointer 
         text-onBackground{{if .ShouldBeActive}}Highlight{{end}} 
         transition-transform">
-          <h5>{{.Text}}</h5>
-        </a>
-        {{ if .ShouldHaveDivider }}
-        <div class="w-full h-px bg-backgroundHighlight"></div>
-        {{ end }}
-        {{ end }}
+            <h5>{{.Text}}</h5>
+          </a>
+          {{ if .ShouldHaveDivider }}
+          <div class="w-full h-px bg-backgroundHighlight"></div>
+          {{ end }}
+          {{ end }}
+        </div>
       </div>
     </div>
   </div>

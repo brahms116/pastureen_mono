@@ -12,6 +12,7 @@
     crossorigin="anonymous"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap"
     rel="stylesheet">
+  <script src="//unpkg.com/alpinejs" defer></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -69,13 +70,73 @@
       h6 {
         font-size: 1.125rem;
       }
+      img {
+        image-rendering: pixelated;
+      }
+      p {
+        line-height: 220%;
+      }
+      form {
+        @apply w-full max-w-[25rem] m-0;
+      }
+
+      .prose h1 {
+        @apply mb-4;
+      }
+
+      [type='text'],
+      [type='email'],
+      [type='url'],
+      [type='password'],
+      [type='number'],
+      [type='date'],
+      [type='datetime-local'],
+      [type='month'],
+      [type='search'],
+      [type='tel'],
+      [type='time'],
+      [type='week'],
+      [multiple],
+      textarea,
+      select
+      {
+        @apply bg-transparent border border-onBackground rounded-xl px-4 py-4 text-onBackground;
+        @apply focus:outline-none focus:border-slate-50 focus:ring-transparent;
+        @apply focus:ring-transparent focus:ring-0 focus:ring-offset-0 appearance-none;
+      }
+
+    [type='submit'] {
+      @apply mt-8 w-full;
     }
-    @layer layout {
-      .content {
-        @apply mx-8 sm:mx-16 lg:mx-auto lg:w-[56rem] max-w-[56rem];
+
+      input::placeholder {
+        @apply text-onBackgroundSubdued opacity-50;
       }
     }
+
+    @layer layout {
+      .content-wrapper{
+        @apply flex justify-center;
+      }
+      .content {
+        @apply px-8 sm:px-16 w-full max-w-[56rem];
+      }
+      .content-custom {
+        @apply px-8 sm:px-16 w-full;
+      }
+    }
+
     @layer components {
+      .btn {
+        @apply bg-primary text-onPrimary px-8 py-4 rounded-full text-[1.125rem] uppercase;
+        @apply hover:bg-primaryHighlight cursor-pointer border-none;
+      }
+      .form-item {
+        @apply flex flex-col mb-8;
+      }
+      .form-item label {
+        @apply mb-4 transform translate-x-1 uppercase;
+      }
     }
   </style>
 </head>
