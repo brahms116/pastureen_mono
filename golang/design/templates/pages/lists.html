@@ -10,7 +10,7 @@
           <input type="text" name="search" placeholder="Search" />
         </div>
       </form>
-      <div class="mb-8 flex justify-end">
+      <div class="mb-8 flex justify-start">
         <a href="/">
           <div class="btn inline text-[0.75rem]">Create New</div>
         </a>
@@ -18,13 +18,15 @@
       <div x-show="!loading" class="pastureen-list">
         <div class="pastureen-list-item py-8" x-data="{open: false, loading: false}">
           <div x-show="!loading">
-            <img src="/static/assets/light.png" class="h-24 w-24 mb-8" />
             <div class="flex flex-row justify-between items-start">
-              <div class="cursor-pointer hover:text-onBackgroundHighlight">
-                <a href="/">
-                  <h2 class="mb-2">List Item 1, which is super super long</h2>
-                  <h5 class="pastureen-list-item-subtitle mb-8">Super super long subtitle</h5>
-                </a>
+              <div class="flex flex-row gap-8">
+                <img src="/static/assets/light.png" class="h-16 w-16 translate-y-2" />
+                <div class="cursor-pointer hover:text-onBackgroundHighlight">
+                  <a href="/">
+                    <h2 class="mb-2">How I used a reverse proxy to manage my domain</h2>
+                    <h5 class="pastureen-list-item-subtitle mb-8">Super super long subtitle</h5>
+                  </a>
+                </div>
               </div>
               <div class="cursor-pointer relative translate-y-2">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -44,11 +46,6 @@
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="pastureen-list-item-properties leading-loose text-onBackgroundSubdued mb-8">
-              Property 1: value1</br>
-              Property with super: super value no 3</br>
-              Property 2: value2</br>
             </div>
           </div>
           <div x-show="loading"
