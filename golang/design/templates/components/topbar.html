@@ -1,6 +1,7 @@
 {{ block "topbar" . }}
 <div id="pastureen-topbar" x-data="{open: false}">
-  <div class="flex flex-row top-0 left-0 justify-between items-center p-4 sm:p-8 md:absolute z-20 w-full" :class="open ? 'fixed' : 'absolute'">
+  <div class="flex flex-row top-0 left-0 justify-between items-center p-4 sm:p-8 md:absolute z-20 w-full"
+    :class="open ? 'fixed' : 'absolute'">
     <a class="text-primary flex flex-row items-center cursor-pointer" href="https://google.com">
       <img src="/static/assets/logo.png" alt="logo" class="h-12">
       <h3 class="ml-2 translate-y-[0.125rem]">PastureenDesign</h3>
@@ -29,8 +30,7 @@
       {{ end }}
     </div>
   </div>
-  <div id="pastureen-mobile-menu"
-    class="md:hidden bg-background transition-transform top-0 left-[100%] min-h-screen w-full fixed z-10"
+  <div class="md:hidden bg-background transition-transform top-0 left-[100%] min-h-screen w-full fixed z-10"
     :style="open ? 'transform: translateX(-100%);' : 'transform: translateX(0%);'">
     <div class="content-wrapper mt-[10rem]">
       <div class="content">

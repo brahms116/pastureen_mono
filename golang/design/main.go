@@ -56,6 +56,11 @@ func GetTopbarProps(page string) TopbarProps {
 				Text:           "Forms",
 				ShouldBeActive: page == "forms",
 			},
+			{
+				Link:           "/lists",
+				Text:           "Lists",
+				ShouldBeActive: page == "lists",
+			},
 		},
 	}
 }
@@ -71,6 +76,7 @@ func main() {
 
 	indexTemplate := template.Must(template.ParseFS(f, "templates/pages/index.html", "templates/layout/*.html", "templates/components/*.html"))
 	formsTemplate := template.Must(template.ParseFS(f, "templates/pages/forms.html", "templates/layout/*.html", "templates/components/*.html"))
+	listsTemplate := template.Must(template.ParseFS(f, "templates/pages/lists.html", "templates/layout/*.html", "templates/components/*.html"))
 
 	r.StaticFS("/static", http.FS(assetsFS))
 
@@ -94,6 +100,20 @@ func main() {
 		if err := formsTemplate.ExecuteTemplate(&buffer, "forms.html", IndexProps{
 			LayoutProps: LayoutProps{
 				Title:       "Forms",
+				TopbarProps: props,
+			},
+		}); err != nil {
+			c.Error(err)
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", buffer.Bytes())
+	})
+
+	r.GET("/lists", func(c *gin.Context) {
+		props := GetTopbarProps("lists")
+		var buffer bytes.Buffer
+		if err := listsTemplate.ExecuteTemplate(&buffer, "lists.html", IndexProps{
+			LayoutProps: LayoutProps{
+				Title:       "Lists",
 				TopbarProps: props,
 			},
 		}); err != nil {

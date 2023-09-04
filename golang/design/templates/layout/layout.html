@@ -12,7 +12,7 @@
     crossorigin="anonymous"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap"
     rel="stylesheet">
-  <script src="//unpkg.com/alpinejs" defer></script>
+  <script src="//unpkg.com/alpinejs"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -134,8 +134,14 @@
     @layer components {
       .btn {
         @apply bg-primary text-onPrimary px-8 py-4 rounded-full text-[1.125rem] uppercase;
-        @apply hover:bg-primaryHighlight cursor-pointer border-none;
+        @apply hover:bg-primaryHighlight cursor-pointer border-none text-center whitespace-nowrap;
       }
+
+      .btn.outline {
+        @apply bg-transparent text-primary border border-primary border-x;
+        @apply hover:bg-primaryHighlight hover:text-primaryHighlight;
+      }
+
       .form-item {
         @apply flex flex-col mb-8;
       }
@@ -144,6 +150,21 @@
       }
       .error-message {
         @apply text-error text-[0.875rem] mt-4 translate-x-1;
+      }
+
+      .list {
+        @apply flex flex-col
+      }
+
+      .btn.pagination {
+        @apply w-[12rem];
+      }
+
+      .htmx-indicator {
+        @apply hidden
+      }
+      .htmx-request.htmx-indicator,.htmx-request .htmx-indicator {
+        @apply flex absolute inset-0 w-full h-full 
       }
     }
   </style>
