@@ -1,66 +1,36 @@
-{{ template "layout" .LayoutProps }}
+{{ template "layout" . }}
 {{ define "body" }}
 <div class="content-wrapper my-[10rem]">
   <div class="content">
-    <div x-data="{loading:false}">
-      <h1 class="mb-8">Listable entity</h1>
-      <form class="mb-32">
-        <div class="form-item">
-          <label for="search">Search</label>
-          <input type="text" name="search" placeholder="Search" />
-        </div>
-      </form>
-      <div class="mb-8 flex justify-start">
-        <a href="/">
-          <div class="btn inline text-[0.75rem]">Create New</div>
-        </a>
+    <h1 class="mb-8">A list of random data</h1>
+    <form class="mb-32">
+      <div class="form-item">
+        <label for="search">Search</label>
+        <input type="text" name="search" placeholder="Search" />
       </div>
-      <div x-show="!loading" class="pastureen-list">
-        <div class="pastureen-list-item py-8" x-data="{open: false, loading: false}">
-          <div x-show="!loading">
-            <div class="flex flex-row justify-between items-start">
-              <div class="flex flex-row gap-8">
-                <img src="/static/assets/light.png" class="h-16 w-16 translate-y-2" />
-                <div class="cursor-pointer hover:text-onBackgroundHighlight">
-                  <a href="/">
-                    <h2 class="mb-2">How I used a reverse proxy to manage my domain</h2>
-                    <h5 class="pastureen-list-item-subtitle mb-8">Super super long subtitle</h5>
-                  </a>
-                </div>
-              </div>
-              <div class="cursor-pointer relative translate-y-2">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                  @click="open=!open" class="w-8 h-8 stroke-onBackground hover:stroke-onBackgroundHighlight">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
-                </svg>
-                <div x-show="open" @click.outside="open=false"
-                  class="absolute rounded-xl overflow-hidden top-[110%] text-right right-0 w-[8rem] bg-background drop-shadow-xl flex flex-col items-end w-[8rem]">
-                  <div @click="loading=true"
-                    class="px-8 py-4 hover:bg-backgroundHighlight w-full cursor-pointer relative">
-                    Edit
-                  </div>
-                  <div @click="loading=true"
-                    class="px-8 py-4 hover:bg-backgroundHighlight w-full cusrsor-pointer relative">
-                    Delete
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div x-show="loading"
-            class="flex flex-col py-8 rounded-xl text-center items-center animate-pulse bg-backgroundHighlight">
-            <h2 class="text-onBackgroundSubdued">Your item is loading</h2>
-          </div>
-        </div>
+    </form>
+    <div class="mb-8 flex justify-start">
+      <a href="/">
+        <div class="btn inline text-[0.75rem]">Create New</div>
+      </a>
+    </div>
+    <div class="lists-page-list">
+      <div class="lists-page-list-content">
+        {{ range .ListItems }}
+        {{ template "list_item" . }}
+        {{ end }}
         <div
-          class="pastureen-list-control bg-backgroundHighlight text-center text-onBackgroundSubdued rounded-xl py-8 flex justify-center items-center animate-pulse">
+          class="bg-backgroundHighlight text-center text-onBackgroundSubdued rounded-xl py-8 flex justify-center items-center animate-pulse">
           <h2>Loading more items....</h2>
         </div>
       </div>
-      <div x-show="loading"
-        class="flex flex-col text-center py-16 rounded-xl items-center animate-pulse bg-backgroundHighlight">
-        <h2 class="text-onBackgroundSubdued">Your list is loading...</h2>
+      <div class="lists-page-list-loading">
+        <div
+          class="bg-backgroundHighlight text-center text-onBackgroundSubdued rounded-xl py-8 flex justify-center items-center animate-pulse">
+          <h2>Loading list....</h2>
+        </div>
       </div>
     </div>
-    {{ end }}
+  </div>
+</div>
+{{ end }}

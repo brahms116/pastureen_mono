@@ -29,13 +29,10 @@ type TopbarProps struct {
 	CurrentPageId string
 }
 
-type LayoutProps struct {
+type PageProps struct {
 	Title       string
 	TopbarProps TopbarProps
-}
-
-type IndexProps struct {
-	LayoutProps LayoutProps
+	BodyProps   interface{}
 }
 
 func GetTopbarProps(page string) TopbarProps {
@@ -84,10 +81,12 @@ type HtmxListItemActionConfig struct {
 	ActionText      string
 	ActionIndicator string
 	ActionTarget    string
+	ActionLink      string
 }
 
 type UrlListItemActionConfig struct {
 	ActionLink string
+	ActionText string
 }
 
 func (c *HtmxListItemActionConfig) ActionType() string {
@@ -98,6 +97,8 @@ func (c *UrlListItemActionConfig) ActionType() string {
 	return "url"
 }
 
+var _ ListItemActionConfig = &UrlListItemActionConfig{}
+
 func ListItemActionConfigToProps(c *ListItemActionConfig) ListItemActionProps {
 	switch v := (*c).(type) {
 	case *HtmxListItemActionConfig:
@@ -106,14 +107,16 @@ func ListItemActionConfigToProps(c *ListItemActionConfig) ListItemActionProps {
 			ActionText:      v.ActionText,
 			ActionIndicator: v.ActionIndicator,
 			ActionTarget:    v.ActionTarget,
+			ActionLink:      v.ActionLink,
 		}
-  case *UrlListItemActionConfig:
-    return ListItemActionProps{
-      ActionType: "url",
-      ActionLink: v.ActionLink,
-    }
+	case *UrlListItemActionConfig:
+		return ListItemActionProps{
+			ActionType: "url",
+			ActionLink: v.ActionLink,
+			ActionText: v.ActionText,
+		}
 	}
-  return ListItemActionProps{}
+	panic("unknown list action type")
 }
 
 type ListItemActionConfig interface {
@@ -126,6 +129,11 @@ type ListItemProps struct {
 	Title    string
 	Subtitle string
 	Actions  []ListItemActionProps
+	Link     string
+}
+
+type ListPageProps struct {
+	ListItems []ListItemProps
 }
 
 func main() {
@@ -140,11 +148,9 @@ func main() {
 	r.GET("/", func(c *gin.Context) {
 		props := GetTopbarProps("home")
 		var buffer bytes.Buffer
-		if err := indexTemplate.ExecuteTemplate(&buffer, "index.html", IndexProps{
-			LayoutProps: LayoutProps{
-				Title:       "Home",
-				TopbarProps: props,
-			},
+		if err := indexTemplate.ExecuteTemplate(&buffer, "index.html", PageProps{
+			Title:       "Home",
+			TopbarProps: props,
 		}); err != nil {
 			c.Error(err)
 		}
@@ -154,12 +160,11 @@ func main() {
 	r.GET("/forms", func(c *gin.Context) {
 		props := GetTopbarProps("forms")
 		var buffer bytes.Buffer
-		if err := formsTemplate.ExecuteTemplate(&buffer, "forms.html", IndexProps{
-			LayoutProps: LayoutProps{
-				Title:       "Forms",
-				TopbarProps: props,
-			},
-		}); err != nil {
+		if err := formsTemplate.ExecuteTemplate(&buffer, "forms.html", PageProps{
+			Title:       "Forms",
+			TopbarProps: props,
+		},
+		); err != nil {
 			c.Error(err)
 		}
 		c.Data(http.StatusOK, "text/html; charset=utf-8", buffer.Bytes())
@@ -168,12 +173,37 @@ func main() {
 	r.GET("/lists", func(c *gin.Context) {
 		props := GetTopbarProps("lists")
 		var buffer bytes.Buffer
-		if err := listsTemplate.ExecuteTemplate(&buffer, "lists.html", IndexProps{
-			LayoutProps: LayoutProps{
+		var _ ListItemActionConfig = &UrlListItemActionConfig{
+			ActionLink: "/",
+			ActionText: "Home",
+		}
+
+		listItem := ListItemProps{
+			ImageSrc: "/static/assets/light.png",
+			ImageAlt: "Light",
+			Title:    "Light",
+			Subtitle: "A light",
+			Actions: []ListItemActionProps{
+				// ListItemActionConfigToProps(&urlListItemActionConfig),
+			},
+		}
+
+		if err := listsTemplate.ExecuteTemplate(&buffer, "lists.html",
+			PageProps{
 				Title:       "Lists",
 				TopbarProps: props,
+				BodyProps: ListPageProps{
+					ListItems: []ListItemProps{
+            listItem,
+            listItem,
+            listItem,
+            listItem,
+            listItem,
+            listItem,
+					},
+				},
 			},
-		}); err != nil {
+		); err != nil {
 			c.Error(err)
 		}
 		c.Data(http.StatusOK, "text/html; charset=utf-8", buffer.Bytes())

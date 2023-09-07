@@ -1,0 +1,30 @@
+{{ block "list_item" . }}
+<div class="pastureen-list-item py-8">
+  <div class="pastureen-list-item-content flex-row justify-between items-start">
+    <div class="flex flex-row gap-8">
+      <img src="{{ .ImageSrc}}" alt="{{ .ImageAlt }}" class="h-16 w-16 translate-y-2" />
+      <div class="
+        {{ if .Link }}
+        cursor-pointer hover:text-onBackgroundHighlight
+        {{ end }}
+      ">
+        {{ if .Link }}
+        <a href="{{ .Link }}">
+          {{ end }}
+          <h2 class="mb-2">{{ .Title }}</h2>
+          <h5 class="pastureen-list-item-subtitle mb-8">{{ .Subtitle }}</h5>
+          {{ if .Link }}
+        </a>
+        {{ end }}
+      </div>
+    </div>
+    {{ if len .Actions }}
+      {{ template "list_item_action_menu" .Actions }}
+    {{ end }}
+  </div>
+  <div
+    class="pastureen-list-item-loading flex-col py-8 rounded-xl text-center items-center animate-pulse bg-backgroundHighlight">
+    <h2 class="text-onBackgroundSubdued">Your item is loading</h2>
+  </div>
+</div>
+{{ end }}

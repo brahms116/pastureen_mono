@@ -160,11 +160,20 @@
         @apply w-[12rem];
       }
 
-      .htmx-indicator {
+      .pastureen-list-item .pastureen-list-item-content {
+        @apply flex
+      }
+
+      .pastureen-list-item .pastureen-list-item-loading {
         @apply hidden
       }
-      .htmx-request.htmx-indicator,.htmx-request .htmx-indicator {
-        @apply flex absolute inset-0 w-full h-full 
+
+      .pastureen-list-item.htmx-request .pastureen-list-item-content {
+        @apply hidden
+      }
+
+      .pastureen-list-item.htmx-request .pastureen-list-item-loading {
+        @apply flex
       }
     }
   </style>
@@ -172,7 +181,7 @@
 
 <body>
   {{ template "topbar" .TopbarProps }}
-  {{ block "body" . }}
+  {{ block "body" .BodyProps }}
 
   {{ end }}
 </body>
