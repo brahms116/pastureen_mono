@@ -52,9 +52,10 @@ func GetTopbarProps(page string) TopbarProps {
 				ShouldBeActive:    page == "home",
 			},
 			{
-				Link:           "/forms",
-				Text:           "Forms",
-				ShouldBeActive: page == "forms",
+				Link:              "/forms",
+				Text:              "Forms",
+				ShouldHaveDivider: true,
+				ShouldBeActive:    page == "forms",
 			},
 			{
 				Link:           "/lists",
@@ -70,6 +71,62 @@ var f embed.FS
 
 //go:embed assets/*
 var assetsFS embed.FS
+
+type ListItemActionProps struct {
+	ActionType      string
+	ActionText      string
+	ActionLink      string
+	ActionIndicator string
+	ActionTarget    string
+}
+
+type HtmxListItemActionConfig struct {
+	ActionText      string
+	ActionIndicator string
+	ActionTarget    string
+}
+
+type UrlListItemActionConfig struct {
+	ActionLink string
+}
+
+func (c *HtmxListItemActionConfig) ActionType() string {
+	return "htmx"
+}
+
+func (c *UrlListItemActionConfig) ActionType() string {
+	return "url"
+}
+
+func ListItemActionConfigToProps(c *ListItemActionConfig) ListItemActionProps {
+	switch v := (*c).(type) {
+	case *HtmxListItemActionConfig:
+		return ListItemActionProps{
+			ActionType:      "htmx",
+			ActionText:      v.ActionText,
+			ActionIndicator: v.ActionIndicator,
+			ActionTarget:    v.ActionTarget,
+		}
+  case *UrlListItemActionConfig:
+    return ListItemActionProps{
+      ActionType: "url",
+      ActionLink: v.ActionLink,
+    }
+	}
+  return ListItemActionProps{}
+}
+
+type ListItemActionConfig interface {
+	ActionType() string
+}
+
+type ListItemProps struct {
+	ImageSrc string
+	ImageAlt string
+	Title    string
+	Subtitle string
+	Actions  []ListItemActionProps
+}
 
 func main() {
 	r := gin.Default()
