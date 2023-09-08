@@ -2,7 +2,7 @@
 {{ define "body" }}
 <div class="content-wrapper my-[10rem]">
   <div class="content">
-    <h1 class="mb-8">A list of random data</h1>
+    <h1 class="mb-8">A list of random items</h1>
     <form class="mb-32">
       <div class="form-item">
         <label for="search">Search</label>
@@ -16,7 +16,6 @@
     </div>
     <div class="lists-page-list">
       <div class="lists-page-list-content">
-        {{ range .ListItems }}
         {{ template "list_item" . }}
         {{ end }}
         <div

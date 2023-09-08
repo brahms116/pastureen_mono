@@ -9,7 +9,7 @@
     class="absolute rounded-xl overflow-hidden top-[110%] text-right right-0 w-[8rem] bg-background drop-shadow-xl flex flex-col items-end w-[8rem]">
     {{ range . }}
     <div class="px-8 py-4 hover:bg-backgroundHighlight w-full cursor-pointer relative" {{ if eq .ActionType "htmx" }}
-      hx-get="{{ .ActionLink }}" hx-target="{{ .ActionTarget }}" hx-swap="outerHTML" hx-indicator="{{.ActionIndicator}}"
+      hx-get="{{ .ActionLink }}" hx-target="{{ .ActionTarget }}" hx-swap="innerHTML" hx-indicator="{{.ActionIndicator}}"
       {{ else if eq .ActionType "url" }} onclick="window.location.href='{{ .ActionLink }}'" {{ end }}>
       {{ .ActionText }}
     </div>
