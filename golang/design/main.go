@@ -2,12 +2,11 @@ package main
 
 import (
 	"bytes"
+	"embed"
 	"github.com/gin-gonic/gin"
+	"html/template"
+	"net/http"
 )
-
-import "embed"
-import "html/template"
-import "net/http"
 
 type LogoProps struct {
 	LogoText string
@@ -173,9 +172,9 @@ func main() {
 	r.GET("/lists", func(c *gin.Context) {
 		props := GetTopbarProps("lists")
 		var buffer bytes.Buffer
-		var _ ListItemActionConfig = &UrlListItemActionConfig{
-			ActionLink: "/",
-			ActionText: "Home",
+		var urlListItemActionConfig ListItemActionConfig = &UrlListItemActionConfig{
+			ActionLink: "/lists",
+			ActionText: "Edit",
 		}
 
 		listItem := ListItemProps{
@@ -183,8 +182,8 @@ func main() {
 			ImageAlt: "Light",
 			Title:    "Light",
 			Subtitle: "A light",
-			Actions: []ListItemActionProps{
-				// ListItemActionConfigToProps(&urlListItemActionConfig),
+			Actions:  []ListItemActionProps{
+				ListItemActionConfigToProps(&urlListItemActionConfig),
 			},
 		}
 
@@ -194,12 +193,12 @@ func main() {
 				TopbarProps: props,
 				BodyProps: ListPageProps{
 					ListItems: []ListItemProps{
-            listItem,
-            listItem,
-            listItem,
-            listItem,
-            listItem,
-            listItem,
+						listItem,
+						listItem,
+						listItem,
+						listItem,
+						listItem,
+						listItem,
 					},
 				},
 			},
