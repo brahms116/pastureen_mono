@@ -16,6 +16,7 @@
     </div>
     <div class="lists-page-list">
       <div class="lists-page-list-content">
+        {{ range .ListItems }}
         {{ template "list_item" . }}
         {{ end }}
         <div
