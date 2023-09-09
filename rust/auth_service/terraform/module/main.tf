@@ -1,6 +1,6 @@
 
 module "function" {
-  source               = "../../../terraform/aws_lambda"
+  source               = "../../../../terraform/aws_lambda"
   lambda_function_name = "${local.service}_${var.environment}"
   http_adapter         = true
 }
