@@ -5,11 +5,11 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
-	"github.com/gin-gonic/gin"
 )
 
 type LogoProps struct {
@@ -182,19 +182,19 @@ func QueryFakeData(searchString string, cursor int) (QueryResult, error) {
 		items = data.Items
 	} else {
 		for _, item := range data.Items {
-      upperCaseSearchString := strings.ToUpper(searchString)
-      upperCaseTitle := strings.ToUpper(item.Title)
+			upperCaseSearchString := strings.ToUpper(searchString)
+			upperCaseTitle := strings.ToUpper(item.Title)
 			if strings.Contains(upperCaseTitle, upperCaseSearchString) {
 				items = append(items, item)
 			}
 		}
 	}
 
-  if len(items) == 0 {
-    return QueryResult{
-      IsLastPage: true,
-    }, nil
-  }
+	if len(items) == 0 {
+		return QueryResult{
+			IsLastPage: true,
+		}, nil
+	}
 
 	numPerPage := 10
 	totalItems := len(items)
@@ -259,6 +259,10 @@ func main() {
 	listsTemplate := template.Must(template.ParseFS(f, "templates/pages/lists.html", "templates/layout/*.html", "templates/page_components/*.html", "templates/components/*.html"))
 
 	r.StaticFS("/static", http.FS(assetsFS))
+
+	r.GET("/healthcheck", func(c *gin.Context) {
+		c.String(http.StatusOK, "OK")
+	})
 
 	r.GET("/", func(c *gin.Context) {
 		props := GetTopbarProps("home")
