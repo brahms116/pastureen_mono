@@ -161,19 +161,35 @@
       }
 
       .pastureen-list-item .pastureen-list-item-content {
-        @apply flex
+        @apply flex;
       }
 
       .pastureen-list-item .pastureen-list-item-loading {
-        @apply hidden
+        @apply hidden;
       }
 
       .pastureen-list-item.htmx-request .pastureen-list-item-content {
-        @apply hidden
+        @apply hidden;
       }
 
       .pastureen-list-item.htmx-request .pastureen-list-item-loading {
-        @apply flex
+        @apply flex;
+      }
+
+      .lists-page-list .lists-page-list-content {
+        @apply block;
+      }
+
+      .lists-page-list .lists-page-list-loading {
+        @apply hidden;
+      }
+
+      .lists-page-list.htmx-request .lists-page-list-content {
+        @apply hidden;
+      }
+
+      .lists-page-list.htmx-request .lists-page-list-loading {
+        @apply flex;
       }
     }
   </style>

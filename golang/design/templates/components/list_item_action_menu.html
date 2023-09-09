@@ -6,7 +6,7 @@
       d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
   </svg>
   <div x-show="open" @click.outside="open=false"
-    class="absolute rounded-xl overflow-hidden top-[110%] text-right right-0 w-[8rem] bg-background drop-shadow-xl flex flex-col items-end w-[8rem]">
+    class="absolute rounded-xl overflow-hidden top-[110%] text-right right-0 bg-background drop-shadow-xl flex flex-col items-end">
     {{ range . }}
     <div class="px-8 py-4 hover:bg-backgroundHighlight w-full cursor-pointer relative" {{ if eq .ActionType "htmx" }}
       hx-get="{{ .ActionLink }}" hx-target="{{ .ActionTarget }}" hx-swap="innerHTML" hx-indicator="{{.ActionIndicator}}"

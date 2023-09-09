@@ -2,32 +2,36 @@
 {{ define "body" }}
 <div class="content-wrapper my-[10rem]">
   <div class="content">
-    <h1 class="mb-8">A list of random items</h1>
-    <form class="mb-32">
+    <div class="flex justify-between mb-8">
+      <h1 class="mb-0">A list of random people</h1>
+      <div class="translate-transform translate-y-6">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" @click="open=!open"
+          class="w-8 h-8 min-h-[2rem] min-w-[2rem] stroke-onBackground hover:stroke-onBackgroundHighlight">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
+        </svg>
+      </div>
+    </div>
+    <form class="mb-16">
       <div class="form-item">
         <label for="search">Search</label>
         <input type="text" name="search" placeholder="Search" />
       </div>
     </form>
-    <div class="mb-8 flex justify-start">
-      <a href="/">
-        <div class="btn inline text-[0.75rem]">Create New</div>
-      </a>
-    </div>
     <div class="lists-page-list">
       <div class="lists-page-list-content">
         {{ range .ListItems }}
         {{ template "list_item" . }}
         {{ end }}
         <div
-          class="bg-backgroundHighlight text-center text-onBackgroundSubdued rounded-xl py-8 flex justify-center items-center animate-pulse">
-          <h2>Loading more items....</h2>
+          class="bg-backgroundHighlight text-center mt-4 text-onBackgroundSubdued rounded-xl py-8 flex justify-center items-center animate-pulse">
+          <h2>Loading items....</h2>
         </div>
       </div>
       <div class="lists-page-list-loading">
         <div
           class="bg-backgroundHighlight text-center text-onBackgroundSubdued rounded-xl py-8 flex justify-center items-center animate-pulse">
-          <h2>Loading list....</h2>
+          <h2>Searching items....</h2>
         </div>
       </div>
     </div>
