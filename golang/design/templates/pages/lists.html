@@ -10,17 +10,18 @@
       </div>
       {{ end }}
     </div>
-    <form class="mb-16">
+    <form class="mb-16" @submit.prevent>
       <div class="form-item">
         <label for="search">Search</label>
-        <input type="text" name="search" placeholder="Search" />
+        <input hx-post="/htmx/lists_page_search" hx-trigger="keyup changed delay:0.5s" hx-swap="innerHTML"
+          hx-indicator=".lists-page-list" hx-target=".lists-page-list-content" type="text" name="search" placeholder="Search" />
       </div>
     </form>
-    <div class="lists-page-list">
+    <div class="lists-page-list w-full">
       <div class="lists-page-list-content">
         {{ template "lists_page_paginator" .Paginator }}
       </div>
-      <div class="lists-page-list-loading">
+      <div class="lists-page-list-loading flex flex-col w-full">
         <div
           class="bg-backgroundHighlight text-center text-onBackgroundSubdued rounded-xl py-8 flex justify-center items-center animate-pulse">
           <h2>Searching items....</h2>

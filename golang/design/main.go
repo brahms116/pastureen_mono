@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -164,6 +165,93 @@ type ListsPageListResponseProps struct {
 	PaginatorPresent bool
 }
 
+type QueryResult struct {
+	Items          []FakeDataItem
+	IsLastPage     bool
+	NextPageCursor int
+}
+
+func QueryFakeData(searchString string, cursor int) (QueryResult, error) {
+	var data FakeData
+	if err := json.Unmarshal(fakeData, &data); err != nil {
+		return QueryResult{}, err
+	}
+
+	var items []FakeDataItem
+
+	if searchString == "" {
+		items = data.Items
+	} else {
+		for _, item := range data.Items {
+      upperCaseSearchString := strings.ToUpper(searchString)
+      upperCaseTitle := strings.ToUpper(item.Title)
+			if strings.Contains(upperCaseTitle, upperCaseSearchString) {
+				items = append(items, item)
+			}
+		}
+	}
+
+  if len(items) == 0 {
+    return QueryResult{
+      IsLastPage: true,
+    }, nil
+  }
+
+	numPerPage := 10
+	totalItems := len(items)
+	nextPageCursor := cursor + numPerPage
+	isLastPage := nextPageCursor >= totalItems-1
+	var pageEnd int
+
+	if isLastPage {
+		pageEnd = totalItems - 1
+	} else {
+		pageEnd = nextPageCursor
+	}
+	responseItems := items[cursor:pageEnd]
+
+	return QueryResult{
+		Items:          responseItems,
+		IsLastPage:     isLastPage,
+		NextPageCursor: nextPageCursor,
+	}, nil
+}
+
+func FakeDataItemToListItemProps(item FakeDataItem) ListItemProps {
+	return ListItemProps{
+		ImageSrc: "/static/assets/logo.png",
+		ImageAlt: "Logo",
+		Title:    item.Title,
+		Subtitle: item.Subtitle,
+		Tags:     item.Tags,
+	}
+}
+
+func FakeDataItemsToListItemProps(items []FakeDataItem) []ListItemProps {
+	var result []ListItemProps
+	for _, item := range items {
+		result = append(result, FakeDataItemToListItemProps(item))
+	}
+	return result
+}
+
+func ListItemPropsToListsPageResponseProps(
+	items []ListItemProps,
+	searchString string, cursor int, isLastPage bool,
+) ListsPageListResponseProps {
+	var paginatorProps ListsPagePaginatorProps
+	if !isLastPage {
+		paginatorProps = ListsPagePaginatorProps{
+			PaginatorRequestUrl: fmt.Sprintf("htmx/lists_page_list?search=%s&cursor=%d", searchString, cursor),
+		}
+	}
+	return ListsPageListResponseProps{
+		Items:            items,
+		PaginatorProps:   paginatorProps,
+		PaginatorPresent: !isLastPage,
+	}
+}
+
 func main() {
 	r := gin.Default()
 
@@ -228,53 +316,36 @@ func main() {
 
 	r.GET("/htmx/lists_page_list", func(c *gin.Context) {
 		var buffer bytes.Buffer
-		var data FakeData
-
-		if err := json.Unmarshal(fakeData, &data); err != nil {
-			c.Error(err)
-		}
-
-		numPerPage := 10
-
+		searchString := c.Query("search")
 		cursor, err := strconv.Atoi(c.Query("cursor"))
 		if err != nil {
 			c.Error(err)
 		}
-
-		totalItems := len(data.Items)
-		nextCursor := cursor + numPerPage
-		isLastPage := nextCursor >= totalItems-1
-
-		var pageEnd int
-		if isLastPage {
-			pageEnd = totalItems - 1
-		} else {
-			pageEnd = nextCursor
-		}
-
-		responseItems := data.Items[cursor:pageEnd]
-		var responseItemsProps []ListItemProps
-		for _, item := range responseItems {
-			responseItemsProps = append(responseItemsProps, ListItemProps{
-				ImageSrc: "/static/assets/logo.png",
-				ImageAlt: "Logo",
-				Title:    item.Title,
-				Subtitle: item.Subtitle,
-				Tags:     item.Tags,
-			})
-		}
-
-		if err := listsTemplate.ExecuteTemplate(&buffer, "lists_page_list_response.html", ListsPageListResponseProps{
-			Items: responseItemsProps,
-			PaginatorProps: ListsPagePaginatorProps{
-				PaginatorRequestUrl: fmt.Sprintf("/htmx/lists_page_list?cursor=%d", nextCursor),
-			},
-			PaginatorPresent: !isLastPage,
-		}); err != nil {
+		result, err := QueryFakeData(searchString, cursor)
+		if err != nil {
 			c.Error(err)
 		}
+		itemsProps := FakeDataItemsToListItemProps(result.Items)
+		responseProps := ListItemPropsToListsPageResponseProps(itemsProps, searchString, result.NextPageCursor, result.IsLastPage)
+		if err := listsTemplate.ExecuteTemplate(&buffer, "lists_page_list_response.html", responseProps); err != nil {
+			c.Error(err)
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", buffer.Bytes())
+	})
 
-    c.Data(http.StatusOK, "text/html; charset=utf-8", buffer.Bytes())
+	r.POST("/htmx/lists_page_search", func(c *gin.Context) {
+		var buffer bytes.Buffer
+		queryString := c.PostForm("search")
+		result, err := QueryFakeData(queryString, 0)
+		if err != nil {
+			c.Error(err)
+		}
+		itemsProps := FakeDataItemsToListItemProps(result.Items)
+		responseProps := ListItemPropsToListsPageResponseProps(itemsProps, queryString, result.NextPageCursor, result.IsLastPage)
+		if err := listsTemplate.ExecuteTemplate(&buffer, "lists_page_list_response.html", responseProps); err != nil {
+			c.Error(err)
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", buffer.Bytes())
 	})
 
 	r.Run()
