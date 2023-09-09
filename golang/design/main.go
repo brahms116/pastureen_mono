@@ -3,9 +3,13 @@ package main
 import (
 	"bytes"
 	"embed"
-	"github.com/gin-gonic/gin"
+	"encoding/json"
+	"fmt"
 	"html/template"
 	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 type LogoProps struct {
@@ -67,6 +71,19 @@ var f embed.FS
 
 //go:embed assets/*
 var assetsFS embed.FS
+
+//go:embed fake_data.json
+var fakeData []byte
+
+type FakeDataItem struct {
+	Title    string   `json:"title"`
+	Subtitle string   `json:"subtitle"`
+	Tags     []string `json:"tags"`
+}
+
+type FakeData struct {
+	Items []FakeDataItem `json:"items"`
+}
 
 type ActionItemProps struct {
 	ActionType      string
@@ -132,9 +149,19 @@ type ListItemProps struct {
 	Link     string
 }
 
-type ListPageProps struct {
-	ListItems []ListItemProps
+type ListsPageProps struct {
+	Paginator ListsPagePaginatorProps
 	Actions   []ActionItemProps
+}
+
+type ListsPagePaginatorProps struct {
+	PaginatorRequestUrl string
+}
+
+type ListsPageListResponseProps struct {
+	Items            []ListItemProps
+	PaginatorProps   ListsPagePaginatorProps
+	PaginatorPresent bool
 }
 
 func main() {
@@ -174,39 +201,19 @@ func main() {
 	r.GET("/lists", func(c *gin.Context) {
 		props := GetTopbarProps("lists")
 		var buffer bytes.Buffer
-		var urlListItemActionConfig ActionItemConfig = &UrlActionItemConfig{
-			ActionLink: "/lists",
-			ActionText: "Edit",
-		}
 
 		var addNewPersonActionConfig ActionItemConfig = &UrlActionItemConfig{
 			ActionLink: "/lists",
 			ActionText: "Add New Person",
 		}
 
-		listItem := ListItemProps{
-			ImageSrc: "/static/assets/light.png",
-			ImageAlt: "Light",
-			Title:    "Light",
-			Subtitle: "A light",
-			Tags:     []string{"light", "bulb"},
-			Actions: []ActionItemProps{
-				ActionItemConfigToProps(&urlListItemActionConfig),
-			},
-		}
-
 		if err := listsTemplate.ExecuteTemplate(&buffer, "lists.html",
 			PageProps{
 				Title:       "Lists",
 				TopbarProps: props,
-				BodyProps: ListPageProps{
-					ListItems: []ListItemProps{
-						listItem,
-						listItem,
-						listItem,
-						listItem,
-						listItem,
-						listItem,
+				BodyProps: ListsPageProps{
+					Paginator: ListsPagePaginatorProps{
+						PaginatorRequestUrl: "/htmx/lists_page_list?cursor=0",
 					},
 					Actions: []ActionItemProps{
 						ActionItemConfigToProps(&addNewPersonActionConfig),
@@ -217,6 +224,57 @@ func main() {
 			c.Error(err)
 		}
 		c.Data(http.StatusOK, "text/html; charset=utf-8", buffer.Bytes())
+	})
+
+	r.GET("/htmx/lists_page_list", func(c *gin.Context) {
+		var buffer bytes.Buffer
+		var data FakeData
+
+		if err := json.Unmarshal(fakeData, &data); err != nil {
+			c.Error(err)
+		}
+
+		numPerPage := 10
+
+		cursor, err := strconv.Atoi(c.Query("cursor"))
+		if err != nil {
+			c.Error(err)
+		}
+
+		totalItems := len(data.Items)
+		nextCursor := cursor + numPerPage
+		isLastPage := nextCursor >= totalItems-1
+
+		var pageEnd int
+		if isLastPage {
+			pageEnd = totalItems - 1
+		} else {
+			pageEnd = nextCursor
+		}
+
+		responseItems := data.Items[cursor:pageEnd]
+		var responseItemsProps []ListItemProps
+		for _, item := range responseItems {
+			responseItemsProps = append(responseItemsProps, ListItemProps{
+				ImageSrc: "/static/assets/logo.png",
+				ImageAlt: "Logo",
+				Title:    item.Title,
+				Subtitle: item.Subtitle,
+				Tags:     item.Tags,
+			})
+		}
+
+		if err := listsTemplate.ExecuteTemplate(&buffer, "lists_page_list_response.html", ListsPageListResponseProps{
+			Items: responseItemsProps,
+			PaginatorProps: ListsPagePaginatorProps{
+				PaginatorRequestUrl: fmt.Sprintf("/htmx/lists_page_list?cursor=%d", nextCursor),
+			},
+			PaginatorPresent: !isLastPage,
+		}); err != nil {
+			c.Error(err)
+		}
+
+    c.Data(http.StatusOK, "text/html; charset=utf-8", buffer.Bytes())
 	})
 
 	r.Run()

@@ -17,9 +17,9 @@
           {{ if .Link }}
         </a>
         {{ end }}
-        <div class="flex flex-row gap-4">
+        <div class="flex flex-row gap-4 flex-wrap">
           {{ range .Tags }}
-          <div class="bg-backgroundHighlight uppercase text-[0.75rem] text-onBackgroundSubdued rounded-full px-4 py-2">
+          <div class="bg-backgroundHighlight whitespace-nowrap uppercase text-[0.75rem] text-onBackgroundSubdued rounded-full px-4 py-2">
             {{ . }}
           </div>
           {{ end }}

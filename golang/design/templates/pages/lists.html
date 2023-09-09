@@ -18,13 +18,7 @@
     </form>
     <div class="lists-page-list">
       <div class="lists-page-list-content">
-        {{ range .ListItems }}
-        {{ template "list_item" . }}
-        {{ end }}
-        <div
-          class="bg-backgroundHighlight text-center mt-4 text-onBackgroundSubdued rounded-xl py-8 flex justify-center items-center animate-pulse">
-          <h2>Loading items....</h2>
-        </div>
+        {{ template "lists_page_paginator" .Paginator }}
       </div>
       <div class="lists-page-list-loading">
         <div
