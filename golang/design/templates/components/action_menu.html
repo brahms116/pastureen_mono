@@ -1,4 +1,4 @@
-{{ block "list_item_action_menu" . }}
+{{ block "action_menu" . }}
 <div class="cursor-pointer relative translate-y-2" x-data="{open:false}">
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" @click="open=!open"
     class="w-8 h-8 stroke-onBackground hover:stroke-onBackgroundHighlight">
@@ -8,7 +8,7 @@
   <div x-show="open" @click.outside="open=false"
     class="absolute rounded-xl overflow-hidden top-[110%] text-right right-0 bg-background drop-shadow-xl flex flex-col items-end">
     {{ range . }}
-    <div class="px-8 py-4 hover:bg-backgroundHighlight w-full cursor-pointer relative" {{ if eq .ActionType "htmx" }}
+    <div class="px-8 py-4 whitespace-nowrap hover:bg-backgroundHighlight w-full cursor-pointer relative" {{ if eq .ActionType "htmx" }}
       hx-get="{{ .ActionLink }}" hx-target="{{ .ActionTarget }}" hx-swap="innerHTML" hx-indicator="{{.ActionIndicator}}"
       {{ else if eq .ActionType "url" }} onclick="window.location.href='{{ .ActionLink }}'" {{ end }}>
       {{ .ActionText }}

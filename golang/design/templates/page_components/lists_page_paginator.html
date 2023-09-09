@@ -1,0 +1,6 @@
+{{ block "lists_page_paginator" . }}
+<div htmx-get="{{ .PaginatorRequest }}" htmx-target=".lists-page-paginator"
+  class="lists-page-paginator bg-backgroundHighlight text-center mt-4 text-onBackgroundSubdued rounded-xl py-8 flex justify-center items-center animate-pulse">
+  <h2>Loading items....</h2>
+</div>
+{{ end }}

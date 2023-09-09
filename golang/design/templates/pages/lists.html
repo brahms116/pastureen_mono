@@ -4,13 +4,11 @@
   <div class="content">
     <div class="flex justify-between mb-8">
       <h1 class="mb-0">A list of random people</h1>
+      {{ if len .Actions }}
       <div class="translate-transform translate-y-6">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" @click="open=!open"
-          class="w-8 h-8 min-h-[2rem] min-w-[2rem] stroke-onBackground hover:stroke-onBackgroundHighlight">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
-        </svg>
+        {{ template "action_menu" .Actions }}
       </div>
+      {{ end }}
     </div>
     <form class="mb-16">
       <div class="form-item">

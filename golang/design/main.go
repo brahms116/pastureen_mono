@@ -68,7 +68,7 @@ var f embed.FS
 //go:embed assets/*
 var assetsFS embed.FS
 
-type ListItemActionProps struct {
+type ActionItemProps struct {
 	ActionType      string
 	ActionText      string
 	ActionLink      string
@@ -76,40 +76,40 @@ type ListItemActionProps struct {
 	ActionTarget    string
 }
 
-type HtmxListItemActionConfig struct {
+type HtmxActionItemConfig struct {
 	ActionText      string
 	ActionIndicator string
 	ActionTarget    string
 	ActionLink      string
 }
 
-type UrlListItemActionConfig struct {
+type UrlActionItemConfig struct {
 	ActionLink string
 	ActionText string
 }
 
-func (c *HtmxListItemActionConfig) ActionType() string {
+func (c *HtmxActionItemConfig) ActionType() string {
 	return "htmx"
 }
 
-func (c *UrlListItemActionConfig) ActionType() string {
+func (c *UrlActionItemConfig) ActionType() string {
 	return "url"
 }
 
-var _ ListItemActionConfig = &UrlListItemActionConfig{}
+var _ ActionItemConfig = &UrlActionItemConfig{}
 
-func ListItemActionConfigToProps(c *ListItemActionConfig) ListItemActionProps {
+func ActionItemConfigToProps(c *ActionItemConfig) ActionItemProps {
 	switch v := (*c).(type) {
-	case *HtmxListItemActionConfig:
-		return ListItemActionProps{
+	case *HtmxActionItemConfig:
+		return ActionItemProps{
 			ActionType:      "htmx",
 			ActionText:      v.ActionText,
 			ActionIndicator: v.ActionIndicator,
 			ActionTarget:    v.ActionTarget,
 			ActionLink:      v.ActionLink,
 		}
-	case *UrlListItemActionConfig:
-		return ListItemActionProps{
+	case *UrlActionItemConfig:
+		return ActionItemProps{
 			ActionType: "url",
 			ActionLink: v.ActionLink,
 			ActionText: v.ActionText,
@@ -118,7 +118,7 @@ func ListItemActionConfigToProps(c *ListItemActionConfig) ListItemActionProps {
 	panic("unknown list action type")
 }
 
-type ListItemActionConfig interface {
+type ActionItemConfig interface {
 	ActionType() string
 }
 
@@ -127,20 +127,22 @@ type ListItemProps struct {
 	ImageAlt string
 	Title    string
 	Subtitle string
-	Actions  []ListItemActionProps
+	Actions  []ActionItemProps
+	Tags     []string
 	Link     string
 }
 
 type ListPageProps struct {
 	ListItems []ListItemProps
+	Actions   []ActionItemProps
 }
 
 func main() {
 	r := gin.Default()
 
-	indexTemplate := template.Must(template.ParseFS(f, "templates/pages/index.html", "templates/layout/*.html", "templates/components/*.html"))
-	formsTemplate := template.Must(template.ParseFS(f, "templates/pages/forms.html", "templates/layout/*.html", "templates/components/*.html"))
-	listsTemplate := template.Must(template.ParseFS(f, "templates/pages/lists.html", "templates/layout/*.html", "templates/components/*.html"))
+	indexTemplate := template.Must(template.ParseFS(f, "templates/pages/index.html", "templates/layout/*.html", "templates/page_components/*.html", "templates/components/*.html"))
+	formsTemplate := template.Must(template.ParseFS(f, "templates/pages/forms.html", "templates/layout/*.html", "templates/page_components/*.html", "templates/components/*.html"))
+	listsTemplate := template.Must(template.ParseFS(f, "templates/pages/lists.html", "templates/layout/*.html", "templates/page_components/*.html", "templates/components/*.html"))
 
 	r.StaticFS("/static", http.FS(assetsFS))
 
@@ -172,9 +174,14 @@ func main() {
 	r.GET("/lists", func(c *gin.Context) {
 		props := GetTopbarProps("lists")
 		var buffer bytes.Buffer
-		var urlListItemActionConfig ListItemActionConfig = &UrlListItemActionConfig{
+		var urlListItemActionConfig ActionItemConfig = &UrlActionItemConfig{
 			ActionLink: "/lists",
 			ActionText: "Edit",
+		}
+
+		var addNewPersonActionConfig ActionItemConfig = &UrlActionItemConfig{
+			ActionLink: "/lists",
+			ActionText: "Add New Person",
 		}
 
 		listItem := ListItemProps{
@@ -182,8 +189,9 @@ func main() {
 			ImageAlt: "Light",
 			Title:    "Light",
 			Subtitle: "A light",
-			Actions:  []ListItemActionProps{
-				ListItemActionConfigToProps(&urlListItemActionConfig),
+			Tags:     []string{"light", "bulb"},
+			Actions: []ActionItemProps{
+				ActionItemConfigToProps(&urlListItemActionConfig),
 			},
 		}
 
@@ -199,6 +207,9 @@ func main() {
 						listItem,
 						listItem,
 						listItem,
+					},
+					Actions: []ActionItemProps{
+						ActionItemConfigToProps(&addNewPersonActionConfig),
 					},
 				},
 			},
