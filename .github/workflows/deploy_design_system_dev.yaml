@@ -1,0 +1,19 @@
+name: Deploy design system (dev)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy_design_system:
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Deploy reverse proxy
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        run: cd golang/design && ./deploy.sh dev
+
