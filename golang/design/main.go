@@ -217,12 +217,19 @@ func QueryFakeData(searchString string, cursor int) (QueryResult, error) {
 }
 
 func FakeDataItemToListItemProps(item FakeDataItem) ListItemProps {
+  var actionConfig ActionItemConfig = &UrlActionItemConfig{
+    ActionLink: "/",
+    ActionText: "Fire me",
+  }
 	return ListItemProps{
 		ImageSrc: "/static/assets/logo.png",
 		ImageAlt: "Logo",
 		Title:    item.Title,
 		Subtitle: item.Subtitle,
 		Tags:     item.Tags,
+    Actions: []ActionItemProps{
+      ActionItemConfigToProps(&actionConfig),
+    },
 	}
 }
 
