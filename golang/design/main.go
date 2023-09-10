@@ -60,7 +60,25 @@ func GetTopbarProps(page string) TopbarProps {
 			{
 				Link:           "/lists",
 				Text:           "Lists",
+				ShouldHaveDivider: true,
 				ShouldBeActive: page == "lists",
+			},
+			{
+				Link:           "/color",
+				Text:           "Color",
+				ShouldHaveDivider: true,
+				ShouldBeActive: page == "color",
+			},
+			{
+				Link:           "/typography",
+				Text:           "Type",
+				ShouldHaveDivider: true,
+				ShouldBeActive: page == "typography",
+			},
+			{
+				Link:           "/assets",
+				Text:           "Assets",
+				ShouldBeActive: page == "assets",
 			},
 		},
 	}
