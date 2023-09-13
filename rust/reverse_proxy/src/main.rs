@@ -18,7 +18,6 @@ pub enum ReverseProxyError {
     ProxyRequestError(#[from] hyper::Error),
 }
 
-
 /* CONFIG */
 
 pub struct ReverseProxyConfig {
@@ -41,9 +40,9 @@ impl ReverseProxyConfig {
     }
 }
 
-
 /* ROUTE */
 
+#[derive(Debug)]
 pub enum Route {
     DesignSystem(String),
     NotFound,
@@ -107,38 +106,40 @@ fn strip_prefix(input: &str, prefix: &str) -> String {
     input.to_string()
 }
 
-
 /* PROXY_ROUTE */
 
+#[derive(Debug)]
 pub enum ProxyRoute {
     DesignSystem(String),
 }
 
 impl ProxyRoute {
-    pub fn proxied_path_and_query(&self) -> String {
-        get_proxied_path_and_query(self)
+    pub fn proxied_uri(&self, config: &ReverseProxyConfig) -> String {
+        get_proxied_uri(self, config)
     }
 }
 
 /* PROXY_ROUTE_HELPERS */
 
-fn get_proxied_path_and_query(route: &ProxyRoute) -> String {
+fn get_proxied_uri(route: &ProxyRoute, config: &ReverseProxyConfig) -> String {
     match route {
-        ProxyRoute::DesignSystem(slug) => format!("{}{}", "/design", slug),
+        ProxyRoute::DesignSystem(slug) => {
+            format!("{}{}", config.design_system_url, slug)
+        }
     }
 }
 
-
 /* NON_PROXY_ROUTE */
 
+#[derive(Debug)]
 pub enum NonProxyRoute {
     NotFound,
     HealthCheck,
 }
 
-
 /* CLASSIFIED_ROUTE */
 
+#[derive(Debug)]
 pub enum ClassifiedRoute {
     Proxy(ProxyRoute),
     NonProxy(NonProxyRoute),
@@ -170,15 +171,13 @@ impl From<&Uri> for ClassifiedRoute {
 
 fn get_proxied_request(
     request: Request<Body>,
-    proxied_path_and_query: &str,
+    proxied_uri: &str,
 ) -> Result<Request<Body>, ReverseProxyError> {
     let (mut parts, body) = request.into_parts();
     let query = parts.uri.query().unwrap_or("");
-    let proxied_uri = format!("{}?{}", proxied_path_and_query, query);
+    let new_uri = format!("{}?{}", proxied_uri, query);
 
-    let mut uri_parts = parts.uri.into_parts();
-    uri_parts.path_and_query = Some(proxied_uri.parse()?);
-    parts.uri = Uri::from_parts(uri_parts).expect("Failed to build proxied uri");
+    parts.uri = new_uri.parse().expect("Failed to build proxied uri");
     Ok(Request::from_parts(parts, body))
 }
 
@@ -217,20 +216,29 @@ async fn send_request(request: Request<Body>) -> Result<Response<Body>, ReverseP
     Ok(response)
 }
 
-
 /* REVERSE_PROXY_FUNCTION */
 
 async fn reverse_proxy(req: Request<Body>) -> Result<Response<Body>, StdError> {
     let route = ClassifiedRoute::from(req.uri());
+    let config = ReverseProxyConfig::from_env()?;
+
+    println!("Request: {} {}", req.method(), req.uri());
 
     match route {
         ClassifiedRoute::Proxy(proxy_route) => {
-            let proxied_request = get_proxied_request(req, &get_proxied_path_and_query(&proxy_route))?;
+            let proxied_request = get_proxied_request(req, &proxy_route.proxied_uri(&config))?;
+            println!(
+                "Proxied Request: {} {}",
+                proxied_request.method(),
+                proxied_request.uri()
+            );
             let proxied_response = send_request(proxied_request).await?;
+            println!("Proxied Response: {}", proxied_response.status());
             Ok(proxied_response)
         }
         ClassifiedRoute::NonProxy(non_proxy_route) => {
             let response = handle_non_proxy_route(non_proxy_route);
+            println!("Response: {}", response.status());
             Ok(response)
         }
     }
