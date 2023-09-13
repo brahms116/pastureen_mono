@@ -8,9 +8,22 @@ import (
 	"github.com/gin-gonic/gin"
 	"html/template"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 )
+
+var config = GetConfigFromEnv()
+
+type ApplicationConfig struct {
+	BASE_URL string
+}
+
+func GetConfigFromEnv() ApplicationConfig {
+	return ApplicationConfig{
+		BASE_URL: os.Getenv("DESIGN_SYSTEM_BASE_URL"),
+	}
+}
 
 type LogoProps struct {
 	LogoText string
@@ -42,35 +55,35 @@ func GetTopbarProps(page string) TopbarProps {
 	return TopbarProps{
 		LogoProps: LogoProps{
 			LogoText: "Logo",
-			LogoLink: "/",
+			LogoLink: config.BASE_URL + "/",
 		},
 		NavItems: []NavItemProps{
 			{
-				Link:              "/",
+				Link:              config.BASE_URL + "/",
 				Text:              "Home",
 				ShouldHaveDivider: true,
 				ShouldBeActive:    page == "home",
 			},
 			{
-				Link:              "/forms",
+				Link:              config.BASE_URL + "/buttons",
 				Text:              "Forms",
 				ShouldHaveDivider: true,
 				ShouldBeActive:    page == "forms",
 			},
 			{
-				Link:           "/lists",
-				Text:           "Lists",
+				Link:              config.BASE_URL + "/lists",
+				Text:              "Lists",
 				ShouldHaveDivider: true,
-				ShouldBeActive: page == "lists",
+				ShouldBeActive:    page == "lists",
 			},
 			{
-				Link:           "/color",
-				Text:           "Color",
+				Link:              config.BASE_URL + "/color",
+				Text:              "Color",
 				ShouldHaveDivider: true,
-				ShouldBeActive: page == "color",
+				ShouldBeActive:    page == "color",
 			},
 			{
-				Link:           "/typography",
+				Link:           config.BASE_URL + "/typography",
 				Text:           "Type",
 				ShouldBeActive: page == "typography",
 			},
@@ -229,19 +242,19 @@ func QueryFakeData(searchString string, cursor int) (QueryResult, error) {
 }
 
 func FakeDataItemToListItemProps(item FakeDataItem) ListItemProps {
-  var actionConfig ActionItemConfig = &UrlActionItemConfig{
-    ActionLink: "/",
-    ActionText: "Fire me",
-  }
+	var actionConfig ActionItemConfig = &UrlActionItemConfig{
+		ActionLink: config.BASE_URL + "/",
+		ActionText: "Fire me",
+	}
 	return ListItemProps{
-		ImageSrc: "/static/assets/logo.png",
+		ImageSrc: config.BASE_URL + "/static/assets/logo.png",
 		ImageAlt: "Logo",
 		Title:    item.Title,
 		Subtitle: item.Subtitle,
 		Tags:     item.Tags,
-    Actions: []ActionItemProps{
-      ActionItemConfigToProps(&actionConfig),
-    },
+		Actions: []ActionItemProps{
+			ActionItemConfigToProps(&actionConfig),
+		},
 	}
 }
 
@@ -260,7 +273,7 @@ func ListItemPropsToListsPageResponseProps(
 	var paginatorProps ListsPagePaginatorProps
 	if !isLastPage {
 		paginatorProps = ListsPagePaginatorProps{
-			PaginatorRequestUrl: fmt.Sprintf("htmx/lists_page_list?search=%s&cursor=%d", searchString, cursor),
+			PaginatorRequestUrl: config.BASE_URL + fmt.Sprintf("htmx/lists_page_list?search=%s&cursor=%d", searchString, cursor),
 		}
 	}
 	return ListsPageListResponseProps{
@@ -271,6 +284,7 @@ func ListItemPropsToListsPageResponseProps(
 }
 
 func main() {
+
 	r := gin.Default()
 
 	indexTemplate := template.Must(template.ParseFS(f, "templates/pages/index.html", "templates/layout/*.html", "templates/page_components/*.html", "templates/components/*.html"))
@@ -323,7 +337,7 @@ func main() {
 				TopbarProps: props,
 				BodyProps: ListsPageProps{
 					Paginator: ListsPagePaginatorProps{
-						PaginatorRequestUrl: "/htmx/lists_page_list?cursor=0",
+						PaginatorRequestUrl: config.BASE_URL + "/htmx/lists_page_list?cursor=0",
 					},
 					Actions: []ActionItemProps{
 						ActionItemConfigToProps(&addNewPersonActionConfig),
