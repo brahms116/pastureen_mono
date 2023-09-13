@@ -65,7 +65,7 @@ func GetTopbarProps(page string) TopbarProps {
 				ShouldBeActive:    page == "home",
 			},
 			{
-				Link:              config.BASE_URL + "/buttons",
+				Link:              config.BASE_URL + "/forms",
 				Text:              "Forms",
 				ShouldHaveDivider: true,
 				ShouldBeActive:    page == "forms",
