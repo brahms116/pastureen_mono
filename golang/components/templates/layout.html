@@ -1,0 +1,207 @@
+{{ define "layout" }}
+<html>
+
+<head>
+  <title>{{ .Title }}</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script src="https://unpkg.com/htmx.org@1.9.5"
+    integrity="sha384-xcuj3WpfgjlKF+FXhSQFQ0ZNr39ln+hwjN3npfM9VBnUskLolQAcN80McRIVOPuO"
+    crossorigin="anonymous"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <script src="//unpkg.com/alpinejs"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            error: '#E83A3A',
+            background: '#222222',
+            backgroundHighlight: '#2D2D2D',
+            onBackground: '#7B896E',
+            onBackgroundHighlight: '#B8CBA7',
+            onBackgroundSubdued: '#515949',
+            secondary: '#7B896E',
+            onSecondaryHighlight: '#425842',
+            secondaryHighlight: '#B8CBA7',
+            secondarySubdued: '#515948',
+            onSecondarySubdued: '#5E615D',
+            onSecondary: '#363D36',
+            primary: '#4B692F',
+            primarySubdued: '#394929',
+            primaryHighlight: '#759B51',
+            onPrimary: '#BDCCAE',
+            onPrimaryHighlight: '#FFFFFF',
+            onPrimarySubdued: '#96A786',
+          },
+          fontFamily: {
+            sans: 'Poppins, sans-serif',
+          }
+        }
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+      html {
+        @apply font-sans;
+      }
+      body {
+        @apply bg-background text-onBackground w-screen overflow-x-hidden;
+      }
+      h1 {
+        font-size: 3.5rem;
+      }
+      h2 {
+        font-size: 2rem;
+      }
+      h3 {
+        font-size: 1.5rem;
+      }
+      h4 {
+        font-size: 1.375rem;
+      }
+      h5 {
+        font-size: 1.25rem;
+      }
+      h6 {
+        font-size: 1.125rem;
+      }
+      img {
+        image-rendering: pixelated;
+      }
+      p {
+        line-height: 220%;
+      }
+      form {
+        @apply w-full max-w-[25rem] m-0;
+      }
+
+      .prose h1 {
+        @apply mb-4;
+      }
+
+      [type='text'],
+      [type='email'],
+      [type='url'],
+      [type='password'],
+      [type='number'],
+      [type='date'],
+      [type='datetime-local'],
+      [type='month'],
+      [type='search'],
+      [type='tel'],
+      [type='time'],
+      [type='week'],
+      [multiple],
+      textarea,
+      select
+      {
+        @apply bg-transparent border border-onBackground rounded-xl px-4 py-4 text-onBackground;
+        @apply focus:outline-none focus:border-slate-50 focus:ring-transparent;
+        @apply focus:ring-transparent focus:ring-0 focus:ring-offset-0 appearance-none;
+      }
+
+      input.error {
+        @apply border-error;
+      }
+
+      [type='submit'] {
+        @apply mt-8 w-full;
+      }
+
+      input::placeholder {
+        @apply text-onBackgroundSubdued opacity-50;
+      }
+    }
+
+    @layer layout {
+      .content-wrapper{
+        @apply flex justify-center overflow-x-hidden;
+      }
+      .content {
+        @apply px-8 sm:px-16 w-full max-w-[56rem];
+      }
+      .content-custom {
+        @apply px-8 sm:px-16 w-full;
+      }
+    }
+
+    @layer components {
+      .btn {
+        @apply bg-primary text-onPrimary px-8 py-4 rounded-full text-[1.125rem] uppercase;
+        @apply hover:bg-primaryHighlight cursor-pointer border-none text-center whitespace-nowrap;
+      }
+
+      .btn.outline {
+        @apply bg-transparent text-primary border border-primary border-x;
+        @apply hover:bg-primaryHighlight hover:text-primaryHighlight;
+      }
+
+      .form-item {
+        @apply flex flex-col mb-8;
+      }
+      .form-item label {
+        @apply mb-4 transform translate-x-1 uppercase;
+      }
+      .error-message {
+        @apply text-error text-[0.875rem] mt-4 translate-x-1;
+      }
+
+      .list {
+        @apply flex flex-col
+      }
+
+      .btn.pagination {
+        @apply w-[12rem];
+      }
+
+      .pastureen-list-item .pastureen-list-item-content {
+        @apply flex;
+      }
+
+      .pastureen-list-item .pastureen-list-item-loading {
+        @apply hidden;
+      }
+
+      .pastureen-list-item.htmx-request .pastureen-list-item-content {
+        @apply hidden;
+      }
+
+      .pastureen-list-item.htmx-request .pastureen-list-item-loading {
+        @apply flex;
+      }
+
+      /* .lists-page-list .lists-page-list-content { */
+      /*   @apply block; */
+      /* } */
+
+      /* .lists-page-list .lists-page-list-loading { */
+      /*   @apply hidden; */
+      /* } */
+
+      /* .lists-page-list.htmx-request .lists-page-list-content { */
+      /*   @apply hidden; */
+      /* } */
+
+      /* .lists-page-list.htmx-request .lists-page-list-loading { */
+      /*   @apply flex; */
+      /* } */
+    }
+    {{ .TailwindCustomStyles }}
+  </style>
+</head>
+
+<body>
+  {{ template "topbar" .TopbarProps }}
+  {{ block "body" .BodyProps }}
+
+  {{ end }}
+</body>
+
+</html>
+{{ end }}
