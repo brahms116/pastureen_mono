@@ -40,13 +40,15 @@ func (n NavItemProps) ToData() navItemData {
 /* TOPBAR */
 type topbarData struct {
 	NavItemsData []navItemData
+	LogoText     string
 	LogoLink     string
 	LogoSrc      string
 }
 
 type TopbarProps struct {
 	NavItemsProps []NavItemProps
-	LogoLink      string
+	LogoText      string
+	LogoLink     string
 	LogoSrc       string
 }
 
@@ -60,6 +62,7 @@ func (t TopbarProps) ToData() topbarData {
 	}
 	return topbarData{
 		NavItemsData: navItemsData,
+		LogoText:     t.LogoText,
 		LogoLink:     t.LogoLink,
 		LogoSrc:      t.LogoSrc,
 	}
@@ -109,12 +112,12 @@ type ActionItemProps interface {
 }
 
 type ActionMenuProps struct {
-	Items []ActionItemProps
+	ItemsProps []ActionItemProps
 }
 
 func (a ActionMenuProps) ToData() actionMenuData {
-	itemsData := make([]actionMenuItemData, len(a.Items))
-	for i, v := range a.Items {
+	itemsData := make([]actionMenuItemData, len(a.ItemsProps))
+	for i, v := range a.ItemsProps {
 		itemsData[i] = v.ToData()
 	}
 	return actionMenuData{
@@ -162,21 +165,25 @@ type listItemData struct {
 	ImageSrc    string
 	ImageAlt    string
 	Link        string
+	Title       string
+	Subtitle    string
 	ActionsData []actionMenuItemData
 	Tags        []string
 }
 
 type ListItemProps struct {
-	ImageSrc     string
-	ImageAlt     string
-	Link         string
-	ActionsProps ActionMenuProps
-	Tags         []string
+	ImageSrc        string
+	ImageAlt        string
+	Link            string
+	ActionMenuProps ActionMenuProps
+	Title           string
+	Subtitle        string
+	Tags            []string
 }
 
 func (l ListItemProps) ToData() listItemData {
-	actionsData := make([]actionMenuItemData, len(l.ActionsProps.Items))
-	for i, v := range l.ActionsProps.Items {
+	actionsData := make([]actionMenuItemData, len(l.ActionMenuProps.ItemsProps))
+	for i, v := range l.ActionMenuProps.ItemsProps {
 		actionsData[i] = v.ToData()
 	}
 	return listItemData{
@@ -184,5 +191,7 @@ func (l ListItemProps) ToData() listItemData {
 		ImageAlt:    l.ImageAlt,
 		Link:        l.Link,
 		ActionsData: actionsData,
+		Title:       l.Title,
+		Subtitle:    l.Subtitle,
 	}
 }

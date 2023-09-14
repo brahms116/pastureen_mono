@@ -4,9 +4,9 @@
   <div class="content">
     <div class="flex justify-between mb-8">
       <h1 class="mb-0">A list of random people</h1>
-      {{ if len .Actions }}
+      {{ if len .ActionsData }}
       <div class="translate-transform translate-y-6">
-        {{ template "action_menu" .Actions }}
+        {{ template "action_menu" .ActionsData }}
       </div>
       {{ end }}
     </div>

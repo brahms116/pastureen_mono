@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"pastureen/components"
 	"strconv"
 	"strings"
 )
@@ -25,67 +26,35 @@ func GetConfigFromEnv() ApplicationConfig {
 	}
 }
 
-type LogoProps struct {
-	LogoText string
-	LogoLink string
-}
-
-type NavItemProps struct {
-	Link              string
-	Text              string
-	Id                string
-	ShouldHaveDivider bool
-	ShouldBeActive    bool
-}
-
-type TopbarProps struct {
-	LogoProps     LogoProps
-	NavItems      []NavItemProps
-	MenuOpen      bool
-	CurrentPageId string
-}
-
-type PageProps struct {
-	Title       string
-	TopbarProps TopbarProps
-	BodyProps   interface{}
-}
-
-func GetTopbarProps(page string) TopbarProps {
-	return TopbarProps{
-		LogoProps: LogoProps{
-			LogoText: "Logo",
-			LogoLink: config.BASE_URL + "/",
-		},
-		NavItems: []NavItemProps{
+func GetTopbarProps(page string, baseUrl string) components.TopbarProps {
+	return components.TopbarProps{
+		LogoSrc:   baseUrl + "/static/assets/logo.png",
+		LogoLink:  baseUrl + "/",
+		LogoText: "PastureenDesign",
+		NavItemsProps: []components.NavItemProps{
 			{
-				Link:              config.BASE_URL + "/",
-				Text:              "Home",
-				ShouldHaveDivider: true,
-				ShouldBeActive:    page == "home",
+				Link:     config.BASE_URL + "/",
+				Text:     "Home",
+				IsActive: page == "home",
 			},
 			{
-				Link:              config.BASE_URL + "/forms",
-				Text:              "Forms",
-				ShouldHaveDivider: true,
-				ShouldBeActive:    page == "forms",
+				Link:     config.BASE_URL + "/forms",
+				Text:     "Forms",
+				IsActive: page == "forms",
 			},
 			{
-				Link:              config.BASE_URL + "/lists",
-				Text:              "Lists",
-				ShouldHaveDivider: true,
-				ShouldBeActive:    page == "lists",
+				Link:     config.BASE_URL + "/lists",
+				Text:     "Lists",
+				IsActive: page == "lists",
 			},
 			{
-				Link:              config.BASE_URL + "/color",
-				Text:              "Color",
-				ShouldHaveDivider: true,
-				ShouldBeActive:    page == "color",
+				Link:     config.BASE_URL + "/color",
+				Text:     "Color",
+				IsActive: page == "color",
 			},
 			{
-				Link:           config.BASE_URL + "/typography",
-				Text:           "Type",
-				ShouldBeActive: page == "typography",
+				Link: config.BASE_URL + "/typography",
+				Text: "Type",
 			},
 		},
 	}
@@ -110,81 +79,17 @@ type FakeData struct {
 	Items []FakeDataItem `json:"items"`
 }
 
-type ActionItemProps struct {
-	ActionType      string
-	ActionText      string
-	ActionLink      string
-	ActionIndicator string
-	ActionTarget    string
-}
-
-type HtmxActionItemConfig struct {
-	ActionText      string
-	ActionIndicator string
-	ActionTarget    string
-	ActionLink      string
-}
-
-type UrlActionItemConfig struct {
-	ActionLink string
-	ActionText string
-}
-
-func (c *HtmxActionItemConfig) ActionType() string {
-	return "htmx"
-}
-
-func (c *UrlActionItemConfig) ActionType() string {
-	return "url"
-}
-
-var _ ActionItemConfig = &UrlActionItemConfig{}
-
-func ActionItemConfigToProps(c *ActionItemConfig) ActionItemProps {
-	switch v := (*c).(type) {
-	case *HtmxActionItemConfig:
-		return ActionItemProps{
-			ActionType:      "htmx",
-			ActionText:      v.ActionText,
-			ActionIndicator: v.ActionIndicator,
-			ActionTarget:    v.ActionTarget,
-			ActionLink:      v.ActionLink,
-		}
-	case *UrlActionItemConfig:
-		return ActionItemProps{
-			ActionType: "url",
-			ActionLink: v.ActionLink,
-			ActionText: v.ActionText,
-		}
-	}
-	panic("unknown list action type")
-}
-
-type ActionItemConfig interface {
-	ActionType() string
-}
-
-type ListItemProps struct {
-	ImageSrc string
-	ImageAlt string
-	Title    string
-	Subtitle string
-	Actions  []ActionItemProps
-	Tags     []string
-	Link     string
-}
-
-type ListsPageProps struct {
-	Paginator ListsPagePaginatorProps
-	Actions   []ActionItemProps
-}
-
 type ListsPagePaginatorProps struct {
 	PaginatorRequestUrl string
 }
 
+type ListsPageProps struct {
+	Paginator ListsPagePaginatorProps
+	ActionsProps   []components.ActionItemProps
+}
+
 type ListsPageListResponseProps struct {
-	Items            []ListItemProps
+	Items            []components.ListItemProps
 	PaginatorProps   ListsPagePaginatorProps
 	PaginatorPresent bool
 }
@@ -241,25 +146,27 @@ func QueryFakeData(searchString string, cursor int) (QueryResult, error) {
 	}, nil
 }
 
-func FakeDataItemToListItemProps(item FakeDataItem) ListItemProps {
-	var actionConfig ActionItemConfig = &UrlActionItemConfig{
+func FakeDataItemToListItemProps(item FakeDataItem) components.ListItemProps {
+	var actionConfig components.ActionItemProps = &components.UrlActionItemProps{
 		ActionLink: config.BASE_URL + "/",
 		ActionText: "Fire me",
 	}
-	return ListItemProps{
+	return components.ListItemProps{
 		ImageSrc: config.BASE_URL + "/static/assets/logo.png",
 		ImageAlt: "Logo",
 		Title:    item.Title,
 		Subtitle: item.Subtitle,
 		Tags:     item.Tags,
-		Actions: []ActionItemProps{
-			ActionItemConfigToProps(&actionConfig),
+		ActionMenuProps: components.ActionMenuProps{
+			ItemsProps: []components.ActionItemProps{
+				actionConfig,
+			},
 		},
 	}
 }
 
-func FakeDataItemsToListItemProps(items []FakeDataItem) []ListItemProps {
-	var result []ListItemProps
+func FakeDataItemsToListItemProps(items []FakeDataItem) []components.ListItemProps {
+	var result []components.ListItemProps
 	for _, item := range items {
 		result = append(result, FakeDataItemToListItemProps(item))
 	}
@@ -267,7 +174,7 @@ func FakeDataItemsToListItemProps(items []FakeDataItem) []ListItemProps {
 }
 
 func ListItemPropsToListsPageResponseProps(
-	items []ListItemProps,
+	items []components.ListItemProps,
 	searchString string, cursor int, isLastPage bool,
 ) ListsPageListResponseProps {
 	var paginatorProps ListsPagePaginatorProps
@@ -287,9 +194,17 @@ func main() {
 
 	r := gin.Default()
 
-	indexTemplate := template.Must(template.ParseFS(f, "templates/pages/index.html", "templates/layout/*.html", "templates/page_components/*.html", "templates/components/*.html"))
-	formsTemplate := template.Must(template.ParseFS(f, "templates/pages/forms.html", "templates/layout/*.html", "templates/page_components/*.html", "templates/components/*.html"))
-	listsTemplate := template.Must(template.ParseFS(f, "templates/pages/lists.html", "templates/layout/*.html", "templates/page_components/*.html", "templates/components/*.html"))
+	componentTemplate := components.GetTemplate()
+	designSystemTemplate := template.Must(componentTemplate.ParseFS(f, "templates/page_components/*.html"))
+
+	indexTemplate := template.Must(designSystemTemplate.Clone())
+	indexTemplate = template.Must(indexTemplate.ParseFS(f, "templates/pages/index.html"))
+
+	formsTemplate := template.Must(designSystemTemplate.Clone())
+	formsTemplate = template.Must(formsTemplate.ParseFS(f, "templates/pages/forms.html"))
+
+	listsTemplate := template.Must(designSystemTemplate.Clone())
+	listsTemplate = template.Must(listsTemplate.ParseFS(f, "templates/pages/lists.html"))
 
 	r.StaticFS("/static", http.FS(assetsFS))
 
@@ -298,24 +213,24 @@ func main() {
 	})
 
 	r.GET("/", func(c *gin.Context) {
-		props := GetTopbarProps("home")
+		props := GetTopbarProps("home", config.BASE_URL)
 		var buffer bytes.Buffer
-		if err := indexTemplate.ExecuteTemplate(&buffer, "index.html", PageProps{
+		if err := indexTemplate.ExecuteTemplate(&buffer, "index.html", components.LayoutProps{
 			Title:       "Home",
 			TopbarProps: props,
-		}); err != nil {
+		}.ToData()); err != nil {
 			c.Error(err)
 		}
 		c.Data(http.StatusOK, "text/html; charset=utf-8", buffer.Bytes())
 	})
 
 	r.GET("/forms", func(c *gin.Context) {
-		props := GetTopbarProps("forms")
+		props := GetTopbarProps("forms", config.BASE_URL)
 		var buffer bytes.Buffer
-		if err := formsTemplate.ExecuteTemplate(&buffer, "forms.html", PageProps{
+		if err := formsTemplate.ExecuteTemplate(&buffer, "forms.html", components.LayoutProps{
 			Title:       "Forms",
 			TopbarProps: props,
-		},
+		}.ToData(),
 		); err != nil {
 			c.Error(err)
 		}
@@ -323,27 +238,27 @@ func main() {
 	})
 
 	r.GET("/lists", func(c *gin.Context) {
-		props := GetTopbarProps("lists")
+		props := GetTopbarProps("lists", config.BASE_URL)
 		var buffer bytes.Buffer
 
-		var addNewPersonActionConfig ActionItemConfig = &UrlActionItemConfig{
+		var addNewPersonActionConfig components.ActionItemProps = &components.UrlActionItemProps{
 			ActionLink: "/lists",
 			ActionText: "Add New Person",
 		}
 
 		if err := listsTemplate.ExecuteTemplate(&buffer, "lists.html",
-			PageProps{
+			components.LayoutProps{
 				Title:       "Lists",
 				TopbarProps: props,
-				BodyProps: ListsPageProps{
+				BodyData: ListsPageProps{
 					Paginator: ListsPagePaginatorProps{
 						PaginatorRequestUrl: config.BASE_URL + "/htmx/lists_page_list?cursor=0",
 					},
-					Actions: []ActionItemProps{
-						ActionItemConfigToProps(&addNewPersonActionConfig),
+					ActionsProps: []components.ActionItemProps{
+						addNewPersonActionConfig,
 					},
 				},
-			},
+			}.ToData(),
 		); err != nil {
 			c.Error(err)
 		}
