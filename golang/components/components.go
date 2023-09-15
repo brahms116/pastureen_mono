@@ -16,7 +16,8 @@ func GetTemplate() template.Template {
 }
 
 /* NAV_ITEMS */
-type navItemData struct {
+
+type NavItemData struct {
 	Text       string
 	Link       string
 	IsActive   bool
@@ -29,8 +30,8 @@ type NavItemProps struct {
 	IsActive bool
 }
 
-func (n NavItemProps) ToData() navItemData {
-	return navItemData{
+func (n NavItemProps) ToData() NavItemData {
+	return NavItemData{
 		Text:     n.Text,
 		Link:     n.Link,
 		IsActive: n.IsActive,
@@ -38,8 +39,8 @@ func (n NavItemProps) ToData() navItemData {
 }
 
 /* TOPBAR */
-type topbarData struct {
-	NavItemsData []navItemData
+type TopbarData struct {
+	NavItemsData []NavItemData
 	LogoText     string
 	LogoLink     string
 	LogoSrc      string
@@ -52,15 +53,15 @@ type TopbarProps struct {
 	LogoSrc       string
 }
 
-func (t TopbarProps) ToData() topbarData {
-	navItemsData := make([]navItemData, len(t.NavItemsProps))
+func (t TopbarProps) ToData() TopbarData {
+	navItemsData := make([]NavItemData, len(t.NavItemsProps))
 	for i, v := range t.NavItemsProps {
 		navItemsData[i] = v.ToData()
 		if i == len(t.NavItemsProps)-1 {
 			navItemsData[i].IsLastItem = true
 		}
 	}
-	return topbarData{
+	return TopbarData{
 		NavItemsData: navItemsData,
 		LogoText:     t.LogoText,
 		LogoLink:     t.LogoLink,
@@ -70,10 +71,10 @@ func (t TopbarProps) ToData() topbarData {
 
 /* LAYOUT */
 
-type layoutData struct {
+type LayoutData struct {
 	Title                string
 	TailwindCustomStyles string
-	TopbarData           topbarData
+	TopbarData           TopbarData
 	BodyData             interface{}
 }
 
@@ -84,8 +85,8 @@ type LayoutProps struct {
 	BodyData             interface{}
 }
 
-func (l LayoutProps) ToData() layoutData {
-	return layoutData{
+func (l LayoutProps) ToData() LayoutData {
+	return LayoutData{
 		Title:                l.Title,
 		TailwindCustomStyles: l.TailwindCustomStyles,
 		TopbarData:           l.TopbarProps.ToData(),
@@ -95,7 +96,7 @@ func (l LayoutProps) ToData() layoutData {
 
 /* ACTION_MENU */
 
-type actionMenuItemData struct {
+type ActionItemData struct {
 	ActionType      string
 	ActionText      string
 	ActionLink      string
@@ -103,24 +104,24 @@ type actionMenuItemData struct {
 	ActionTarget    string
 }
 
-type actionMenuData struct {
-	ItemsData []actionMenuItemData
+type ActionMenuData struct {
+	ItemsData []ActionItemData
 }
 
 type ActionItemProps interface {
-	ToData() actionMenuItemData
+	ToData() ActionItemData
 }
 
 type ActionMenuProps struct {
 	ItemsProps []ActionItemProps
 }
 
-func (a ActionMenuProps) ToData() actionMenuData {
-	itemsData := make([]actionMenuItemData, len(a.ItemsProps))
+func (a ActionMenuProps) ToData() ActionMenuData {
+	itemsData := make([]ActionItemData, len(a.ItemsProps))
 	for i, v := range a.ItemsProps {
 		itemsData[i] = v.ToData()
 	}
-	return actionMenuData{
+	return ActionMenuData{
 		ItemsData: itemsData,
 	}
 }
@@ -134,8 +135,8 @@ type HtmxActionItemProps struct {
 	ActionLink      string
 }
 
-func (a HtmxActionItemProps) ToData() actionMenuItemData {
-	return actionMenuItemData{
+func (a HtmxActionItemProps) ToData() ActionItemData {
+	return ActionItemData{
 		ActionType:      "htmx",
 		ActionText:      a.ActionText,
 		ActionIndicator: a.ActionIndicator,
@@ -151,8 +152,8 @@ type UrlActionItemProps struct {
 	ActionText string
 }
 
-func (a UrlActionItemProps) ToData() actionMenuItemData {
-	return actionMenuItemData{
+func (a UrlActionItemProps) ToData() ActionItemData {
+	return ActionItemData{
 		ActionType: "url",
 		ActionText: a.ActionText,
 		ActionLink: a.ActionLink,
@@ -161,13 +162,13 @@ func (a UrlActionItemProps) ToData() actionMenuItemData {
 
 /* LIST_ITEM */
 
-type listItemData struct {
+type ListItemData struct {
 	ImageSrc    string
 	ImageAlt    string
 	Link        string
 	Title       string
 	Subtitle    string
-	ActionsData []actionMenuItemData
+	ActionsData ActionMenuData
 	Tags        []string
 }
 
@@ -181,16 +182,12 @@ type ListItemProps struct {
 	Tags            []string
 }
 
-func (l ListItemProps) ToData() listItemData {
-	actionsData := make([]actionMenuItemData, len(l.ActionMenuProps.ItemsProps))
-	for i, v := range l.ActionMenuProps.ItemsProps {
-		actionsData[i] = v.ToData()
-	}
-	return listItemData{
+func (l ListItemProps) ToData() ListItemData {
+	return ListItemData{
 		ImageSrc:    l.ImageSrc,
 		ImageAlt:    l.ImageAlt,
 		Link:        l.Link,
-		ActionsData: actionsData,
+		ActionsData: l.ActionMenuProps.ToData(),
 		Title:       l.Title,
 		Subtitle:    l.Subtitle,
 	}

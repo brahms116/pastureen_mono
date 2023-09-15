@@ -28,8 +28,8 @@ func GetConfigFromEnv() ApplicationConfig {
 
 func GetTopbarProps(page string, baseUrl string) components.TopbarProps {
 	return components.TopbarProps{
-		LogoSrc:   baseUrl + "/static/assets/logo.png",
-		LogoLink:  baseUrl + "/",
+		LogoSrc:  baseUrl + "/static/assets/logo.png",
+		LogoLink: baseUrl + "/",
 		LogoText: "PastureenDesign",
 		NavItemsProps: []components.NavItemProps{
 			{
@@ -79,19 +79,59 @@ type FakeData struct {
 	Items []FakeDataItem `json:"items"`
 }
 
+type ListsPagePaginatorData struct {
+	PaginatorRequestUrl string
+}
+
 type ListsPagePaginatorProps struct {
 	PaginatorRequestUrl string
 }
 
+func (p ListsPagePaginatorProps) ToData() ListsPagePaginatorData {
+	return ListsPagePaginatorData{
+		PaginatorRequestUrl: p.PaginatorRequestUrl,
+	}
+}
+
 type ListsPageProps struct {
-	Paginator ListsPagePaginatorProps
-	ActionsProps   []components.ActionItemProps
+	PaginatorProps ListsPagePaginatorProps
+	ActionsProps   components.ActionMenuProps
+}
+
+type ListsPageData struct {
+	PaginatorData ListsPagePaginatorData
+	ActionsData   components.ActionMenuData
+}
+
+func (p ListsPageProps) ToData() ListsPageData {
+	return ListsPageData{
+		PaginatorData: p.PaginatorProps.ToData(),
+		ActionsData:   p.ActionsProps.ToData(),
+	}
+}
+
+type ListsPageListResponseData struct {
+	ItemsData        []components.ListItemData
+	PaginatorData    ListsPagePaginatorData
+	PaginatorPresent bool
 }
 
 type ListsPageListResponseProps struct {
-	Items            []components.ListItemProps
+	ItemsProps       []components.ListItemProps
 	PaginatorProps   ListsPagePaginatorProps
 	PaginatorPresent bool
+}
+
+func (p ListsPageListResponseProps) ToData() ListsPageListResponseData {
+	itemsData := make([]components.ListItemData, len(p.ItemsProps))
+	for i, itemProps := range p.ItemsProps {
+		itemsData[i] = itemProps.ToData()
+	}
+	return ListsPageListResponseData{
+		ItemsData:        itemsData,
+		PaginatorData:    p.PaginatorProps.ToData(),
+		PaginatorPresent: p.PaginatorPresent,
+	}
 }
 
 type QueryResult struct {
@@ -180,11 +220,11 @@ func ListItemPropsToListsPageResponseProps(
 	var paginatorProps ListsPagePaginatorProps
 	if !isLastPage {
 		paginatorProps = ListsPagePaginatorProps{
-			PaginatorRequestUrl: config.BASE_URL + fmt.Sprintf("htmx/lists_page_list?search=%s&cursor=%d", searchString, cursor),
+			PaginatorRequestUrl: config.BASE_URL + fmt.Sprintf("/htmx/lists_page_list?search=%s&cursor=%d", searchString, cursor),
 		}
 	}
 	return ListsPageListResponseProps{
-		Items:            items,
+		ItemsProps:       items,
 		PaginatorProps:   paginatorProps,
 		PaginatorPresent: !isLastPage,
 	}
@@ -248,16 +288,18 @@ func main() {
 
 		if err := listsTemplate.ExecuteTemplate(&buffer, "lists.html",
 			components.LayoutProps{
-				Title:       "Lists",
-				TopbarProps: props,
+				Title:                "Lists",
+				TopbarProps:          props,
 				BodyData: ListsPageProps{
-					Paginator: ListsPagePaginatorProps{
+					PaginatorProps: ListsPagePaginatorProps{
 						PaginatorRequestUrl: config.BASE_URL + "/htmx/lists_page_list?cursor=0",
 					},
-					ActionsProps: []components.ActionItemProps{
-						addNewPersonActionConfig,
+					ActionsProps: components.ActionMenuProps{
+						ItemsProps: []components.ActionItemProps{
+							addNewPersonActionConfig,
+						},
 					},
-				},
+				}.ToData(),
 			}.ToData(),
 		); err != nil {
 			c.Error(err)
@@ -278,7 +320,7 @@ func main() {
 		}
 		itemsProps := FakeDataItemsToListItemProps(result.Items)
 		responseProps := ListItemPropsToListsPageResponseProps(itemsProps, searchString, result.NextPageCursor, result.IsLastPage)
-		if err := listsTemplate.ExecuteTemplate(&buffer, "lists_page_list_response.html", responseProps); err != nil {
+		if err := listsTemplate.ExecuteTemplate(&buffer, "lists_page_list_response.html", responseProps.ToData()); err != nil {
 			c.Error(err)
 		}
 		c.Data(http.StatusOK, "text/html; charset=utf-8", buffer.Bytes())
@@ -293,7 +335,7 @@ func main() {
 		}
 		itemsProps := FakeDataItemsToListItemProps(result.Items)
 		responseProps := ListItemPropsToListsPageResponseProps(itemsProps, queryString, result.NextPageCursor, result.IsLastPage)
-		if err := listsTemplate.ExecuteTemplate(&buffer, "lists_page_list_response.html", responseProps); err != nil {
+		if err := listsTemplate.ExecuteTemplate(&buffer, "lists_page_list_response.html", responseProps.ToData()); err != nil {
 			c.Error(err)
 		}
 		c.Data(http.StatusOK, "text/html; charset=utf-8", buffer.Bytes())

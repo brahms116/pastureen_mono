@@ -175,24 +175,9 @@
       .pastureen-list-item.htmx-request .pastureen-list-item-loading {
         @apply flex;
       }
-
-      /* .lists-page-list .lists-page-list-content { */
-      /*   @apply block; */
-      /* } */
-
-      /* .lists-page-list .lists-page-list-loading { */
-      /*   @apply hidden; */
-      /* } */
-
-      /* .lists-page-list.htmx-request .lists-page-list-content { */
-      /*   @apply hidden; */
-      /* } */
-
-      /* .lists-page-list.htmx-request .lists-page-list-loading { */
-      /*   @apply flex; */
-      /* } */
     }
-    {{ .TailwindCustomStyles }}
+    {{ block "custom_styles" . }}
+    {{ end }}
   </style>
 </head>
 

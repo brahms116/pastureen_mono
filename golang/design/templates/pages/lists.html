@@ -1,10 +1,27 @@
 {{ template "layout" . }}
+{{ define "custom_styles" }}
+.lists-page-list .lists-page-list-content {
+  @apply block;
+}
+
+.lists-page-list .lists-page-list-loading {
+  @apply hidden;
+}
+
+.lists-page-list.htmx-request .lists-page-list-content {
+  @apply hidden;
+}
+
+.lists-page-list.htmx-request .lists-page-list-loading {
+  @apply flex;
+}
+{{ end }}
 {{ define "body" }}
 <div class="content-wrapper my-[10rem]">
   <div class="content">
     <div class="flex justify-between mb-8">
       <h1 class="mb-0">A list of random people</h1>
-      {{ if len .ActionsData }}
+      {{ if len .ActionsData.ItemsData }}
       <div class="translate-transform translate-y-6">
         {{ template "action_menu" .ActionsData }}
       </div>
@@ -19,7 +36,7 @@
     </form>
     <div class="lists-page-list w-full">
       <div class="lists-page-list-content">
-        {{ template "lists_page_paginator" .Paginator }}
+        {{ template "lists_page_paginator" .PaginatorData }}
       </div>
       <div class="lists-page-list-loading flex flex-col w-full">
         <div
