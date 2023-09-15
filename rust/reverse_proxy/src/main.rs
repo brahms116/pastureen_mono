@@ -1,6 +1,8 @@
 use hyper::{
-    http::request::Parts, http::uri::InvalidUri, Body, Client, Request, Response, Server, Uri,
+    header::HeaderValue, http::request::Parts, http::uri::InvalidUri, Body, Client, Request,
+    Response, Server, Uri,
 };
+use hyper_tls::HttpsConnector;
 use std::net::SocketAddr;
 use thiserror::Error;
 
@@ -178,6 +180,12 @@ fn get_proxied_request(
     let new_uri = format!("{}?{}", proxied_uri, query);
 
     parts.uri = new_uri.parse().expect("Failed to build proxied uri");
+
+    let host = parts.uri.host().unwrap_or("");
+    parts.headers.insert(
+        "host",
+        HeaderValue::from_str(host).expect("Failed to build host header"),
+    );
     Ok(Request::from_parts(parts, body))
 }
 
@@ -211,7 +219,8 @@ fn not_found_route() -> Response<Body> {
 /* SEND_REQUEST */
 
 async fn send_request(request: Request<Body>) -> Result<Response<Body>, ReverseProxyError> {
-    let client = Client::new();
+    let https = HttpsConnector::new();
+    let client = Client::builder().build::<_, hyper::Body>(https);
     let response = client.request(request).await?;
     Ok(response)
 }

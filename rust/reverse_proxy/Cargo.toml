@@ -7,5 +7,6 @@ edition = "2021"
 
 [dependencies]
 hyper = { version="0.14.27", features=["full", "server"] }
+hyper-tls = "0.5.0"
 tokio = { version = "1.32.0", features = ["full"] }
 thiserror = "1.0.46"
