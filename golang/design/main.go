@@ -110,6 +110,20 @@ func (p ListsPageProps) ToData() ListsPageData {
 	}
 }
 
+type IndexPageData struct {
+  LandingImageSrc string
+}
+
+type IndexPageProps struct {
+  LandingImageSrc string
+}
+
+func (p IndexPageProps) ToData() IndexPageData {
+  return IndexPageData{
+    LandingImageSrc: p.LandingImageSrc,
+  }
+}
+
 type ListsPageListResponseData struct {
 	ItemsData        []components.ListItemData
 	PaginatorData    ListsPagePaginatorData
@@ -258,6 +272,9 @@ func main() {
 		if err := indexTemplate.ExecuteTemplate(&buffer, "index.html", components.LayoutProps{
 			Title:       "Home",
 			TopbarProps: props,
+      BodyData: IndexPageProps{
+        LandingImageSrc: config.BASE_URL + "/static/assets/light.png",
+      }.ToData(),
 		}.ToData()); err != nil {
 			c.Error(err)
 		}
