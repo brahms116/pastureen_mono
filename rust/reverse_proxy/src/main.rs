@@ -221,7 +221,14 @@ fn not_found_route() -> Response<Body> {
 async fn send_request(request: Request<Body>) -> Result<Response<Body>, ReverseProxyError> {
     let https = HttpsConnector::new();
     let client = Client::builder().build::<_, hyper::Body>(https);
-    let response = client.request(request).await?;
+    let mut response = client.request(request).await?;
+    let headers = response.headers_mut();
+
+    headers.remove("X-Amzn-Remapped-Content-Length");
+    headers.remove("X-Amzn-Remapped-Date");
+    headers.remove("X-Amzn-Requestid");
+    headers.remove("X-Amzn-Trace-Id");
+
     Ok(response)
 }
 
