@@ -18,5 +18,6 @@ echo "Deploying to $env"
 aws lambda update-function-code --function-name reverse_proxy_$env --zip-file fileb://./lambda.zip
 aws lambda update-function-configuration --function-name reverse_proxy_$env --environment \
   Variables="{\
-    REVERSE_PROXY_LISTEN_ADDR=$REVERSE_PROXY_LISTEN_ADDR\
+    REVERSE_PROXY_LISTEN_ADDR=$REVERSE_PROXY_LISTEN_ADDR,\
+    REVERSE_PROXY_DESIGN_SYSTEM_URL=$REVERSE_PROXY_DESIGN_SYSTEM_URL,\
   }"

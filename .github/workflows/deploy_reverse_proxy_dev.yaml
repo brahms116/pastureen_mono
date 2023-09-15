@@ -16,5 +16,6 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
           REVERSE_PROXY_LISTEN_ADDR: ${{ vars.LAMBDA_LISTEN_ADDR }}
+          REVERSE_PROXY_DESIGN_SYSTEM_URL: ${{ vars.DESIGN_SYSTEM_URL }}
         run: cd rust/reverse_proxy && ./deploy.sh dev
 

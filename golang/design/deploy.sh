@@ -20,5 +20,5 @@ echo "Deploying to $env"
 aws lambda update-function-code --function-name design_system_$env --zip-file fileb://./lambda.zip
 aws lambda update-function-configuration --function-name design_system_$env --environment \
   Variables="{\
-    
+    DESIGN_SYSTEM_BASE_URL=$DESIGN_SYSTEM_BASE_URL,\
   }"
