@@ -1,4 +1,17 @@
 {{ block "lists_page_paginator" . }}
+<style>
+  .lists-page-paginator {
+    padding: 2rem 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 0.75rem;
+    color: var(--onBackgroundSubdued);
+    background-color: var(--backgroundHighlight);
+    text-align: center;
+    margin-top: 1rem;
+  }
+</style>
 <div hx-get="{{ .PaginatorRequestUrl }}" hx-target=".lists-page-paginator" hx-trigger="revealed" hx-swap="outerHTML"
   class="lists-page-paginator">
   <h2>Loading items....</h2>
