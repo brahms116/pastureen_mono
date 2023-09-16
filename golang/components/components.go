@@ -49,7 +49,7 @@ type TopbarData struct {
 type TopbarProps struct {
 	NavItemsProps []NavItemProps
 	LogoText      string
-	LogoLink     string
+	LogoLink      string
 	LogoSrc       string
 }
 
@@ -190,5 +190,6 @@ func (l ListItemProps) ToData() ListItemData {
 		ActionsData: l.ActionMenuProps.ToData(),
 		Title:       l.Title,
 		Subtitle:    l.Subtitle,
+		Tags:        l.Tags,
 	}
 }
