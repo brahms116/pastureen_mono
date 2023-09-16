@@ -20,38 +20,37 @@
       {{ end }}
     </div>
   </div>
-  <div class="lg:hidden bg-background transition-transform top-0 left-[100%] h-screen overflow-y-auto w-full fixed z-10"
-    :style="open ? 'transform: translateX(-100%);' : 'transform: translateX(0%);'">
-    <div class="flex flex-row top-0 left-0 justify-between items-center p-4 sm:p-8">
-      <a class="text-primary flex flex-row items-center cursor-pointer" href="{{ .LogoLink }}">
-        <img src="{{ .LogoSrc }}" alt="logo" class="h-12">
-        <h3 class="ml-2 translate-y-[0.125rem]">{{ .LogoText }}</h3>
+  <div class="mobile-menu" :style="open ? 'transform: translateX(-100%);' : 'transform: translateX(0%);'">
+    <div class="pt-navbar">
+      <a class="pt-navbar-logo" href="{{ .LogoLink }}">
+        <img src="{{ .LogoSrc }}" alt="logo" class="pt-navbar-logo__logo">
+        <h3 class="pt-navbar-logo__text">{{ .LogoText }}</h3>
       </a>
-      <div @click="open = !open; document.body.style.overflowY = 'auto'" class="cursor-pointer lg:hidden">
+      <div @click="open = !open; document.body.style.overflowY = 'auto'" class="pt-navbar-mobile-menu-button">
         <svg x-show="open" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-          class="w-8 h-8 stroke-onBackground hover:stroke-onBackgroundHighlight">
+          class="pt-navbar-mobile-menu-button__icon">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </div>
     </div>
-    <div class="content-wrapper mt-[8rem] overflow-y-auto">
-      <div class="content pb-8">
-        <h2 class="mb-8 px-2">Menu</h2>
-        <div class="flex flex-col">
-          {{ range .NavItemsData }}
-          <a href="{{.Link}}" class="
-        hover:bg-backgroundHighlight
-        px-2 
-        py-8 
-        cursor-pointer 
-        text-onBackground{{if .IsActive}}Highlight{{end}} 
-        transition-transform">
-            <h5>{{.Text}}</h5>
-          </a>
-          {{ if ne .IsLastItem true }}
-          <div class="w-full h-px bg-backgroundHighlight"></div>
-          {{ end }}
-          {{ end }}
+    <div class="content-wrapper">
+      <div class="content">
+        <div class="mobile-menu__nav">
+          <div class="mobile-menu-nav">
+            <h2 class="mobile-menu-nav__title">Menu</h2>
+            <div class="mobile-menu-nav__list">
+              {{ range .NavItemsData }}
+              <a href="{{.Link}}" class="mobile-menu-item
+                {{if .IsActive}}mobile-menu-item--active{{end}}
+                ">
+                <h5>{{.Text}}</h5>
+              </a>
+              {{ if ne .IsLastItem true }}
+              <div class="mobile-menu-divider"></div>
+              {{ end }}
+              {{ end }}
+            </div>
+          </div>
         </div>
       </div>
     </div>
