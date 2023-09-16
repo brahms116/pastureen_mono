@@ -1,47 +1,45 @@
 {{ template "layout" . }}
-{{ define "custom_styles" }}
-
-.index-page__landing {
-min-height: 100vh;
-}
-
-.index-page-landing {
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-text-align: center;
-}
-
-.index-page-landing__logo {
-min-height: 12rem;
-margin-top: 10rem;
-}
-
-.index-page-landing__title {
-margin-top: 5rem;
-margin-bottom: 2rem;
-}
-
-.index-page-landing__cta {
-margin-bottom: 5rem;
-}
-
-.index-page__about {
-margin-top: 8rem;
-margin-bottom: 16rem;
-}
-
-.index-page-about__title {
-margin-bottom: 2rem;
-}
-
-.index-page-about__content {
-margin-bottom: 4rem;
-}
-
-{{ end }}
 {{ define "body" }}
+<style>
+  .index-page__landing {
+    min-height: 100vh;
+  }
+
+  .index-page-landing {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .index-page-landing__logo {
+    min-height: 12rem;
+    margin-top: 10rem;
+  }
+
+  .index-page-landing__title {
+    margin-top: 5rem;
+    margin-bottom: 2rem;
+  }
+
+  .index-page-landing__cta {
+    margin-bottom: 5rem;
+  }
+
+  .index-page__about {
+    margin-top: 8rem;
+    margin-bottom: 16rem;
+  }
+
+  .index-page-about__title {
+    margin-bottom: 2rem;
+  }
+
+  .index-page-about__content {
+    margin-bottom: 4rem;
+  }
+</style>
 <div class="content-wrapper index-page__landing">
   <div class="index-page-landing">
     <img src="{{ .LandingImageSrc }}" alt="logo" class="index-page-landing__logo" />

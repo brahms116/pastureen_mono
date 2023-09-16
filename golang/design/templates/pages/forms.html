@@ -1,17 +1,15 @@
 {{ template "layout" . }}
-{{ define "custom_styles" }}
-
-.forms-page__title {
-margin-bottom: 2rem;
-}
-
-.forms-page__content {
-margin-top: 10rem;
-margin-bottom: 8rem;
-}
-
-{{ end }}
 {{ define "body" }}
+<style>
+  .forms-page__title {
+    margin-bottom: 2rem;
+  }
+
+  .forms-page__content {
+    margin-top: 10rem;
+    margin-bottom: 8rem;
+  }
+</style>
 <div class="content-wrapper forms-page__content">
   <div class="content">
     <h1 class="forms-page__title">Forms</h1>
