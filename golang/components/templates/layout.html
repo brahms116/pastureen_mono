@@ -192,6 +192,51 @@
         }
       }
 
+      .action-menu {
+        cursor: pointer;
+        position: relative;
+      }
+
+      .action-menu__icon {
+        width: 2rem;
+        height: 2rem;
+        stroke: var(--onBackground);
+      }
+
+      .action-menu__icon:hover {
+        stroke: var(--onBackgroundHighlight);
+      }
+
+      .action-menu__list {
+        position: absolute;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        right: 0;
+        top: 110%;
+        text-align: right;
+        background-color: var(--background);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        box-shadow:
+          /* offset-x | offset-y | blur-radius | spread-radius | color */
+          0px 1px 1px 0px hsla(0,0%,0%,0.14), 
+          0px 2px 1px -1px hsla(0,0%,0%,0.12), 
+          0px 1px 3px 0px hsla(0,0%,0%,0.2);
+      }
+
+      .action-menu__item {
+        padding: 1rem 2rem;
+        white-space: nowrap;
+        width: 100%;
+        cursor: pointer;
+        position: relative;
+      }
+      
+      .action-menu__item:hover {
+        background-color: var(--backgroundHighlight);
+      }
+
       .btn {
         background-color: var(--primary);
         color: var(--onPrimary);
