@@ -380,6 +380,82 @@
         color: var(--onBackgroundSubdued);
       }
 
+      .pt-navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background-color: var(--background);
+      }
+
+      @media (min-width: 640px) {
+        .pt-navbar {
+          padding: 2rem;
+        }
+      }
+
+      .pt-navbar-logo {
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+      }
+
+      .pt-navbar-logo__logo {
+        height: 3rem;
+      }
+      
+      .pt-navbar-logo__text {
+        margin-left: 0.5rem;
+        transform: translateY(0.125rem);
+      }
+
+      .pt-navbar-mobile-menu-button {
+        cursor: pointer;
+      }
+
+      @media (min-width: 1024px) {
+        .pt-navbar-mobile-menu-button {
+          display: none;
+        }
+      }
+
+      .pt-navbar-mobile-menu-button__icon {
+        width: 2rem;
+        height: 2rem;
+        stroke: var(--onBackground);
+      }
+      
+      .pt-navbar-mobile-menu-button__icon:hover {
+        stroke: var(--onBackgroundHighlight);
+      }
+
+      .pt-navbar-menu {
+        display: none;
+        align-items: center;
+      }
+
+      @media (min-width: 1024px) {
+        .pt-navbar-menu {
+          display: flex;
+        }
+      }
+
+      .pt-navbar-menu__item {
+        padding: 0 2rem;
+        cursor: pointer;
+        color: var(--onBackground);
+      }
+
+      .pt-navbar-menu__item:hover {
+        color: var(--onBackgroundHighlight);
+      }
+
+      .pt-navbar-menu__item--active {
+        color: var(--onBackgroundHighlight);
+      }
+
+
     {{ block "custom_styles" . }}
     {{ end }}
   </style>

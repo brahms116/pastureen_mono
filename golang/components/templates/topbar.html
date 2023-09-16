@@ -1,25 +1,20 @@
 {{ block "topbar" . }}
-<div id="pastureen-topbar" x-data="{open: false}">
-  <div class="flex flex-row top-0 left-0 justify-between items-center p-4 sm:p-8">
-    <a class="text-primary flex flex-row items-center cursor-pointer" href="{{.LogoLink}}">
-      <img src="{{.LogoSrc}}" alt="logo" class="h-12">
-      <h3 class="ml-2 translate-y-[0.125rem]">{{.LogoText}}</h3>
+<div x-data="{open: false}">
+  <div class="pt-navbar">
+    <a class="pt-navbar-logo" href="{{.LogoLink}}">
+      <img src="{{.LogoSrc}}" alt="logo" class="pt-navbar-logo__logo">
+      <h3 class="pt-navbar-logo__text">{{.LogoText}}</h3>
     </a>
-    <div @click="open = !open; document.body.style.overflowY = 'hidden'" class="cursor-pointer lg:hidden">
+    <div @click="open = !open; document.body.style.overflowY = 'hidden'" class="pt-navbar-mobile-menu-button">
       <svg x-show="!open" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-        class="w-8 h-8 stroke-onBackground hover:stroke-onBackgroundHighlight">
+        class="pt-navbar-mobile-menu-button__icon">
         <path stroke-linecap="round" stroke-linejoin="round"
           d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5" />
       </svg>
     </div>
-    <div class="hidden lg:flex flex-row items-center">
+    <div class="pt-navbar-menu">
       {{ range .NavItemsData }}
-      <a href="{{.Link}}" class="
-      hover:text-onBackgroundHighlight
-      cursor-pointer 
-      px-8
-      text-onBackground{{if .IsActive}}Highlight{{end}} 
-      transition-transform">
+      <a href="{{.Link}}" class="pt-navbar-menu__item {{if .IsActive}}pt-navbar-menu__item--active{{end}}">
         <h5>{{.Text}}</h5>
       </a>
       {{ end }}
