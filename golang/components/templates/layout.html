@@ -46,43 +46,74 @@
     }
   </script>
   <style type="text/tailwindcss">
-    @layer base {
+    :root {
+        --error: #E83A3A;
+        --background: #222222;
+        --backgroundHighlight: #2D2D2D;
+        --onBackground: #7B896E;
+        --onBackgroundHighlight: #B8CBA7;
+        --onBackgroundSubdued: #515949;
+        --secondary: #7B896E;
+        --onSecondaryHighlight: #425842;
+        --secondaryHighlight: #B8CBA7;
+        --secondarySubdued: #515948;
+        --onSecondarySubdued: #5E615D;
+        --onSecondary: #363D36;
+        --primary: #4B692F;
+        --primarySubdued: #394929;
+        --primaryHighlight: #759B51;
+        --onPrimary: #BDCCAE;
+        --onPrimaryHighlight: #FFFFFF;
+        --onPrimarySubdued: #96A786;
+      }
+
       html {
-        @apply font-sans;
+        font-family: 'Poppins', sans-serif;
       }
+
       body {
-        @apply bg-background text-onBackground w-screen overflow-x-hidden;
+        background: var(--background);
+        color: var(--onBackground);
+        width: 100vw;
+        overflow-x: hidden;
       }
+
       h1 {
         font-size: 3.5rem;
       }
+
       h2 {
         font-size: 2rem;
       }
+
       h3 {
         font-size: 1.5rem;
       }
+
       h4 {
         font-size: 1.375rem;
       }
+
       h5 {
         font-size: 1.25rem;
       }
+
       h6 {
         font-size: 1.125rem;
       }
+
       img {
         image-rendering: pixelated;
       }
+
       p {
         line-height: 220%;
       }
-      form {
-        @apply w-full max-w-[25rem] m-0;
-      }
 
-      .prose h1 {
-        @apply mb-4;
+      form {
+        width: 100%;
+        max-width: 25rem;
+        margin: 0;
       }
 
       [type='text'],
@@ -101,81 +132,118 @@
       textarea,
       select
       {
-        @apply bg-transparent border border-onBackground rounded-xl px-4 py-4 text-onBackground;
-        @apply focus:outline-none focus:border-slate-50 focus:ring-transparent;
-        @apply focus:ring-transparent focus:ring-0 focus:ring-offset-0 appearance-none;
+
+        background-color: transparent;
+        border-color: var(--onBackground);
+        border-radius: 0.75rem;
+        border-width: 1px;
+        padding: 1rem;
+        color: var(--onBackground);
+      }
+
+      [type='text']:focus,
+      [type='email']:focus,
+      [type='url']:focus,
+      [type='password']:focus,
+      [type='number']:focus,
+      [type='date']:focus,
+      [type='datetime-local']:focus,
+      [type='month']:focus,
+      [type='search']:focus,
+      [type='tel']:focus,
+      [type='time']:focus,
+      [type='week']:focus,
+      [multiple]:focus,
+      textarea:focus,
+      select:focus {
+        outline: none;
+        border-color: var(--onBackgroundHighlight);
+        appearance: none;
       }
 
       input.error {
-        @apply border-error;
+        border-color: var(--error);
       }
 
       [type='submit'] {
-        @apply mt-8 w-full;
+        width: 100%;
+        margin-top: 2rem;
       }
 
       input::placeholder {
-        @apply text-onBackgroundSubdued opacity-50;
+        color: var(--onBackgroundSubdued);
+        opacity: 0.5;
       }
-    }
 
-    @layer layout {
       .content-wrapper{
-        @apply flex justify-center overflow-x-hidden;
+        display: flex;
+        justify-content: center;
+        overflow-x: hidden;
       }
       .content {
-        @apply px-8 sm:px-16 w-full max-w-[56rem];
+        padding: 0 2rem;
+        width: 100%;
+        max-width: 56rem;
       }
-      .content-custom {
-        @apply px-8 sm:px-16 w-full;
-      }
-    }
 
-    @layer components {
+      @media (min-width: 640px) {
+        .content {
+          padding: 0 4rem;
+        }
+      }
+
       .btn {
-        @apply bg-primary text-onPrimary px-8 py-4 rounded-full text-[1.125rem] uppercase;
-        @apply hover:bg-primaryHighlight cursor-pointer border-none text-center whitespace-nowrap;
+        background-color: var(--primary);
+        color: var(--onPrimary);
+        padding: 1rem 2rem;
+        border-radius: 2rem;
+        font-size: 1.125rem;
+        text-transform: uppercase;
+        cursor: pointer;
+        border: none;
+        text-align: center;
+        white-space: nowrap;
       }
 
-      .btn.outline {
-        @apply bg-transparent text-primary border border-primary border-x;
-        @apply hover:bg-primaryHighlight hover:text-primaryHighlight;
+      .btn:hover {
+        background-color: var(--primaryHighlight);
       }
 
       .form-item {
-        @apply flex flex-col mb-8;
-      }
-      .form-item label {
-        @apply mb-4 transform translate-x-1 uppercase;
-      }
-      .error-message {
-        @apply text-error text-[0.875rem] mt-4 translate-x-1;
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 2rem;
       }
 
-      .list {
-        @apply flex flex-col
+      .form-item__label {
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        transform: translateX(4px);
       }
 
-      .btn.pagination {
-        @apply w-[12rem];
+      .form-item__error-message {
+        color: var(--error);
+        font-size: 0.875rem;
+        margin-top: 1rem;
+        transform: translateX(4px);
       }
 
       .pastureen-list-item .pastureen-list-item-content {
-        @apply flex;
+        display: flex;
       }
 
       .pastureen-list-item .pastureen-list-item-loading {
-        @apply hidden;
+        display: none;
       }
 
       .pastureen-list-item.htmx-request .pastureen-list-item-content {
-        @apply hidden;
+        display: none;
       }
 
       .pastureen-list-item.htmx-request .pastureen-list-item-loading {
-        @apply flex;
+        display: flex;
       }
-    }
+
     {{ block "custom_styles" . }}
     {{ end }}
   </style>

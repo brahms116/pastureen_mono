@@ -1,18 +1,60 @@
 {{ template "layout" . }}
+{{ define "custom_styles" }}
+
+.index-page__landing {
+min-height: 100vh;
+}
+
+.index-page-landing {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+text-align: center;
+}
+
+.index-page-landing__logo {
+min-height: 12rem;
+margin-top: 10rem;
+}
+
+.index-page-landing__title {
+margin-top: 5rem;
+margin-bottom: 2rem;
+}
+
+.index-page-landing__cta {
+margin-bottom: 5rem;
+}
+
+.index-page__about {
+margin-top: 8rem;
+margin-bottom: 16rem;
+}
+
+.index-page-about__title {
+margin-bottom: 2rem;
+}
+
+.index-page-about__content {
+margin-bottom: 4rem;
+}
+
+{{ end }}
 {{ define "body" }}
-<div class="content-wrapper min-h-screen">
-  <div class="content-custom flex flex-col items-center justify-center text-center">
-    <img src="{{ .LandingImageSrc }}" alt="logo" class="min-h-[12rem] mt-[10rem]" />
-    <h1 class="mt-20 mb-16">Pastureen <br /> Design System</h1>
-    <a class="mb-20">
+<div class="content-wrapper index-page__landing">
+  <div class="index-page-landing">
+    <img src="{{ .LandingImageSrc }}" alt="logo" class="index-page-landing__logo" />
+    <h1 class="index-page-landing__title">Pastureen <br /> Design System</h1>
+    <a class="index-page-landing__cta">
       <button class="btn">View System</button>
     </a>
   </div>
 </div>
-<div class="content-wrapper mb-[16rem] mt-[8rem]">
-  <div class="content prose">
-    <h1>What is this?</h1>
-    <p class="mb-16">
+<div class="content-wrapper index-page__about">
+  <div class="content index-page-about">
+    <h1 class="index-page-about__title">What is this?</h1>
+    <p class="index-page-about__content">
       This is an honest and humble attempt at making a design system for pastureen.
       I am currently hoping to use this system across my personal projects to enable them to have a consistent look and
       feel to them.
