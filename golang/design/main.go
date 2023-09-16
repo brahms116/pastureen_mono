@@ -96,32 +96,35 @@ func (p ListsPagePaginatorProps) ToData() ListsPagePaginatorData {
 type ListsPageProps struct {
 	PaginatorProps ListsPagePaginatorProps
 	ActionsProps   components.ActionMenuProps
+	SearchUrl      string
 }
 
 type ListsPageData struct {
 	PaginatorData ListsPagePaginatorData
 	ActionsData   components.ActionMenuData
+	SearchUrl     string
 }
 
 func (p ListsPageProps) ToData() ListsPageData {
 	return ListsPageData{
 		PaginatorData: p.PaginatorProps.ToData(),
 		ActionsData:   p.ActionsProps.ToData(),
+		SearchUrl:     p.SearchUrl,
 	}
 }
 
 type IndexPageData struct {
-  LandingImageSrc string
+	LandingImageSrc string
 }
 
 type IndexPageProps struct {
-  LandingImageSrc string
+	LandingImageSrc string
 }
 
 func (p IndexPageProps) ToData() IndexPageData {
-  return IndexPageData{
-    LandingImageSrc: p.LandingImageSrc,
-  }
+	return IndexPageData{
+		LandingImageSrc: p.LandingImageSrc,
+	}
 }
 
 type ListsPageListResponseData struct {
@@ -272,9 +275,9 @@ func main() {
 		if err := indexTemplate.ExecuteTemplate(&buffer, "index.html", components.LayoutProps{
 			Title:       "Home",
 			TopbarProps: props,
-      BodyData: IndexPageProps{
-        LandingImageSrc: config.BASE_URL + "/static/assets/light.png",
-      }.ToData(),
+			BodyData: IndexPageProps{
+				LandingImageSrc: config.BASE_URL + "/static/assets/light.png",
+			}.ToData(),
 		}.ToData()); err != nil {
 			c.Error(err)
 		}
@@ -305,8 +308,8 @@ func main() {
 
 		if err := listsTemplate.ExecuteTemplate(&buffer, "lists.html",
 			components.LayoutProps{
-				Title:                "Lists",
-				TopbarProps:          props,
+				Title:       "Lists",
+				TopbarProps: props,
 				BodyData: ListsPageProps{
 					PaginatorProps: ListsPagePaginatorProps{
 						PaginatorRequestUrl: config.BASE_URL + "/htmx/lists_page_list?cursor=0",
@@ -316,6 +319,7 @@ func main() {
 							addNewPersonActionConfig,
 						},
 					},
+          SearchUrl: config.BASE_URL + "/htmx/lists_page_search",
 				}.ToData(),
 			}.ToData(),
 		); err != nil {

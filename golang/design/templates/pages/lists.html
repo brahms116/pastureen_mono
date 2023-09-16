@@ -72,7 +72,7 @@
     <form class="lists-page__search-form" @submit.prevent>
       <div class="form-item">
         <label class="form-item__label" for="search">Search</label>
-        <input hx-post="/htmx/lists_page_search" hx-trigger="keyup changed delay:0.5s" hx-swap="innerHTML"
+        <input hx-post="{{ .SearchUrl }}" hx-trigger="keyup changed delay:0.5s" hx-swap="innerHTML"
           hx-indicator=".lists-page-list" hx-target=".lists-page-list__content" type="text" name="search"
           placeholder="Search" />
       </div>
