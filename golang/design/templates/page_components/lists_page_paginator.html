@@ -1,6 +1,6 @@
 {{ block "lists_page_paginator" . }}
 <div hx-get="{{ .PaginatorRequestUrl }}" hx-target=".lists-page-paginator" hx-trigger="revealed" hx-swap="outerHTML"
-  class="lists-page-paginator px-4 text-center bg-backgroundHighlight text-center mt-4 text-onBackgroundSubdued rounded-xl py-8 flex justify-center items-center animate-pulse">
+  class="lists-page-paginator">
   <h2>Loading items....</h2>
 </div>
 {{ end }}
