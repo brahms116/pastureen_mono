@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"pastureen/components"
+	"pastureen/styles"
 	"strconv"
 	"strings"
 )
@@ -265,6 +266,10 @@ func main() {
 
 	r.StaticFS("/static", http.FS(assetsFS))
 
+	r.GET("/embed/styles.css", func(c *gin.Context) {
+		c.Data(http.StatusOK, "text/css; charset=utf-8", styles.PastureenCss)
+	})
+
 	r.GET("/healthcheck", func(c *gin.Context) {
 		c.String(http.StatusOK, "OK")
 	})
@@ -273,8 +278,10 @@ func main() {
 		props := GetTopbarProps("home", config.BASE_URL)
 		var buffer bytes.Buffer
 		if err := indexTemplate.ExecuteTemplate(&buffer, "index.html", components.LayoutProps{
-			Title:       "Home",
-			TopbarProps: props,
+			Title:               "Home",
+			TopbarProps:         props,
+			StylesheetUri:       config.BASE_URL + "/embed/styles.css",
+			CustomStylesheetUri: config.BASE_URL + "/static/assets/design-system.css",
 			BodyData: IndexPageProps{
 				LandingImageSrc: config.BASE_URL + "/static/assets/light.png",
 			}.ToData(),
@@ -288,8 +295,10 @@ func main() {
 		props := GetTopbarProps("forms", config.BASE_URL)
 		var buffer bytes.Buffer
 		if err := formsTemplate.ExecuteTemplate(&buffer, "forms.html", components.LayoutProps{
-			Title:       "Forms",
-			TopbarProps: props,
+			Title:               "Forms",
+			StylesheetUri:       config.BASE_URL + "/embed/styles.css",
+			CustomStylesheetUri: config.BASE_URL + "/static/assets/design-system.css",
+			TopbarProps:         props,
 		}.ToData(),
 		); err != nil {
 			c.Error(err)
@@ -308,8 +317,10 @@ func main() {
 
 		if err := listsTemplate.ExecuteTemplate(&buffer, "lists.html",
 			components.LayoutProps{
-				Title:       "Lists",
-				TopbarProps: props,
+				Title:               "Lists",
+				TopbarProps:         props,
+				StylesheetUri:       config.BASE_URL + "/embed/styles.css",
+				CustomStylesheetUri: config.BASE_URL + "/static/assets/design-system.css",
 				BodyData: ListsPageProps{
 					PaginatorProps: ListsPagePaginatorProps{
 						PaginatorRequestUrl: config.BASE_URL + "/htmx/lists_page_list?cursor=0",
@@ -319,7 +330,7 @@ func main() {
 							addNewPersonActionConfig,
 						},
 					},
-          SearchUrl: config.BASE_URL + "/htmx/lists_page_search",
+					SearchUrl: config.BASE_URL + "/htmx/lists_page_search",
 				}.ToData(),
 			}.ToData(),
 		); err != nil {

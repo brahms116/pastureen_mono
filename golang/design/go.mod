@@ -5,6 +5,7 @@ go 1.20
 require (
 	github.com/gin-gonic/gin v1.9.1
 	pastureen/components v0.0.0-00010101000000-000000000000
+	pastureen/styles v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -36,3 +37,5 @@ require (
 )
 
 replace pastureen/components => ../components
+
+replace pastureen/styles => ../../styles

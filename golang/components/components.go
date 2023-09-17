@@ -72,25 +72,28 @@ func (t TopbarProps) ToData() TopbarData {
 /* LAYOUT */
 
 type LayoutData struct {
-	Title                string
-	TailwindCustomStyles string
-	TopbarData           TopbarData
-	BodyData             interface{}
+	Title               string
+	StylesheetUri       string
+	CustomStylesheetUri string
+	TopbarData          TopbarData
+	BodyData            interface{}
 }
 
 type LayoutProps struct {
-	Title                string
-	TailwindCustomStyles string
-	TopbarProps          TopbarProps
-	BodyData             interface{}
+	Title               string
+	StylesheetUri       string
+	CustomStylesheetUri string
+	TopbarProps         TopbarProps
+	BodyData            interface{}
 }
 
 func (l LayoutProps) ToData() LayoutData {
 	return LayoutData{
-		Title:                l.Title,
-		TailwindCustomStyles: l.TailwindCustomStyles,
-		TopbarData:           l.TopbarProps.ToData(),
-		BodyData:             l.BodyData,
+		Title:               l.Title,
+		StylesheetUri:       l.StylesheetUri,
+		CustomStylesheetUri: l.CustomStylesheetUri,
+		TopbarData:          l.TopbarProps.ToData(),
+		BodyData:            l.BodyData,
 	}
 }
 
