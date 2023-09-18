@@ -6,5 +6,7 @@ members = [
   "actix_poc",
   "auth_api",
   "auth_service",
-  "reverse_proxy"
+  "reverse_proxy",
+  "components",
+  "blog_site"
 ]
