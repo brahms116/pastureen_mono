@@ -143,17 +143,17 @@ pub fn navbar(props: NavbarProps) -> Markup {
                         }
                     }
                 }
-                div.mobile-menu 
+                div.mobile-menu
                     x-bind:style="open ? 'transform: translateX(-100%);' : 'transform: translateX(0%);'" {
                         div.pt-navbar {
-                            a.pt-navbar-logo 
+                            a.pt-navbar-logo
                                 href=(props.logo_link) {
-                                    img.pt-navbar-logo__logo 
-                                        src=(props.logo_src) 
+                                    img.pt-navbar-logo__logo
+                                        src=(props.logo_src)
                                         alt="logo" {}
                                     h3.pt-navbar-logo__text { (props.logo_text) }
                             }
-                            .pt-navbar-mobile-menu-button 
+                            .pt-navbar-mobile-menu-button
                                 x-on:click = "open = !open; document.body.style.overflowY = 'auto'" {
                                     (close_menu_svg())
                             }
@@ -165,7 +165,7 @@ pub fn navbar(props: NavbarProps) -> Markup {
                                         h2.mobile-menu-nav__title {"Menu"}
                                         div.mobile-menu-nav__list {
                                             @for (i, item) in props.nav_items.iter().enumerate() {
-                                                a.mobile-menu-item.mobile-menu-item--active[item.is_active] 
+                                                a.mobile-menu-item.mobile-menu-item--active[item.is_active]
                                                     href=(item.link) {
                                                         h5 { (item.text) }
                                                 }
@@ -183,6 +183,7 @@ pub fn navbar(props: NavbarProps) -> Markup {
     }
 }
 
+#[derive(Debug, Clone)]
 pub enum ActionItemProps<'a> {
     Link {
         link: &'a str,
@@ -200,7 +201,7 @@ pub fn action_item(props: ActionItemProps) -> Markup {
     match props {
         ActionItemProps::Link { link, text } => {
             html! {
-                a.action-menu__item 
+                a.action-menu__item
                     href=(link) {
                        (text)
                 }
@@ -215,12 +216,48 @@ pub fn action_item(props: ActionItemProps) -> Markup {
             html! {
                 .action-menu__item
                     href=(action_link)
-                    hx-post=(action_target)
+                    hx-get=(action_target)
                     hx-swap="outerHTML"
                     hx-indicator=(action_indicator) {
                        (text)
                 }
             }
+        }
+    }
+}
+
+fn action_menu_svg() -> Markup {
+    html! {
+        svg.action-menu__icon
+            xmlns="http://www.w3.org/2000/svg" 
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke-width="1.5" 
+            x-on:click="open=!open" {
+                path 
+                    stroke-linecap="round" 
+                    stroke-linejoin="round"
+                    d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" {}
+        }
+      }
+}
+
+pub struct ActionMenuProps<'a> {
+    pub items: &'a [ActionItemProps<'a>],
+}
+
+pub fn action_menu(props: ActionMenuProps) -> Markup {
+    html! {
+        div.action-menu
+            x-data="{open: false}" {
+                (action_menu_svg())
+                div.action-menu__list 
+                    x-show="open"
+                    x-on:click.outside="open=false" {
+                    @for item in props.items {
+                        (action_item(item.clone()))
+                    }
+                }
         }
     }
 }
