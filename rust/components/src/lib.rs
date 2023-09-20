@@ -6,6 +6,12 @@ fn pastureen_css() -> Markup {
     PreEscaped(PASTUREEN_CSS.to_string())
 }
 
+fn correct_alpine_directives(markup: Markup) -> Markup {
+    let string = markup.into_string();
+    let string = string.replace("x-on:click-outside", "x-on:click.outside");
+    PreEscaped(string)
+}
+
 fn htmx() -> Markup {
     html! {
         script
@@ -228,36 +234,102 @@ pub fn action_item(props: ActionItemProps) -> Markup {
 
 fn action_menu_svg() -> Markup {
     html! {
-        svg.action-menu__icon
-            xmlns="http://www.w3.org/2000/svg" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke-width="1.5" 
-            x-on:click="open=!open" {
-                path 
-                    stroke-linecap="round" 
-                    stroke-linejoin="round"
-                    d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" {}
-        }
+      svg.action-menu__icon
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          x-on:click="open=!open" {
+              path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" {}
       }
+    }
 }
 
 pub struct ActionMenuProps<'a> {
     pub items: &'a [ActionItemProps<'a>],
 }
 
-pub fn action_menu(props: ActionMenuProps) -> Markup {
+fn action_menu_raw(props: ActionMenuProps) -> Markup {
     html! {
         div.action-menu
             x-data="{open: false}" {
                 (action_menu_svg())
-                div.action-menu__list 
+                div.action-menu__list
                     x-show="open"
-                    x-on:click.outside="open=false" {
+                    x-on:click-outside="open=false" {
                     @for item in props.items {
                         (action_item(item.clone()))
                     }
                 }
+        }
+    }
+}
+
+pub fn action_menu(props: ActionMenuProps) -> Markup {
+    correct_alpine_directives(action_menu_raw(props))
+}
+
+pub struct ImageProps<'a> {
+    pub src: &'a str,
+    pub alt: &'a str,
+}
+
+pub struct ListItemProps<'a> {
+    pub image: Option<ImageProps<'a>>,
+    pub title: &'a str,
+    pub link: Option<&'a str>,
+    pub subtitle: &'a str,
+    pub action_menu: Option<ActionMenuProps<'a>>,
+    pub tags: Option<&'a [&'a str]>,
+}
+
+pub fn list_item<'a>(props: ListItemProps<'a>) -> Markup {
+    html! {
+        .resource {
+            .resource__content {
+                .pt-list-item {
+                    @if let Some(image) = props.image {
+                        img.pt-list-item__image
+                            src=(image.src)
+                            alt=(image.alt) {}
+                    }
+                    @else {
+                        div.pt-list-item__image {}
+                    }
+                    .pt-list-item-heading.pt-list-item-heading--link[props.link.is_some()] {
+                        @if let Some(link) = props.link {
+                            a href=(link) {
+                                h2.pt-list-item-heading__title { (props.title) }
+                                h5.pt-list-item-heading__subtitle { (props.subtitle) }
+                            }
+                        }
+                        @else {
+                            h2.pt-list-item-heading__title { (props.title) }
+                            h5.pt-list-item-heading__subtitle { (props.subtitle) }
+                        }
+                    }
+                    .pt-list-item__actions {
+                        @if let Some(menu_props) = props.action_menu {
+                            (action_menu(menu_props))
+                        }
+                    }
+                    .pt-list-item__tags {
+                        @if let Some(tags) = props.tags {
+                            @for tag in tags {
+                                span.pt-list-item__tag { (tag) }
+                            }
+                        }
+                    }
+                }
+            }
+            .resource__loader {
+               .pt-list-item-loader {
+                    h2 { "Your item is loading"}
+                }
+            }
         }
     }
 }
