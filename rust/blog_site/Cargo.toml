@@ -9,3 +9,4 @@ edition = "2021"
 axum = "0.6.20"
 tokio = { version = "1.32.0", features = ["full"] }
 components = { path = "../components" }
+maud = "0.25.0"

@@ -54,6 +54,8 @@ fn alpinejs() -> Markup {
 pub struct LayoutProps<'a> {
     pub title: &'a str,
     pub navbar_props: NavbarProps<'a>,
+    pub custom_css: Markup,
+    pub body: Markup,
 }
 
 pub fn layout(props: LayoutProps) -> Markup {
@@ -71,11 +73,12 @@ pub fn layout(props: LayoutProps) -> Markup {
                 (tailwind_reset())
                 (alpinejs())
                 style { (pastureen_css()) }
+                style { (props.custom_css) }
             }
         }
         body {
             (navbar(props.navbar_props))
-            "HELLO WORLD!"
+            (props.body)
         }
     }
 }
@@ -128,7 +131,7 @@ pub fn navbar(props: NavbarProps) -> Markup {
     html! {
         div
             x-data="{open: false}" {
-                div.pt-navbar {
+                .pt-navbar {
                     a.pt-navbar-logo
                         href=(props.logo_link) {
                             img.pt-navbar-logo__logo
@@ -140,7 +143,7 @@ pub fn navbar(props: NavbarProps) -> Markup {
                         x-on:click = "open = !open; document.body.style.overflowY = 'hidden'" {
                             (open_menu_svg())
                     }
-                    div.pt-navbar-menu {
+                    .pt-navbar-menu {
                         @for item in props.nav_items {
                             a.pt-navbar-menu__item.pt-navbar-menu__item--active[item.is_active]
                                     href=(item.link) {
@@ -149,9 +152,9 @@ pub fn navbar(props: NavbarProps) -> Markup {
                         }
                     }
                 }
-                div.mobile-menu
+                .mobile-menu
                     x-bind:style="open ? 'transform: translateX(-100%);' : 'transform: translateX(0%);'" {
-                        div.pt-navbar {
+                        .pt-navbar {
                             a.pt-navbar-logo
                                 href=(props.logo_link) {
                                     img.pt-navbar-logo__logo
@@ -164,19 +167,19 @@ pub fn navbar(props: NavbarProps) -> Markup {
                                     (close_menu_svg())
                             }
                         }
-                        div.content-wrapper {
-                            div.content {
-                                div.mobile-menu__nav {
-                                    div.mobile-menu-nav {
+                        .content-wrapper {
+                            .content {
+                                .mobile-menu__nav {
+                                    .mobile-menu-nav {
                                         h2.mobile-menu-nav__title {"Menu"}
-                                        div.mobile-menu-nav__list {
+                                        .mobile-menu-nav__list {
                                             @for (i, item) in props.nav_items.iter().enumerate() {
                                                 a.mobile-menu-item.mobile-menu-item--active[item.is_active]
                                                     href=(item.link) {
                                                         h5 { (item.text) }
                                                 }
                                                 @if i != props.nav_items.len() - 1 {
-                                                    div.mobile-menu-divider {}
+                                                    .mobile-menu-.der {}
                                                 }
                                             }
                                         }
@@ -254,10 +257,10 @@ pub struct ActionMenuProps<'a> {
 
 fn action_menu_raw(props: ActionMenuProps) -> Markup {
     html! {
-        div.action-menu
+        .action-menu
             x-data="{open: false}" {
                 (action_menu_svg())
-                div.action-menu__list
+                .action-menu__list
                     x-show="open"
                     x-on:click-outside="open=false" {
                     @for item in props.items {
@@ -297,7 +300,7 @@ pub fn list_item<'a>(props: ListItemProps<'a>) -> Markup {
                             alt=(image.alt) {}
                     }
                     @else {
-                        div.pt-list-item__image {}
+                        .pt-list-item__image {}
                     }
                     .pt-list-item-heading.pt-list-item-heading--link[props.link.is_some()] {
                         @if let Some(link) = props.link {

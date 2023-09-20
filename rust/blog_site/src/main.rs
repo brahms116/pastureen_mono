@@ -6,6 +6,8 @@ use axum::{
 };
 use components::LayoutProps;
 
+use maud::PreEscaped;
+
 use std::net::SocketAddr;
 
 #[tokio::main]
@@ -42,6 +44,8 @@ async fn index() -> Response {
                 },
             ],
         },
+        custom_css: PreEscaped("".to_string()),
+        body: PreEscaped("<h1>Hello, world!</h1>".to_string()),
     };
     Html(components::layout(layout_props).into_string()).into_response()
 }
