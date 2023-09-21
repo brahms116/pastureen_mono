@@ -6,6 +6,6 @@ import (
 
 func main() {
   r := gin.Default()
-  r.Static("/", "./assets")
+  r.Static("/", "./content")
   r.Run(":8081")
 }
