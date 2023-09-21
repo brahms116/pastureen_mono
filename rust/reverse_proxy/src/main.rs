@@ -25,6 +25,7 @@ pub enum ReverseProxyError {
 pub struct ReverseProxyConfig {
     pub listen_addr: String,
     pub design_system_url: String,
+    pub static_assets_url: String,
 }
 
 impl ReverseProxyConfig {
@@ -35,9 +36,13 @@ impl ReverseProxyConfig {
         let design_system_url = std::env::var("REVERSE_PROXY_DESIGN_SYSTEM_URL").map_err(|_| {
             ReverseProxyError::MissingConfiguration("REVERSE_PROXY_DESIGN_SYSTEM_URL".to_string())
         })?;
+        let static_assets_url = std::env::var("REVERSE_PROXY_STATIC_ASSETS_URL").map_err(|_| {
+            ReverseProxyError::MissingConfiguration("REVERSE_PROXY_STATIC_ASSETS_URL".to_string())
+        })?;
         Ok(Self {
             listen_addr,
             design_system_url,
+            static_assets_url,
         })
     }
 }
@@ -47,6 +52,7 @@ impl ReverseProxyConfig {
 #[derive(Debug)]
 pub enum Route {
     DesignSystem(String),
+    StaticAssets(String),
     NotFound,
     HealthCheck,
 }
@@ -55,10 +61,16 @@ impl From<&str> for Route {
     fn from(path: &str) -> Self {
         let design_system_slug = "/design";
         let healthcheck_slug = "/healthcheck";
+        let static_assets_slug = "/static";
 
         if matches_path(path, design_system_slug) {
             return Route::DesignSystem(strip_prefix(path, design_system_slug));
         }
+
+        if matches_path(path, static_assets_slug) {
+            return Route::StaticAssets(strip_prefix(path, static_assets_slug));
+        }
+
         if matches_path(path, healthcheck_slug) {
             return Route::HealthCheck;
         }
@@ -113,6 +125,7 @@ fn strip_prefix(input: &str, prefix: &str) -> String {
 #[derive(Debug)]
 pub enum ProxyRoute {
     DesignSystem(String),
+    StaticAssets(String),
 }
 
 impl ProxyRoute {
@@ -127,6 +140,9 @@ fn get_proxied_uri(route: &ProxyRoute, config: &ReverseProxyConfig) -> String {
     match route {
         ProxyRoute::DesignSystem(slug) => {
             format!("{}{}", config.design_system_url, slug)
+        }
+        ProxyRoute::StaticAssets(slug) => {
+            format!("{}{}", config.static_assets_url, slug)
         }
     }
 }
@@ -151,6 +167,7 @@ impl From<Route> for ClassifiedRoute {
     fn from(route: Route) -> Self {
         match route {
             Route::DesignSystem(slug) => ClassifiedRoute::Proxy(ProxyRoute::DesignSystem(slug)),
+            Route::StaticAssets(slug) => ClassifiedRoute::Proxy(ProxyRoute::StaticAssets(slug)),
             Route::NotFound => ClassifiedRoute::NonProxy(NonProxyRoute::NotFound),
             Route::HealthCheck => ClassifiedRoute::NonProxy(NonProxyRoute::HealthCheck),
         }
