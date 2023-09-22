@@ -27,28 +27,26 @@ pub struct ReverseProxyConfig {
     pub design_system_url: String,
     pub static_assets_url: String,
     pub blog_url: String,
+    pub base_url: String,
+}
+
+fn get_url_from_env(key: &str) -> Result<String, ReverseProxyError> {
+    std::env::var(key).map_err(|_| ReverseProxyError::MissingConfiguration(key.to_string()))
 }
 
 impl ReverseProxyConfig {
     pub fn from_env() -> Result<Self, ReverseProxyError> {
-        let listen_addr = std::env::var("REVERSE_PROXY_LISTEN_ADDR").map_err(|_| {
-            ReverseProxyError::MissingConfiguration("REVERSE_PROXY_LISTEN_ADDR".to_string())
-        })?;
-        let design_system_url = std::env::var("REVERSE_PROXY_DESIGN_SYSTEM_URL").map_err(|_| {
-            ReverseProxyError::MissingConfiguration("REVERSE_PROXY_DESIGN_SYSTEM_URL".to_string())
-        })?;
-        let static_assets_url = std::env::var("REVERSE_PROXY_STATIC_ASSETS_URL").map_err(|_| {
-            ReverseProxyError::MissingConfiguration("REVERSE_PROXY_STATIC_ASSETS_URL".to_string())
-        })?;
-
-        let blog_url = std::env::var("REVERSE_PROXY_BLOG_URL").map_err(|_| {
-            ReverseProxyError::MissingConfiguration("REVERSE_PROXY_BLOG_URL".to_string())
-        })?;
+        let listen_addr = get_url_from_env("REVERSE_PROXY_LISTEN_ADDR")?;
+        let design_system_url = get_url_from_env("REVERSE_PROXY_DESIGN_SYSTEM_URL")?;
+        let static_assets_url = get_url_from_env("REVERSE_PROXY_STATIC_ASSETS_URL")?;
+        let blog_url = get_url_from_env("REVERSE_PROXY_BLOG_URL")?;
+        let base_url = get_url_from_env("REVERSE_PROXY_BASE_URL")?;
         Ok(Self {
             listen_addr,
             design_system_url,
             static_assets_url,
-            blog_url
+            blog_url,
+            base_url,
         })
     }
 }
@@ -62,6 +60,7 @@ pub enum Route {
     Blog(String),
     NotFound,
     HealthCheck,
+    Root,
 }
 
 impl From<&str> for Route {
@@ -70,6 +69,10 @@ impl From<&str> for Route {
         let healthcheck_slug = "/healthcheck";
         let static_assets_slug = "/static";
         let blog_slug = "/blog";
+
+        if path == "/" || path.is_empty() {
+            return Route::Root;
+        }
 
         if matches_path(path, design_system_slug) {
             return Route::DesignSystem(strip_prefix(path, design_system_slug));
@@ -169,6 +172,7 @@ fn get_proxied_uri(route: &ProxyRoute, config: &ReverseProxyConfig) -> String {
 pub enum NonProxyRoute {
     NotFound,
     HealthCheck,
+    Root,
 }
 
 /* CLASSIFIED_ROUTE */
@@ -187,6 +191,7 @@ impl From<Route> for ClassifiedRoute {
             Route::StaticAssets(slug) => ClassifiedRoute::Proxy(ProxyRoute::StaticAssets(slug)),
             Route::NotFound => ClassifiedRoute::NonProxy(NonProxyRoute::NotFound),
             Route::HealthCheck => ClassifiedRoute::NonProxy(NonProxyRoute::HealthCheck),
+            Route::Root => ClassifiedRoute::NonProxy(NonProxyRoute::Root),
         }
     }
 }
@@ -225,10 +230,11 @@ fn get_proxied_request(
 
 /* HANDLE_NON_PROXY_ROUTE */
 
-fn handle_non_proxy_route(route: NonProxyRoute) -> Response<Body> {
+fn handle_non_proxy_route(route: NonProxyRoute, base_url: &str) -> Response<Body> {
     match route {
         NonProxyRoute::NotFound => not_found_route(),
         NonProxyRoute::HealthCheck => healthcheck_route(),
+        NonProxyRoute::Root => root(base_url),
     }
 }
 
@@ -248,6 +254,14 @@ fn not_found_route() -> Response<Body> {
         .header("content-type", "text/html")
         .body(Body::from("Not Found"))
         .expect("Failed to build not found response")
+}
+
+fn root(base_url: &str) -> Response<Body> {
+    Response::builder()
+        .status(301)
+        .header("Location", &format!("{}/blog", base_url))
+        .body(Body::empty())
+        .expect("Failed to build root response")
 }
 
 /* SEND_REQUEST */
@@ -287,7 +301,7 @@ async fn reverse_proxy(req: Request<Body>) -> Result<Response<Body>, StdError> {
             Ok(proxied_response)
         }
         ClassifiedRoute::NonProxy(non_proxy_route) => {
-            let response = handle_non_proxy_route(non_proxy_route);
+            let response = handle_non_proxy_route(non_proxy_route, &config.base_url);
             println!("Response: {}", response.status());
             Ok(response)
         }
