@@ -29,3 +29,13 @@
 .main-posts__search {
   margin-top: 3rem;
 }
+
+.socials {
+  margin-top: 3rem;
+}
+
+.socials__item {
+  fill: var(--onBackground);
+  height: 2.5rem;
+  opacity: 0.3;
+}
