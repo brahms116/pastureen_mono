@@ -1,0 +1,459 @@
+<html><head><title>Pastureen</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></meta><script src="https://unpkg.com/htmx.org@1.9.5" integrity="sha384-xcuj3WpfgjlKF+FXhSQFQ0ZNr39ln+hwjN3npfM9VBnUskLolQAcN80McRIVOPuO" crossorigin="anonymous"></script><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin></link><link rel="preconnect" href="https://fonts.googleapis.com"></link><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"></link><link rel="stylesheet" href="https://unpkg.com/tailwindcss@3.3.3/src/css/preflight.css"></link><script src="//unpkg.com/alpinejs"></script><style>:root {
+  --error: #e83a3a;
+  --background: #222222;
+  --backgroundHighlight: #2d2d2d;
+  --onBackground: #7b896e;
+  --onBackgroundHighlight: #b8cba7;
+  --onBackgroundSubdued: #515949;
+  --secondary: #7b896e;
+  --onSecondaryHighlight: #425842;
+  --secondaryHighlight: #b8cba7;
+  --secondarySubdued: #515948;
+  --onSecondarySubdued: #5e615d;
+  --onSecondary: #363d36;
+  --primary: #4b692f;
+  --primarySubdued: #394929;
+  --primaryHighlight: #759b51;
+  --onPrimary: #bdccae;
+  --onPrimaryHighlight: #ffffff;
+  --onPrimarySubdued: #96a786;
+}
+
+html {
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--onBackground);
+  width: 100vw;
+  overflow-x: hidden;
+}
+
+h1 {
+  font-size: 3.5rem;
+}
+
+h2 {
+  font-size: 2rem;
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+h4 {
+  font-size: 1.375rem;
+}
+
+h5 {
+  font-size: 1.25rem;
+}
+
+h6 {
+  font-size: 1.125rem;
+}
+
+img {
+  image-rendering: pixelated;
+}
+
+p {
+  line-height: 220%;
+}
+
+form {
+  width: 100%;
+  max-width: 25rem;
+  margin: 0;
+}
+
+[type="text"],
+[type="email"],
+[type="url"],
+[type="password"],
+[type="number"],
+[type="date"],
+[type="datetime-local"],
+[type="month"],
+[type="search"],
+[type="tel"],
+[type="time"],
+[type="week"],
+[multiple],
+textarea,
+select {
+  background-color: transparent;
+  border-color: var(--onBackground);
+  border-radius: 0.75rem;
+  border-width: 1px;
+  padding: 1rem;
+  color: var(--onBackground);
+}
+
+[type="text"]:focus,
+[type="email"]:focus,
+[type="url"]:focus,
+[type="password"]:focus,
+[type="number"]:focus,
+[type="date"]:focus,
+[type="datetime-local"]:focus,
+[type="month"]:focus,
+[type="search"]:focus,
+[type="tel"]:focus,
+[type="time"]:focus,
+[type="week"]:focus,
+[multiple]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--onBackgroundHighlight);
+  appearance: none;
+}
+
+input.error {
+  border-color: var(--error);
+}
+
+[type="submit"] {
+  width: 100%;
+  margin-top: 2rem;
+}
+
+input::placeholder {
+  color: var(--onBackgroundSubdued);
+  opacity: 0.5;
+}
+
+.resource .resource__content {
+  display: block;
+}
+
+.resource .resource__loader {
+  display: none;
+}
+
+.resource.htmx-request .resource__content {
+  display: none;
+}
+
+.resource.htmx-request .resource__loader {
+  display: block;
+}
+
+.content-wrapper {
+  display: flex;
+  justify-content: center;
+  overflow-x: hidden;
+}
+
+.content {
+  padding: 0 2rem;
+  width: 100%;
+  max-width: 56rem;
+}
+
+@media (min-width: 640px) {
+  .content {
+    padding: 0 4rem;
+  }
+}
+
+.action-menu {
+  cursor: pointer;
+  position: relative;
+}
+
+.action-menu__icon {
+  width: 2rem;
+  height: 2rem;
+  stroke: var(--onBackground);
+}
+
+.action-menu__icon:hover {
+  stroke: var(--onBackgroundHighlight);
+}
+
+.action-menu__list {
+  position: absolute;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  right: 0;
+  top: 110%;
+  text-align: right;
+  background-color: var(--background);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  box-shadow:
+    /* offset-x | offset-y | blur-radius | spread-radius | color */
+    0px 1px 1px 0px hsla(0, 0%, 0%, 0.14),
+    0px 2px 1px -1px hsla(0, 0%, 0%, 0.12),
+    0px 1px 3px 0px hsla(0, 0%, 0%, 0.2);
+}
+
+.action-menu__item {
+  padding: 1rem 2rem;
+  white-space: nowrap;
+  width: 100%;
+  cursor: pointer;
+  position: relative;
+}
+
+.action-menu__item:hover {
+  background-color: var(--backgroundHighlight);
+}
+
+.btn {
+  background-color: var(--primary);
+  color: var(--onPrimary);
+  padding: 1rem 2rem;
+  border-radius: 2rem;
+  font-size: 1.125rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: none;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  background-color: var(--primaryHighlight);
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 2rem;
+}
+
+.form-item__label {
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  transform: translateX(4px);
+}
+
+.form-item__error-message {
+  color: var(--error);
+  font-size: 0.875rem;
+  margin-top: 1rem;
+  transform: translateX(4px);
+}
+
+.pt-list-item {
+  display: grid;
+  padding: 2rem 0;
+  grid-template:
+    "image . ." auto
+    "heading heading action" auto
+    "tags tags tags" auto / auto 1fr auto;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .pt-list-item {
+    grid-template:
+      "image heading action" auto
+      ". tags tags" auto / auto 1fr auto;
+  }
+}
+
+.pt-list-item__image {
+  grid-area: image;
+  width: 4rem;
+  height: 4rem;
+  translate: transformY(1rem);
+  margin-right: 0;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 640px) {
+  .pt-list-item__image {
+    margin-bottom: 0rem;
+    margin-right: 1rem;
+  }
+}
+
+.pt-list-item-heading {
+  grid-area: heading;
+  display: flex;
+  flex-direction: column;
+  justify-items: center;
+}
+
+.pt-list-item-heading--link {
+  cursor: pointer;
+}
+
+.pt-list-item-heading--link:hover {
+  color: var(--onBackgroundHighlight);
+}
+
+.pt-list-item-heading__title {
+  margin-bottom: 0.5rem;
+}
+
+.pt-list-item-heading__subtitle {
+  margin-bottom: 2rem;
+}
+
+.pt-list-item__tags {
+  grid-area: tags;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.pt-list-item__actions {
+  grid-area: action;
+  display: flex;
+  flex-direction: column;
+}
+
+.tag {
+  background-color: var(--backgroundHighlight);
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  color: var(--onBackground);
+  text-transform: uppercase;
+}
+
+.pt-list-item-loader {
+  border-radius: 0.75rem;
+  padding: 2rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--backgroundHighlight);
+  color: var(--onBackgroundSubdued);
+}
+
+.pt-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: var(--background);
+}
+
+@media (min-width: 640px) {
+  .pt-navbar {
+    padding: 2rem;
+  }
+}
+
+.pt-navbar-logo {
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.pt-navbar-logo__logo {
+  height: 3rem;
+}
+
+.pt-navbar-logo__text {
+  margin-left: 0.5rem;
+  transform: translateY(0.125rem);
+}
+
+.pt-navbar-mobile-menu-button {
+  cursor: pointer;
+}
+
+@media (min-width: 1024px) {
+  .pt-navbar-mobile-menu-button {
+    display: none;
+  }
+}
+
+.pt-navbar-mobile-menu-button__icon {
+  width: 2rem;
+  height: 2rem;
+  stroke: var(--onBackground);
+}
+
+.pt-navbar-mobile-menu-button__icon:hover {
+  stroke: var(--onBackgroundHighlight);
+}
+
+.pt-navbar-menu {
+  display: none;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .pt-navbar-menu {
+    display: flex;
+  }
+}
+
+.pt-navbar-menu__item {
+  padding: 0 2rem;
+  cursor: pointer;
+  color: var(--onBackground);
+}
+
+.pt-navbar-menu__item:hover {
+  color: var(--onBackgroundHighlight);
+}
+
+.pt-navbar-menu__item--active {
+  color: var(--onBackgroundHighlight);
+}
+
+.mobile-menu {
+  position: fixed;
+  overflow-y: auto;
+  height: 100vh;
+  width: 100%;
+  top: 0;
+  left: 100%;
+  transition: transform 0.3s ease-in-out;
+  background-color: var(--background);
+  z-index: 10;
+}
+
+@media (min-width: 1024px) {
+  .mobile-menu {
+    display: none;
+  }
+}
+
+.mobile-menu__nav {
+  margin: 2rem 0;
+}
+
+.mobile-menu-nav__title {
+  margin-bottom: 2rem;
+  padding: 0 0.25rem;
+}
+
+.mobile-menu-nav__list {
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-menu-item {
+  padding: 2rem 0.25rem;
+  cursor: pointer;
+  color: var(--onBackground);
+}
+
+.mobile-menu-item:hover {
+  color: var(--onBackgroundHighlight);
+}
+
+.mobile-menu-item--active {
+  color: var(--onBackgroundHighlight);
+}
+
+.mobile-menu-divider {
+  height: 1px;
+  background-color: var(--onBackgroundSubdued);
+  width: 100%;
+}
+</style><style></style></head></html><body><div x-data="{open: false}"><div class="pt-navbar"><a class="pt-navbar-logo" href="http://localhost:8082"><img class="pt-navbar-logo__logo" src="http://localhost:8081/logo.png" alt="logo"></img><h3 class="pt-navbar-logo__text">Pastureen</h3></a><div class="pt-navbar-mobile-menu-button" x-on:click="open = !open; document.body.style.overflowY = 'hidden'"><svg class="pt-navbar-mobile-menu-button__icon" x-show="!open" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5"></path></svg></div><div class="pt-navbar-menu"></div></div><div class="mobile-menu" x-bind:style="open ? 'transform: translateX(-100%);' : 'transform: translateX(0%);'"><div class="pt-navbar"><a class="pt-navbar-logo" href="http://localhost:8082"><img class="pt-navbar-logo__logo" src="http://localhost:8081/logo.png" alt="logo"></img><h3 class="pt-navbar-logo__text">Pastureen</h3></a><div class="pt-navbar-mobile-menu-button" x-on:click="open = !open; document.body.style.overflowY = 'auto'"><svg class="pt-navbar-mobile-menu-button__icon" x-show="open" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg></div></div><div class="content-wrapper"><div class="content"><div class="mobile-menu__nav"><div class="mobile-menu-nav"><h2 class="mobile-menu-nav__title">Menu</h2><div class="mobile-menu-nav__list"></div></div></div></div></div></div></div><div class="index-page"><div class="index-page__landing"><div class="landing"><img class="landing_image" src="http://localhost:8081/landing.jpg"></img><h1 class="landing_title">Pastureen</h1><h4 class="landing_subtitle">A David Kwong blog</h4></div></div></div></body>

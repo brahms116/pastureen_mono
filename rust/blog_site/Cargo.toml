@@ -6,5 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+axum = { version = "0.6.20", optional = true }
 components = { path = "../components" }
 maud = "0.25.0"
+tokio = { version = "1.32.0", features = ["full"], optional = true }
+tower-http = { version = "0.4.4", features = ["fs"], optional = true }
+
+[features]
+local = ["dep:tokio", "dep:axum", "dep:tower-http"]
+
