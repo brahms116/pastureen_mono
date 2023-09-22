@@ -37,6 +37,7 @@ fn get_file_descriptor(path: &str) -> File {
     OpenOptions::new()
         .write(true)
         .create(true)
+        .truncate(true)
         .open(path)
         .expect(&format!("Could not open file {}", path))
 }
@@ -48,7 +49,7 @@ fn build() {
         base_url: &config.base_url,
     };
 
-    let mut index_file = get_file_descriptor("index.html");
+    let mut index_file = get_file_descriptor("./build/index.html");
 
     index_file
         .write_all(index(index_props).into_string().as_bytes())
