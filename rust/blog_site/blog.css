@@ -1,0 +1,31 @@
+
+.index-page__landing {
+  min-height: 50rem;
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 15rem;
+}
+
+.landing {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.landing_image {
+  height: 14rem;
+  margin-bottom: 2rem;
+}
+
+.index-page__content {
+  margin-bottom: 10rem;
+}
+
+
+.main-posts__search {
+  margin-top: 3rem;
+}

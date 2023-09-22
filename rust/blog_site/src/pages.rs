@@ -17,6 +17,20 @@ fn index_body(props: IndexBodyProps) -> Markup {
                     h4.landing_subtitle { "A David Kwong blog" }
                 }
             }
+            .index-page__content {
+                .content-wrapper{
+                    .content{
+                        .main-posts{
+                            h1.main-posts__title { "Recent Posts" }
+                            form.main-posts__search {
+                                .form-item {
+                                    input type="text" name="search" id="search" placeholder="Search posts" {}
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -35,7 +49,7 @@ pub fn index(props: IndexProps) -> Markup {
     };
 
     let body_props = IndexBodyProps {
-        image_src: &format!("{}/landing.jpg", props.assets_url),
+        image_src: &format!("{}/logo.png", props.assets_url),
     };
 
     let layout_props = LayoutProps {
