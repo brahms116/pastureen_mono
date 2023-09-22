@@ -26,6 +26,7 @@ pub struct ReverseProxyConfig {
     pub listen_addr: String,
     pub design_system_url: String,
     pub static_assets_url: String,
+    pub blog_url: String,
 }
 
 impl ReverseProxyConfig {
@@ -39,10 +40,15 @@ impl ReverseProxyConfig {
         let static_assets_url = std::env::var("REVERSE_PROXY_STATIC_ASSETS_URL").map_err(|_| {
             ReverseProxyError::MissingConfiguration("REVERSE_PROXY_STATIC_ASSETS_URL".to_string())
         })?;
+
+        let blog_url = std::env::var("REVERSE_PROXY_BLOG_URL").map_err(|_| {
+            ReverseProxyError::MissingConfiguration("REVERSE_PROXY_BLOG_URL".to_string())
+        })?;
         Ok(Self {
             listen_addr,
             design_system_url,
             static_assets_url,
+            blog_url
         })
     }
 }
@@ -53,6 +59,7 @@ impl ReverseProxyConfig {
 pub enum Route {
     DesignSystem(String),
     StaticAssets(String),
+    Blog(String),
     NotFound,
     HealthCheck,
 }
@@ -62,9 +69,14 @@ impl From<&str> for Route {
         let design_system_slug = "/design";
         let healthcheck_slug = "/healthcheck";
         let static_assets_slug = "/static";
+        let blog_slug = "/blog";
 
         if matches_path(path, design_system_slug) {
             return Route::DesignSystem(strip_prefix(path, design_system_slug));
+        }
+
+        if matches_path(path, blog_slug) {
+            return Route::Blog(strip_prefix(path, blog_slug));
         }
 
         if matches_path(path, static_assets_slug) {
@@ -126,6 +138,7 @@ fn strip_prefix(input: &str, prefix: &str) -> String {
 pub enum ProxyRoute {
     DesignSystem(String),
     StaticAssets(String),
+    Blog(String),
 }
 
 impl ProxyRoute {
@@ -143,6 +156,9 @@ fn get_proxied_uri(route: &ProxyRoute, config: &ReverseProxyConfig) -> String {
         }
         ProxyRoute::StaticAssets(slug) => {
             format!("{}{}", config.static_assets_url, slug)
+        }
+        ProxyRoute::Blog(slug) => {
+            format!("{}{}", config.blog_url, slug)
         }
     }
 }
@@ -166,6 +182,7 @@ pub enum ClassifiedRoute {
 impl From<Route> for ClassifiedRoute {
     fn from(route: Route) -> Self {
         match route {
+            Route::Blog(slug) => ClassifiedRoute::Proxy(ProxyRoute::Blog(slug)),
             Route::DesignSystem(slug) => ClassifiedRoute::Proxy(ProxyRoute::DesignSystem(slug)),
             Route::StaticAssets(slug) => ClassifiedRoute::Proxy(ProxyRoute::StaticAssets(slug)),
             Route::NotFound => ClassifiedRoute::NonProxy(NonProxyRoute::NotFound),

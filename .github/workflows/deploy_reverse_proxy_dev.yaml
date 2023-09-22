@@ -18,5 +18,6 @@ jobs:
           REVERSE_PROXY_LISTEN_ADDR: ${{ vars.LAMBDA_LISTEN_ADDR }}
           REVERSE_PROXY_DESIGN_SYSTEM_URL: ${{ vars.DESIGN_SYSTEM_URL }}
           REVERSE_PROXY_STATIC_ASSETS_URL: ${{ vars.STATIC_ASSETS_URL }}
+          REVERSE_PROXY_BLOG_URL: ${{ vars.BLOG_URL }}
         run: cd rust/reverse_proxy && ./deploy.sh dev
 
