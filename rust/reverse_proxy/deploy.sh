@@ -20,4 +20,5 @@ aws lambda update-function-configuration --function-name reverse_proxy_$env --en
   Variables="{\
     REVERSE_PROXY_LISTEN_ADDR=$REVERSE_PROXY_LISTEN_ADDR,\
     REVERSE_PROXY_DESIGN_SYSTEM_URL=$REVERSE_PROXY_DESIGN_SYSTEM_URL,\
+    REVERSE_PROXY_STATIC_ASSETS_URL=$REVERSE_PROXY_STATIC_ASSETS_URL,\
   }"
