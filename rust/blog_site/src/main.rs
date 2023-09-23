@@ -44,7 +44,7 @@ fn get_file_descriptor(path: &str) -> File {
 
 fn build() {
     let config = BlogSiteConfig::from_env();
-    let index_props = IndexProps {
+    let index_props = PagesConfig {
         assets_url: &config.assets_url,
         base_url: &config.base_url,
     };
@@ -54,6 +54,18 @@ fn build() {
     index_file
         .write_all(index(index_props).into_string().as_bytes())
         .expect("Could not write to index file");
+
+    let mut posts_file = get_file_descriptor("./build/posts.html");
+    posts_file
+        .write_all(
+            posts_page(PagesConfig {
+                assets_url: &config.assets_url,
+                base_url: &config.base_url,
+            })
+            .into_string()
+            .as_bytes(),
+        )
+        .expect("Could not write to posts file");
 }
 
 #[cfg(not(feature = "local"))]

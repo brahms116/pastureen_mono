@@ -3,6 +3,8 @@ use maud::{html, Markup, PreEscaped};
 
 const CSS: &'static str = include_str!("../blog.css");
 
+const POSTS_JS: &'static str = include_str!("../posts.js");
+
 struct IndexBodyProps<'a> {
     image_src: &'a str,
 }
@@ -21,6 +23,31 @@ fn github_svg() -> Markup {
     }
 }
 
+fn email_svg() -> Markup {
+    html! {
+        svg.socials__item
+            xmlns="http://www.w3.org/2000/svg"
+            x="0px"
+            y="0px"
+            viewBox="0 0 50 50"{
+                path d="M12 23.403V23.39 10.389L11.88 10.3h-.01L9.14 8.28C7.47 7.04 5.09 7.1 3.61 8.56 2.62 9.54 2 10.9 2 12.41v3.602L12 23.403zM38 23.39v.013l10-7.391V12.41c0-1.49-.6-2.85-1.58-3.83-1.46-1.457-3.765-1.628-5.424-.403L38.12 10.3 38 10.389V23.39zM14 24.868l10.406 7.692c.353.261.836.261 1.189 0L36 24.868V11.867L25 20l-11-8.133V24.868zM38 25.889V41c0 .552.448 1 1 1h6.5c1.381 0 2.5-1.119 2.5-2.5V18.497L38 25.889zM12 25.889L2 18.497V39.5C2 40.881 3.119 42 4.5 42H11c.552 0 1-.448 1-1V25.889z" {}
+        }
+    }
+}
+
+fn linkedin_svg() -> Markup {
+    html! {
+    svg.socials__item
+        xmlns="http://www.w3.org/2000/svg"
+        x="0px"
+        y="0px"
+        viewBox="0 0 30 30" {
+            path
+                d="M24,4H6C4.895,4,4,4.895,4,6v18c0,1.105,0.895,2,2,2h18c1.105,0,2-0.895,2-2V6C26,4.895,25.105,4,24,4z M10.954,22h-2.95 v-9.492h2.95V22z M9.449,11.151c-0.951,0-1.72-0.771-1.72-1.72c0-0.949,0.77-1.719,1.72-1.719c0.948,0,1.719,0.771,1.719,1.719 C11.168,10.38,10.397,11.151,9.449,11.151z M22.004,22h-2.948v-4.616c0-1.101-0.02-2.517-1.533-2.517 c-1.535,0-1.771,1.199-1.771,2.437V22h-2.948v-9.492h2.83v1.297h0.04c0.394-0.746,1.356-1.533,2.791-1.533 c2.987,0,3.539,1.966,3.539,4.522V22z" {}
+        }
+    }
+}
+
 fn index_body(props: IndexBodyProps) -> Markup {
     html! {
         .index-page {
@@ -29,22 +56,37 @@ fn index_body(props: IndexBodyProps) -> Markup {
                     img.landing_image src=(props.image_src) {}
                     h1.landing_title { "Pastureen" }
                     h4.landing_subtitle { "A David Kwong blog" }
-                    .socials {
-                        a href="https://github.com/brahms116" {
-                            (github_svg())
+                    .landing__cta {
+                        .btn {
+                            a href="" {"See posts"}
+                        }
+                    }
+                    .landing__socials{
+                        .socials {
+                            a href="https://github.com/brahms116" {
+                                (github_svg())
+                            }
+                            a href="mailto:davidkwong17@gmail.com" {
+                                (email_svg())
+                            }
+                            a href="https://www.linkedin.com/in/david-kwong-a4323b206/" {
+                                (linkedin_svg())
+                            }
                         }
                     }
                 }
             }
             .index-page__content {
-                .content-wrapper{
-                    .content{
-                        .main-posts{
-                            h1.main-posts__title { "Recent Posts" }
-                            form.main-posts__search {
-                                .form-item {
-                                    input type="text" name="search" id="search" placeholder="Search posts" {}
-                                }
+                .content-wrapper {
+                    .content {
+                        .about {
+                            h1.about__title { "What is Pastureen?" }
+                            p.about__text {
+                                "Pastureen is a mix-mash of the words \"pasture\" and \"green\".
+                                It comes from Psalm 23 in the Bible.
+                                As I live my life out, build my projects and technologies, I hope to do so resting peacefully amongst green pastures God, my Shepard, has provided for me.
+                                Pastureen is a creative outlet for me to share my journey and ideas about technologies, faith and other various facets of my life.
+                                "
                             }
                         }
                     }
@@ -54,12 +96,12 @@ fn index_body(props: IndexBodyProps) -> Markup {
     }
 }
 
-pub struct IndexProps<'a> {
+pub struct PagesConfig<'a> {
     pub assets_url: &'a str,
     pub base_url: &'a str,
 }
 
-pub fn index(props: IndexProps) -> Markup {
+pub fn index(props: PagesConfig) -> Markup {
     let navbar_props = NavbarProps {
         logo_link: props.base_url,
         logo_src: &format!("{}/logo.png", props.assets_url),
@@ -76,6 +118,51 @@ pub fn index(props: IndexProps) -> Markup {
         custom_css: PreEscaped(CSS.to_string()),
         navbar_props,
         body: index_body(body_props),
+    };
+
+    layout(layout_props)
+}
+
+fn posts_body() -> Markup {
+    html! {
+        .content-wrapper{
+            .content{
+                .main-posts{
+                    h1.main-posts__title { "What has David been up to?" }
+                    form.main-posts__search {
+                        .form-item {
+                            input 
+                                type="text" 
+                                name="search" 
+                                id="search" 
+                                hx-post="/posts/search"
+                                hx-trigger="customLoad, keyup changed delay:0.5s"
+                                placeholder="Search posts" {}
+                        }
+                     }
+                 }
+             }
+        }
+        script {
+            (PreEscaped(POSTS_JS.to_string()))
+        }
+    }
+}
+
+pub fn posts_page(props: PagesConfig) -> Markup {
+    let navbar_props = NavbarProps {
+        logo_link: props.base_url,
+        logo_src: &format!("{}/logo.png", props.assets_url),
+        logo_text: "Pastureen",
+        nav_items: &vec![],
+    };
+
+
+    let layout_props = LayoutProps {
+        title: "Pastureen - Posts",
+        custom_css: PreEscaped(CSS.to_string()),
+        navbar_props,
+        body: posts_body(),
     };
 
     layout(layout_props)

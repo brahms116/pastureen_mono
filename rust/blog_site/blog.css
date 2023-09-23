@@ -30,12 +30,25 @@
   margin-top: 3rem;
 }
 
-.socials {
+.landing__socials {
+  margin-top: 6rem;
+}
+
+.landing__cta {
   margin-top: 3rem;
+}
+
+.socials {
+  display:flex;
+  gap: 1rem;
 }
 
 .socials__item {
   fill: var(--onBackground);
-  height: 2.5rem;
+  height: 2rem;
   opacity: 0.3;
+}
+
+.about__title {
+  margin-bottom: 2rem;
 }
