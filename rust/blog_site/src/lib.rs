@@ -96,9 +96,11 @@ fn index_body(props: IndexBodyProps) -> Markup {
     }
 }
 
+#[derive(Clone)]
 pub struct PagesConfig<'a> {
     pub assets_url: &'a str,
     pub base_url: &'a str,
+    pub htmx_url: &'a str,
 }
 
 pub fn index(props: PagesConfig) -> Markup {
@@ -123,7 +125,12 @@ pub fn index(props: PagesConfig) -> Markup {
     layout(layout_props)
 }
 
-fn posts_body() -> Markup {
+
+struct PostBodyProps<'a> {
+    htmx_search_url: &'a str,
+}
+
+fn posts_body(props: PostBodyProps) -> Markup {
     html! {
         .content-wrapper{
             .content{
@@ -135,8 +142,8 @@ fn posts_body() -> Markup {
                                 type="text" 
                                 name="search" 
                                 id="search" 
-                                hx-post="/posts/search"
-                                hx-trigger="customLoad, keyup changed delay:0.5s"
+                                hx-post=(props.htmx_search_url)
+                                hx-trigger="customLoad,keyup changed delay:0.5s"
                                 placeholder="Search posts" {}
                         }
                      }
@@ -162,7 +169,9 @@ pub fn posts_page(props: PagesConfig) -> Markup {
         title: "Pastureen - Posts",
         custom_css: PreEscaped(CSS.to_string()),
         navbar_props,
-        body: posts_body(),
+        body: posts_body(PostBodyProps {
+            htmx_search_url: &format!("{}/posts/search", props.htmx_url),
+        }),
     };
 
     layout(layout_props)

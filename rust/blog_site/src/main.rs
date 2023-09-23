@@ -1,5 +1,4 @@
-mod pages;
-use pages::*;
+use blog_site::*;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
 
@@ -15,21 +14,21 @@ use std::net::SocketAddr;
 struct BlogSiteConfig {
     pub base_url: String,
     pub assets_url: String,
+    pub htmx_url: String,
 }
 
 impl BlogSiteConfig {
-    fn new(base_url: String, assets_url: String) -> Self {
-        Self {
-            base_url,
-            assets_url,
-        }
-    }
-
     fn from_env() -> Self {
         let base_url = std::env::var("BLOG_SITE_BASE_URL").expect("BLOG_SITE_BASE_URL not set");
         let assets_url =
             std::env::var("BLOG_SITE_ASSETS_URL").expect("BLOG_SITE_ASSETS_URL not set");
-        Self::new(base_url, assets_url)
+
+        let htmx_url = std::env::var("BLOG_SITE_HTMX_URL").expect("BLOG_SITE_HTMX_URL not set");
+        Self {
+            base_url,
+            assets_url,
+            htmx_url,
+        }
     }
 }
 
@@ -44,27 +43,21 @@ fn get_file_descriptor(path: &str) -> File {
 
 fn build() {
     let config = BlogSiteConfig::from_env();
-    let index_props = PagesConfig {
+    let page_config = PagesConfig {
         assets_url: &config.assets_url,
         base_url: &config.base_url,
+        htmx_url: &config.htmx_url,
     };
 
     let mut index_file = get_file_descriptor("./build/index.html");
 
     index_file
-        .write_all(index(index_props).into_string().as_bytes())
+        .write_all(index(page_config.clone()).into_string().as_bytes())
         .expect("Could not write to index file");
 
     let mut posts_file = get_file_descriptor("./build/posts.html");
     posts_file
-        .write_all(
-            posts_page(PagesConfig {
-                assets_url: &config.assets_url,
-                base_url: &config.base_url,
-            })
-            .into_string()
-            .as_bytes(),
-        )
+        .write_all(posts_page(page_config.clone()).into_string().as_bytes())
         .expect("Could not write to posts file");
 }
 
