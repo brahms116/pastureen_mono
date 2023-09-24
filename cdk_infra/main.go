@@ -5,11 +5,10 @@ import (
 	"github.com/aws/jsii-runtime-go"
 )
 
-
 func main() {
 	defer jsii.Close()
 	app := cdk.NewApp(nil)
 	NewStaticAssetsStack(app, "StaticAssets")
+	NewBlogStack(app, "BlogSite")
 	app.Synth(nil)
 }
-
