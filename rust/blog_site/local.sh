@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# stub as local just uses dev for static assets
+
 set -e
 
 env=local
@@ -10,6 +12,6 @@ set -a
 . ./.$env.env
 set +a
 
-cargo run -p blog_site --features local
+./deploy.sh dev
 
 

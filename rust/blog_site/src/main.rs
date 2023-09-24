@@ -2,15 +2,6 @@ use blog_site::*;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
 
-#[cfg(feature = "local")]
-use axum::Router;
-
-#[cfg(feature = "local")]
-use tower_http::services::ServeDir;
-
-#[cfg(feature = "local")]
-use std::net::SocketAddr;
-
 struct BlogSiteConfig {
     pub base_url: String,
     pub assets_url: String,
@@ -61,23 +52,6 @@ fn build() {
         .expect("Could not write to posts file");
 }
 
-#[cfg(not(feature = "local"))]
 fn main() {
     build()
-}
-
-#[cfg(feature = "local")]
-#[tokio::main]
-async fn main() {
-    build();
-
-    let app = Router::new().nest_service("/", ServeDir::new("build"));
-
-    let addr = SocketAddr::from(([0, 0, 0, 0], 8082));
-    println!("Listening on {}", addr);
-
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
 }
