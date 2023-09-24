@@ -1,9 +1,44 @@
-use components::{layout, LayoutProps, NavbarProps};
+use components::{layout, LayoutProps, NavbarProps, NavItemProps};
 use maud::{html, Markup, PreEscaped};
 
 const CSS: &'static str = include_str!("../blog.css");
 
 const POSTS_JS: &'static str = include_str!("../posts.js");
+
+
+#[derive(Clone, PartialEq)]
+pub enum Page {
+    Index,
+    Posts,
+}
+
+pub fn get_navbar_props(config: &PagesConfig, page: &Page)-> NavbarProps {
+
+    let base_url = &config.base_url;
+
+    let index_link = base_url.to_string();
+    let posts_link = format!("{}/posts.html", base_url);
+
+    let nav_items: Vec<NavItemProps> = vec![
+        NavItemProps {
+            link: index_link.clone(),
+            text: "Home".to_string(),
+            is_active: page == &Page::Index,
+        },
+        NavItemProps {
+            link: posts_link,
+            text: "Posts".to_string(),
+            is_active: page == &Page::Posts,
+        },
+    ];
+
+    NavbarProps {
+        nav_items,
+        logo_link: index_link,
+        logo_text: "Pastureen".to_string(),
+        logo_src: format!("{}/logo.png", config.assets_url),
+    }
+}
 
 struct IndexBodyProps {
     image_src: String,
@@ -114,12 +149,8 @@ pub struct PagesConfig {
 }
 
 pub fn index(props: PagesConfig) -> Markup {
-    let navbar_props = NavbarProps {
-        logo_link: props.base_url.clone(),
-        logo_src: format!("{}/logo.png", props.assets_url),
-        logo_text: "Pastureen".to_string(),
-        nav_items: vec![],
-    };
+
+    let navbar_props = get_navbar_props(&props, &Page::Index);
 
     let body_props = IndexBodyProps {
         image_src: format!("{}/logo.png", props.assets_url),
@@ -146,7 +177,7 @@ fn posts_body(props: PostBodyProps) -> Markup {
         .content-wrapper{
             .content{
                 .main-posts{
-                    h1.main-posts__title { "What has David been up to?" }
+                    h1.main-posts__title { "Me recently... " }
                     form.main-posts__search {
                         .form-item {
                             input 
@@ -168,14 +199,7 @@ fn posts_body(props: PostBodyProps) -> Markup {
 }
 
 pub fn posts_page(props: PagesConfig) -> Markup {
-    let navbar_props = NavbarProps {
-        logo_link: props.base_url,
-        logo_src: format!("{}/logo.png", props.assets_url),
-        logo_text: "Pastureen".to_string(),
-        nav_items: vec![],
-    };
-
-
+    let navbar_props = get_navbar_props(&props, &Page::Posts);
     let layout_props = LayoutProps {
         title: "Pastureen - Posts".to_string(),
         custom_css: PreEscaped(CSS.to_string()),
@@ -184,6 +208,5 @@ pub fn posts_page(props: PagesConfig) -> Markup {
             htmx_search_url: &format!("{}/posts/search", props.htmx_url),
         }),
     };
-
     layout(layout_props)
 }
