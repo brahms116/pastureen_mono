@@ -1,3 +1,5 @@
+use post_generator::*;
+
 fn main() {
-    println!("Hello, world!");
+    generate();
 }
