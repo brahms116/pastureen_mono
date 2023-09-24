@@ -22,5 +22,4 @@ echo "Uploading blog skeleton to S3 $env"
 
 ls -la ./build
 
-aws s3 sync ./build/index.html s3://pastureen-blog-$env/index.html --delete
-aws s3 sync ./build/posts.html s3://pastureen-blog-$env/posts.html --delete
+aws s3 cp ./build s3://pastureen-blog-$env --recursive
