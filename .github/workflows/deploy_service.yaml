@@ -21,6 +21,7 @@ env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   AWS_REGION: ${{ secrets.AWS_REGION }}
+  ENV: ${{ inputs.environment }}
 
 
 jobs:
@@ -36,5 +37,60 @@ jobs:
           AUTH_API_SECRET: ${{ secrets.AUTH_API_SECRET }}
           AUTH_API_DB_CONN_STR: ${{ secrets.AUTH_API_DB_CONN_STR }}
           AUTH_SERVICE_LISTEN_ADDR: ${{ vars.LAMBDA_LISTEN_ADDR }}
-        run: cd rust/auth_service && ./deploy.sh dev
+        run: cd rust/auth_service && ./deploy.sh $ENV
 
+  deploy_design_system:
+    if: inputs.service == 'design_system' || inputs.service == 'everything'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.envrionment }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Deploy design system
+        env:
+          DESIGN_SYSTEM_BASE_URL: ${{ vars.REVERSE_PROXY_URL }}/design
+        run: cd golang/design && ./deploy.sh $ENV
+
+  deploy_reverse_proxy:
+    runs-on: ubuntu-latest
+    if: inputs.service == 'reverse_proxy' || inputs.service == 'everything'
+    environment: ${{ inputs.envrionment }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Deploy reverse proxy
+        env:
+          REVERSE_PROXY_LISTEN_ADDR: ${{ vars.LAMBDA_LISTEN_ADDR }}
+          REVERSE_PROXY_DESIGN_SYSTEM_URL: ${{ vars.DESIGN_SYSTEM_URL }}
+          REVERSE_PROXY_STATIC_ASSETS_URL: ${{ vars.STATIC_ASSETS_URL }}
+          REVERSE_PROXY_BLOG_URL: ${{ vars.BLOG_URL }}
+          REVERSE_PROXY_BASE_URL: ${{ vars.REVERSE_PROXY_URL }}
+        run: cd rust/reverse_proxy && ./deploy.sh $ENV
+
+  deploy_static_assets:
+    runs-on: ubuntu-latest
+    if: inputs.service == 'static_assets' || inputs.service == 'everything'
+    environment: ${{ inputs.envrionment }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Deploy static assets
+        run: cd static && ./deploy.sh $ENV
+
+  deploy_blog_skeleton:
+    runs-on: ubuntu-latest
+    if: inputs.service == 'blog_skeleton' || inputs.service == 'everything'
+    environment: ${{ inputs.envrionment }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Deploy blog skeleton
+        env:
+          BLOG_SITE_BASE_URL: ${{ var.REVERSE_PROXY_URL }}/blog
+          BLOG_SITE_STATIC_ASSETS_URL: ${{ var.REVERSE_PROXY_URL }}/static
+          BLOG_SITE_HTMX_URL: ${{ var.REVERSE_PROXY_URL }}/blog-htmx
+        run: cd rust/blog_site && ./deploy.sh $ENV
