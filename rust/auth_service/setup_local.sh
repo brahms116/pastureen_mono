@@ -6,4 +6,5 @@ set -a
 . ./.local.env
 set +a
 
-./test.sh
+./setup.sh
+
