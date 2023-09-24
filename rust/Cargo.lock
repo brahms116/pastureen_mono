@@ -283,9 +283,7 @@ dependencies = [
 name = "auth_service"
 version = "0.1.0"
 dependencies = [
- "actix-web",
  "auth_api",
- "serde",
  "thiserror",
 ]
 
