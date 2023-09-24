@@ -44,9 +44,9 @@ fn get_file_descriptor(path: &str) -> File {
 fn build() {
     let config = BlogSiteConfig::from_env();
     let page_config = PagesConfig {
-        assets_url: &config.assets_url,
-        base_url: &config.base_url,
-        htmx_url: &config.htmx_url,
+        assets_url: config.assets_url,
+        base_url: config.base_url,
+        htmx_url: config.htmx_url,
     };
 
     let mut index_file = get_file_descriptor("./build/index.html");

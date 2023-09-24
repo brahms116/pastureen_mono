@@ -84,7 +84,7 @@ fn index_body(props: IndexBodyProps) -> Markup {
                             p.about__text {
                                 "Pastureen is a mix-mash of the words \"pasture\" and \"green\".
                                 It comes from Psalm 23 in the Bible.
-                                As I live my life out, build my projects and technologies, I hope to do so resting peacefully amongst green pastures God, my Shepard, has provided for me.
+                                As I live my life out, build my projects and technologies, I hope to do so resting peacefully amongst green pastures God, my Shepherd, has provided for me.
                                 Pastureen is a creative outlet for me to share my journey and ideas about technologies, faith and other various facets of my life.
                                 "
                             }
