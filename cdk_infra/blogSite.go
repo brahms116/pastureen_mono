@@ -8,23 +8,22 @@ import (
 )
 
 type BlogBucketProps struct {
-  Env string
+	Env string
 }
 
-func NewBlogBucket (scope constructs.Construct, id string, props BlogBucketProps) s3.Bucket {
-  env := parseEnv(props.Env)
-  sprops := getPublicBucketProps(env)
-  sprops.BucketName = jsii.String("pastureen-blog-" + env)
-  sprops.WebsiteIndexDocument = jsii.String("index.html")
-  return s3.NewBucket(scope, &id, &sprops)
+func NewBlogBucket(scope constructs.Construct, id string, props BlogBucketProps) s3.Bucket {
+	env := parseEnv(props.Env)
+	sprops := getPublicBucketProps(env)
+	sprops.BucketName = jsii.String("pastureen-blog-" + env)
+	sprops.WebsiteIndexDocument = jsii.String("index.html")
+	return s3.NewBucket(scope, &id, &sprops)
 }
-
 
 func NewBlogStack(scope constructs.Construct, id string) cdk.Stack {
-  stack := cdk.NewStack(scope, &id, nil)
-  NewBlogBucket(stack, "BlogBucketDev", BlogBucketProps{Env: ENV_DEV})
-  NewBlogBucket(stack, "BlogBucketProd", BlogBucketProps{Env: ENV_PROD})
-  NewBlogBucket(stack, "BlogBucketStaging", BlogBucketProps{Env: ENV_TEST})
+	stack := cdk.NewStack(scope, &id, nil)
+	NewBlogBucket(stack, "BlogBucketDev", BlogBucketProps{Env: ENV_DEV})
+	NewBlogBucket(stack, "BlogBucketProd", BlogBucketProps{Env: ENV_PROD})
+	NewBlogBucket(stack, "BlogBucketStaging", BlogBucketProps{Env: ENV_TEST})
 
-  return stack
+	return stack
 }
