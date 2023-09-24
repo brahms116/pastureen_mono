@@ -1,5 +1,6 @@
 {{ block "lists_page_paginator" . }}
-<div hx-get="{{ .PaginatorRequestUrl }}" hx-target=".lists-page-paginator" hx-trigger="revealed" hx-swap="outerHTML"
+<div hx-get="{{ .PaginatorRequestUrl }}" 
+  hx-target=".lists-page-paginator" hx-trigger="{{ if .IsInitialLoad }}load{{ else }}revealed{{end}}" hx-swap="outerHTML"
   class="lists-page-paginator">
   <h2>Loading items....</h2>
 </div>
