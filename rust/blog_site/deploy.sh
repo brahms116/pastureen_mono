@@ -9,6 +9,11 @@ if [[ "$env" != "prod" && "$env" != "dev" && "$env" != "test" ]]; then
   exit 1
 fi
 
+echo "cleaning up build directory"
+
+rm -rf ./build
+mkdir ./build
+
 echo "Building skeleton"
 
 cargo run -p blog_site
