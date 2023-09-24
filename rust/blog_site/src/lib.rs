@@ -7,6 +7,7 @@ const POSTS_JS: &'static str = include_str!("../posts.js");
 
 struct IndexBodyProps {
     image_src: String,
+    posts_link: String,
 }
 
 fn github_svg() -> Markup {
@@ -57,8 +58,10 @@ fn index_body(props: IndexBodyProps) -> Markup {
                     h1.landing_title { "Pastureen" }
                     h4.landing_subtitle { "A David Kwong blog" }
                     .landing__cta {
-                        .btn {
-                            a href="" {"See posts"}
+                        a href="#about" {
+                            .btn {
+                                "What is pastureen"
+                            }
                         }
                     }
                     .landing__socials{
@@ -80,13 +83,20 @@ fn index_body(props: IndexBodyProps) -> Markup {
                 .content-wrapper {
                     .content {
                         .about {
-                            h1.about__title { "What is Pastureen?" }
+                            h1.about__title id="about" { "What is Pastureen?" }
                             p.about__text {
                                 "Pastureen is a mix-mash of the words \"pasture\" and \"green\".
                                 It comes from Psalm 23 in the Bible.
                                 As I live my life out, build my projects and technologies, I hope to do so resting peacefully amongst green pastures God, my Shepherd, has provided for me.
                                 Pastureen is a creative outlet for me to share my journey and ideas about technologies, faith and other various facets of my life.
                                 "
+                            }
+                            .about__cta {
+                                a href=(props.posts_link) {
+                                    .btn {
+                                        "See posts"
+                                    }
+                                }
                             }
                         }
                     }
@@ -105,7 +115,7 @@ pub struct PagesConfig {
 
 pub fn index(props: PagesConfig) -> Markup {
     let navbar_props = NavbarProps {
-        logo_link: props.base_url,
+        logo_link: props.base_url.clone(),
         logo_src: format!("{}/logo.png", props.assets_url),
         logo_text: "Pastureen".to_string(),
         nav_items: vec![],
@@ -113,6 +123,7 @@ pub fn index(props: PagesConfig) -> Markup {
 
     let body_props = IndexBodyProps {
         image_src: format!("{}/logo.png", props.assets_url),
+        posts_link: format!("{}/posts.html", props.base_url),
     };
 
     let layout_props = LayoutProps {
