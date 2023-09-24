@@ -8,6 +8,7 @@ on:
         type: environment
       service:
         required: true
+        type: choice
         options:
           - everything
           - auth_service
