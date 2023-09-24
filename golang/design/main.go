@@ -82,18 +82,18 @@ type FakeData struct {
 
 type ListsPagePaginatorData struct {
 	PaginatorRequestUrl string
-  IsInitialLoad bool
+	IsInitialLoad       bool
 }
 
 type ListsPagePaginatorProps struct {
 	PaginatorRequestUrl string
-  IsInitialLoad bool
+	IsInitialLoad       bool
 }
 
 func (p ListsPagePaginatorProps) ToData() ListsPagePaginatorData {
 	return ListsPagePaginatorData{
 		PaginatorRequestUrl: p.PaginatorRequestUrl,
-    IsInitialLoad: p.IsInitialLoad,
+		IsInitialLoad:       p.IsInitialLoad,
 	}
 }
 
@@ -327,7 +327,7 @@ func main() {
 				BodyData: ListsPageProps{
 					PaginatorProps: ListsPagePaginatorProps{
 						PaginatorRequestUrl: config.BASE_URL + "/htmx/lists_page_list?cursor=0",
-            IsInitialLoad: true,
+						IsInitialLoad:       true,
 					},
 					ActionsProps: components.ActionMenuProps{
 						ItemsProps: []components.ActionItemProps{
