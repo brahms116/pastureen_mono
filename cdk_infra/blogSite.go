@@ -12,34 +12,19 @@ type BlogBucketProps struct {
 }
 
 func NewBlogBucket (scope constructs.Construct, id string, props BlogBucketProps) s3.Bucket {
-  env := props.Env
-  if env == "" {
-    env = "dev"
-  }
-
-	removalPolicy := cdk.RemovalPolicy_DESTROY
-
-	if env == "prod" {
-		removalPolicy = cdk.RemovalPolicy_RETAIN
-	}
-
-  sprops := s3.BucketProps{
-    BucketName: jsii.String("pastureen-blog-site-" + props.Env),
-    BlockPublicAccess: s3.BlockPublicAccess_BLOCK_ACLS(),
-    ObjectOwnership: s3.ObjectOwnership_BUCKET_OWNER_ENFORCED,
-    PublicReadAccess: jsii.Bool(true),
-    RemovalPolicy: removalPolicy,
-  }
-
+  env := parseEnv(props.Env)
+  sprops := getPublicBucketProps(env)
+  sprops.BucketName = jsii.String("pastureen-blog-" + env)
+  sprops.WebsiteIndexDocument = jsii.String("index.html")
   return s3.NewBucket(scope, &id, &sprops)
 }
 
 
 func NewBlogStack(scope constructs.Construct, id string) cdk.Stack {
   stack := cdk.NewStack(scope, &id, nil)
-  NewBlogBucket(stack, "BlogBucketDev", BlogBucketProps{Env: "dev"})
-  NewBlogBucket(stack, "BlogBucketProd", BlogBucketProps{Env: "prod"})
-  NewBlogBucket(stack, "BlogBucketStaging", BlogBucketProps{Env: "test"})
+  NewBlogBucket(stack, "BlogBucketDev", BlogBucketProps{Env: ENV_DEV})
+  NewBlogBucket(stack, "BlogBucketProd", BlogBucketProps{Env: ENV_PROD})
+  NewBlogBucket(stack, "BlogBucketStaging", BlogBucketProps{Env: ENV_TEST})
 
   return stack
 }
