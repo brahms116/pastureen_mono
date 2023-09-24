@@ -9,6 +9,10 @@ if [[ "$env" != "prod" && "$env" != "dev" && "$env" != "test" ]]; then
   exit 1
 fi
 
+echo "Building skeleton"
+
+cargo run -p blog_site
+
 echo "Uploading blog skeleton to S3 $env"
 
 aws s3 sync ./build/index.html s3://pastureen-blog-$env/index.html --delete
