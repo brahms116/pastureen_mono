@@ -1,4 +1,4 @@
-name: deploy_service
+name: Deploy Services
 
 on:
   workflow_dispatch:
