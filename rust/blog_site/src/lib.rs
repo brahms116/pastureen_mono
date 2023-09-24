@@ -5,8 +5,8 @@ const CSS: &'static str = include_str!("../blog.css");
 
 const POSTS_JS: &'static str = include_str!("../posts.js");
 
-struct IndexBodyProps<'a> {
-    image_src: &'a str,
+struct IndexBodyProps {
+    image_src: String,
 }
 
 fn github_svg() -> Markup {
@@ -97,26 +97,26 @@ fn index_body(props: IndexBodyProps) -> Markup {
 }
 
 #[derive(Clone)]
-pub struct PagesConfig<'a> {
-    pub assets_url: &'a str,
-    pub base_url: &'a str,
-    pub htmx_url: &'a str,
+pub struct PagesConfig {
+    pub assets_url: String,
+    pub base_url: String,
+    pub htmx_url: String,
 }
 
 pub fn index(props: PagesConfig) -> Markup {
     let navbar_props = NavbarProps {
         logo_link: props.base_url,
-        logo_src: &format!("{}/logo.png", props.assets_url),
-        logo_text: "Pastureen",
-        nav_items: &vec![],
+        logo_src: format!("{}/logo.png", props.assets_url),
+        logo_text: "Pastureen".to_string(),
+        nav_items: vec![],
     };
 
     let body_props = IndexBodyProps {
-        image_src: &format!("{}/logo.png", props.assets_url),
+        image_src: format!("{}/logo.png", props.assets_url),
     };
 
     let layout_props = LayoutProps {
-        title: "Pastureen",
+        title: "Pastureen".to_string(),
         custom_css: PreEscaped(CSS.to_string()),
         navbar_props,
         body: index_body(body_props),
@@ -159,14 +159,14 @@ fn posts_body(props: PostBodyProps) -> Markup {
 pub fn posts_page(props: PagesConfig) -> Markup {
     let navbar_props = NavbarProps {
         logo_link: props.base_url,
-        logo_src: &format!("{}/logo.png", props.assets_url),
-        logo_text: "Pastureen",
-        nav_items: &vec![],
+        logo_src: format!("{}/logo.png", props.assets_url),
+        logo_text: "Pastureen".to_string(),
+        nav_items: vec![],
     };
 
 
     let layout_props = LayoutProps {
-        title: "Pastureen - Posts",
+        title: "Pastureen - Posts".to_string(),
         custom_css: PreEscaped(CSS.to_string()),
         navbar_props,
         body: posts_body(PostBodyProps {

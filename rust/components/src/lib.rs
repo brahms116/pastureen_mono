@@ -51,9 +51,9 @@ fn alpinejs() -> Markup {
     }
 }
 
-pub struct LayoutProps<'a> {
-    pub title: &'a str,
-    pub navbar_props: NavbarProps<'a>,
+pub struct LayoutProps {
+    pub title: String,
+    pub navbar_props: NavbarProps,
     pub custom_css: Markup,
     pub body: Markup,
 }
@@ -83,17 +83,17 @@ pub fn layout(props: LayoutProps) -> Markup {
     }
 }
 
-pub struct NavItemProps<'a> {
-    pub link: &'a str,
-    pub text: &'a str,
+pub struct NavItemProps {
+    pub link: String,
+    pub text: String,
     pub is_active: bool,
 }
 
-pub struct NavbarProps<'a> {
-    pub logo_link: &'a str,
-    pub logo_src: &'a str,
-    pub logo_text: &'a str,
-    pub nav_items: &'a [NavItemProps<'a>],
+pub struct NavbarProps {
+    pub logo_link: String,
+    pub logo_src: String,
+    pub logo_text: String,
+    pub nav_items: Vec<NavItemProps>,
 }
 
 fn open_menu_svg() -> Markup {
@@ -144,7 +144,7 @@ pub fn navbar(props: NavbarProps) -> Markup {
                             (open_menu_svg())
                     }
                     .pt-navbar-menu {
-                        @for item in props.nav_items {
+                        @for item in props.nav_items.iter() {
                             a.pt-navbar-menu__item.pt-navbar-menu__item--active[item.is_active]
                                     href=(item.link) {
                                         h5 { (item.text) }
