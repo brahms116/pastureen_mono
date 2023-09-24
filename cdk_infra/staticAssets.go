@@ -18,11 +18,18 @@ func NewAssetsBucket(scope constructs.Construct, id string, props AssetsBucketPr
 		env = "dev"
 	}
 
+	removalPolicy := cdk.RemovalPolicy_DESTROY
+
+	if env == "prod" {
+		removalPolicy = cdk.RemovalPolicy_RETAIN
+	}
+
 	sprops := s3.BucketProps{
 		BucketName:        jsii.String("pastureen-static-assets-" + props.Env),
 		BlockPublicAccess: s3.BlockPublicAccess_BLOCK_ACLS(),
 		ObjectOwnership:   s3.ObjectOwnership_BUCKET_OWNER_ENFORCED,
 		PublicReadAccess:  jsii.Bool(true),
+		RemovalPolicy:     removalPolicy,
 	}
 
 	return s3.NewBucket(scope, &id, &sprops)

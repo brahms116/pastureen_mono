@@ -17,11 +17,18 @@ func NewBlogBucket (scope constructs.Construct, id string, props BlogBucketProps
     env = "dev"
   }
 
+	removalPolicy := cdk.RemovalPolicy_DESTROY
+
+	if env == "prod" {
+		removalPolicy = cdk.RemovalPolicy_RETAIN
+	}
+
   sprops := s3.BucketProps{
     BucketName: jsii.String("pastureen-blog-site-" + props.Env),
     BlockPublicAccess: s3.BlockPublicAccess_BLOCK_ACLS(),
     ObjectOwnership: s3.ObjectOwnership_BUCKET_OWNER_ENFORCED,
     PublicReadAccess: jsii.Bool(true),
+    RemovalPolicy: removalPolicy,
   }
 
   return s3.NewBucket(scope, &id, &sprops)
@@ -30,7 +37,7 @@ func NewBlogBucket (scope constructs.Construct, id string, props BlogBucketProps
 
 func NewBlogStack(scope constructs.Construct, id string) cdk.Stack {
   stack := cdk.NewStack(scope, &id, nil)
-  NewBlogBucket(stack, "BlogBucket", BlogBucketProps{Env: "dev"})
+  NewBlogBucket(stack, "BlogBucketDev", BlogBucketProps{Env: "dev"})
   NewBlogBucket(stack, "BlogBucketProd", BlogBucketProps{Env: "prod"})
   NewBlogBucket(stack, "BlogBucketStaging", BlogBucketProps{Env: "test"})
 
