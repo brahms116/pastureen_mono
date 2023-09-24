@@ -11,4 +11,4 @@ fi
 
 echo "Uploading static content to S3 $env"
 
-aws s3 sync ./content s3://pastureen-static-assets-$env
+aws s3 sync ./content s3://pastureen-static-assets-$env --delete
