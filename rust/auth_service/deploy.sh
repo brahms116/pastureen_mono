@@ -20,6 +20,6 @@ aws lambda update-function-configuration --function-name auth_service_$env --env
   Variables="{\
     AUTH_API_SECRET=$AUTH_API_SECRET,\
     AUTH_API_DB_CONN_STR=$AUTH_API_DB_CONN_STR,\
-    AUTH_SERVICE_LISTEN_ADDR=$AUTH_SERVICE_LISTEN_ADDR\
-    READINESS_CHECK_PATH='/healthcheck',\
+    AUTH_SERVICE_LISTEN_ADDR=$AUTH_SERVICE_LISTEN_ADDR,\
+    READINESS_CHECK_PATH='/healthcheck'\
   }"

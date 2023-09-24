@@ -23,5 +23,5 @@ aws lambda update-function-configuration --function-name reverse_proxy_$env --en
     REVERSE_PROXY_STATIC_ASSETS_URL=$REVERSE_PROXY_STATIC_ASSETS_URL,\
     REVERSE_PROXY_BLOG_URL=$REVERSE_PROXY_BLOG_URL,\
     REVERSE_PROXY_BASE_URL=$REVERSE_PROXY_BASE_URL,\
-    READINESS_CHECK_PATH='/healthcheck',\
+    READINESS_CHECK_PATH='/healthcheck'\
   }"
