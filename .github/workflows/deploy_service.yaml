@@ -42,7 +42,7 @@ jobs:
   deploy_design_system:
     if: inputs.service == 'design_system' || inputs.service == 'everything'
     runs-on: ubuntu-latest
-    environment: ${{ inputs.envrionment }}
+    environment: ${{ inputs.environment }}
     steps:
       - name: checkout
         uses: actions/checkout@v3
@@ -54,7 +54,7 @@ jobs:
   deploy_reverse_proxy:
     runs-on: ubuntu-latest
     if: inputs.service == 'reverse_proxy' || inputs.service == 'everything'
-    environment: ${{ inputs.envrionment }}
+    environment: ${{ inputs.environment }}
     steps:
       - name: checkout
         uses: actions/checkout@v3
@@ -70,7 +70,7 @@ jobs:
   deploy_static_assets:
     runs-on: ubuntu-latest
     if: inputs.service == 'static_assets' || inputs.service == 'everything'
-    environment: ${{ inputs.envrionment }}
+    environment: ${{ inputs.environment }}
     steps:
       - name: checkout
         uses: actions/checkout@v3
@@ -80,7 +80,7 @@ jobs:
   deploy_blog_skeleton:
     runs-on: ubuntu-latest
     if: inputs.service == 'blog_skeleton' || inputs.service == 'everything'
-    environment: ${{ inputs.envrionment }}
+    environment: ${{ inputs.environment }}
     steps:
       - name: checkout
         uses: actions/checkout@v3
