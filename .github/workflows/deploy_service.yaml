@@ -1,0 +1,39 @@
+name: deploy_service
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        required: true
+        type: environment
+      service:
+        required: true
+        options:
+          - everything
+          - auth_service
+          - blog_skeleton
+          - design_system
+          - reverse_proxy
+          - static_assets
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+
+
+jobs:
+  deploy_auth_service:
+    if: inputs.service == 'auth_service' || inputs.service == 'everything'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Deploy auth service
+        env:
+          AUTH_API_SECRET: ${{ secrets.AUTH_API_SECRET }}
+          AUTH_API_DB_CONN_STR: ${{ secrets.AUTH_API_DB_CONN_STR }}
+          AUTH_SERVICE_LISTEN_ADDR: ${{ vars.LAMBDA_LISTEN_ADDR }}
+        run: cd rust/auth_service && ./deploy.sh dev
+
