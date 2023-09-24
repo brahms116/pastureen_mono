@@ -8,5 +8,6 @@ members = [
   "auth_service",
   "reverse_proxy",
   "components",
-  "blog_site"
+  "blog_site",
+  "post_generator"
 ]
