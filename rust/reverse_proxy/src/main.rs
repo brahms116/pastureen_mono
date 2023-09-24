@@ -215,8 +215,20 @@ fn get_proxied_request(
     proxied_uri: &str,
 ) -> Result<Request<Body>, ReverseProxyError> {
     let (mut parts, body) = request.into_parts();
-    let query = parts.uri.query().unwrap_or("");
-    let new_uri = format!("{}?{}", proxied_uri, query);
+
+    let query = if let Some(q) = parts.uri.query() {
+        format!("?{}", q.to_string())
+    } else {
+        "".to_string()
+    };
+
+    let fragment = if let Some(f) = parts.uri.to_string().split('#').nth(1) {
+        format!("#{}", f.to_string())
+    } else {
+        "".to_string()
+    };
+
+    let new_uri = format!("{}{}{}", proxied_uri, query, fragment);
 
     parts.uri = new_uri.parse().expect("Failed to build proxied uri");
 
