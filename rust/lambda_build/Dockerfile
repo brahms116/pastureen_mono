@@ -4,7 +4,7 @@ RUN yum install -y jq openssl-devel gcc zip
 
 # Install protobuf compiler
 RUN PB_REL="https://github.com/protocolbuffers/protobuf/releases" && \
-    curl -L ${PB_REL}/download/v3.24.2/protoc-3.24.2-linux-x86_64.zip > protoc.zip && \
+    curl -LO $PB_REL/download/v3.15.8/protoc-3.15.8-linux-x86_64.zip  && \
     unzip protoc.zip -d /usr/local && \
     rm -f protoc.zip
 
