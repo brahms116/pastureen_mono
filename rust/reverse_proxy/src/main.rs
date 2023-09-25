@@ -28,6 +28,7 @@ pub struct ReverseProxyConfig {
     pub static_assets_url: String,
     pub blog_url: String,
     pub base_url: String,
+    pub auth_url: String,
 }
 
 fn get_url_from_env(key: &str) -> Result<String, ReverseProxyError> {
@@ -41,11 +42,13 @@ impl ReverseProxyConfig {
         let static_assets_url = get_url_from_env("REVERSE_PROXY_STATIC_ASSETS_URL")?;
         let blog_url = get_url_from_env("REVERSE_PROXY_BLOG_URL")?;
         let base_url = get_url_from_env("REVERSE_PROXY_BASE_URL")?;
+        let auth_url = get_url_from_env("REVERSE_PROXY_AUTH_URL")?;
         Ok(Self {
             listen_addr,
             design_system_url,
             static_assets_url,
             blog_url,
+            auth_url,
             base_url,
         })
     }
@@ -58,6 +61,7 @@ pub enum Route {
     DesignSystem(String),
     StaticAssets(String),
     Blog(String),
+    Auth(String),
     NotFound,
     HealthCheck,
     Root,
@@ -69,9 +73,14 @@ impl From<&str> for Route {
         let healthcheck_slug = "/healthcheck";
         let static_assets_slug = "/static";
         let blog_slug = "/blog";
+        let auth_slug = "/auth";
 
         if path == "/" || path.is_empty() {
             return Route::Root;
+        }
+
+        if matches_path(path, auth_slug) {
+            return Route::Auth(strip_prefix(path, auth_slug));
         }
 
         if matches_path(path, design_system_slug) {
@@ -142,6 +151,7 @@ pub enum ProxyRoute {
     DesignSystem(String),
     StaticAssets(String),
     Blog(String),
+    Auth(String),
 }
 
 impl ProxyRoute {
@@ -162,6 +172,9 @@ fn get_proxied_uri(route: &ProxyRoute, config: &ReverseProxyConfig) -> String {
         }
         ProxyRoute::Blog(slug) => {
             format!("{}{}", config.blog_url, slug)
+        }
+        ProxyRoute::Auth(slug) => {
+            format!("{}{}", config.auth_url, slug)
         }
     }
 }
@@ -186,9 +199,10 @@ pub enum ClassifiedRoute {
 impl From<Route> for ClassifiedRoute {
     fn from(route: Route) -> Self {
         match route {
-            Route::Blog(slug) => ClassifiedRoute::Proxy(ProxyRoute::Blog(slug)),
-            Route::DesignSystem(slug) => ClassifiedRoute::Proxy(ProxyRoute::DesignSystem(slug)),
-            Route::StaticAssets(slug) => ClassifiedRoute::Proxy(ProxyRoute::StaticAssets(slug)),
+            Route::Blog(path) => ClassifiedRoute::Proxy(ProxyRoute::Blog(path)),
+            Route::DesignSystem(path) => ClassifiedRoute::Proxy(ProxyRoute::DesignSystem(path)),
+            Route::Auth(path) => ClassifiedRoute::Proxy(ProxyRoute::Auth(path)),
+            Route::StaticAssets(path) => ClassifiedRoute::Proxy(ProxyRoute::StaticAssets(path)),
             Route::NotFound => ClassifiedRoute::NonProxy(NonProxyRoute::NotFound),
             Route::HealthCheck => ClassifiedRoute::NonProxy(NonProxyRoute::HealthCheck),
             Route::Root => ClassifiedRoute::NonProxy(NonProxyRoute::Root),
