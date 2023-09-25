@@ -1,6 +1,6 @@
 FROM public.ecr.aws/lambda/provided:al2.2023.07.10.09
 
-RUN yum install -y jq openssl-devel gcc zip 
+RUN yum install -y jq openssl-devel gcc zip unzip
 
 # Install protobuf compiler
 RUN PB_REL="https://github.com/protocolbuffers/protobuf/releases" && \
