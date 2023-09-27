@@ -1,67 +1,176 @@
-use std::net::SocketAddr;
-
-use hyper:: {
-    Response as HyperResponse,
-    Request as HyperRequest,
-    Body
+use actix_web::{
+    error::ResponseError,
+    get,
+    http::StatusCode,
+    post,
+    web::{scope, Data, Json},
+    App, HttpRequest, HttpResponse, HttpServer, Responder,
 };
+use auth_api::*;
+use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
-use tonic::{transport::Server, Request, Response, Status};
-
-use hello_world::greeter_server::{Greeter, GreeterServer};
-use hello_world::{HelloReply, HelloRequest};
-
-pub mod hello_world {
-    tonic::include_proto!("helloworld");
+#[derive(Error, Debug)]
+pub enum AuthWebServiceError {
+    #[error("Missing environment variable {0}")]
+    ConfigurationError(String),
+    #[error(transparent)]
+    ServiceError(#[from] AuthApiError),
+    #[error("Missing token in authorization header")]
+    MissingToken,
 }
 
-#[derive(Debug, Default)]
-pub struct MyGreeter {}
-
-#[tonic::async_trait]
-impl Greeter for MyGreeter {
-    async fn say_hello(
-        &self,
-        request: Request<HelloRequest>,
-    ) -> Result<Response<HelloReply>, Status> {
-
-        println!("Got a request: {:?}", request);
-
-        let reply = hello_world::HelloReply {
-            message: format!("Hello {}!", request.into_inner().name).into(),
-        };
-
-        Ok(Response::new(reply))
+impl AuthWebServiceError {
+    pub fn error_type(&self) -> String {
+        match self {
+            Self::ConfigurationError(_) => "ConfigurationError".to_string(),
+            Self::ServiceError(err) => err.error_type(),
+            Self::MissingToken => "MissingToken".to_string(),
+        }
     }
 }
 
-async fn health_check(_req: HyperRequest<Body>) -> Result<HyperResponse<Body>, StdError> {
-    Ok(HyperResponse::new(Body::from("OK")))
+#[derive(Serialize, Deserialize)]
+pub struct AuthWebServiceErrResponse {
+    pub error_type: String,
+    pub message: String,
 }
 
-type StdError = Box<dyn std::error::Error + Send + Sync + 'static>;
+impl From<&AuthApiError> for AuthWebServiceErrResponse {
+    fn from(err: &AuthApiError) -> Self {
+        Self {
+            error_type: err.error_type(),
+            message: err.to_string(),
+        }
+    }
+}
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let addr = "127.0.0.1:8080".parse()?;
-    let greeter = MyGreeter::default();
+impl From<&AuthWebServiceError> for AuthWebServiceErrResponse {
+    fn from(err: &AuthWebServiceError) -> Self {
+        Self {
+            error_type: err.error_type(),
+            message: err.to_string(),
+        }
+    }
+}
 
-    let health_addr: SocketAddr = "127.0.0.1:8081".parse()?;
-    let service_fn = hyper::service::make_service_fn(|_| async {
-        Ok::<_, StdError>(hyper::service::service_fn(health_check))
-    });
-
-    let server = hyper::Server::bind(&health_addr).serve(service_fn);
-
-    if let Err(e) = server.await {
-        eprintln!("server error: {}", e);
+impl ResponseError for AuthWebServiceError {
+    fn error_response(&self) -> HttpResponse {
+        HttpResponse::build(self.status_code()).json(AuthWebServiceErrResponse::from(self))
     }
 
+    fn status_code(&self) -> actix_web::http::StatusCode {
+        match self {
+            Self::ConfigurationError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::ServiceError(err) => match err {
+                AuthApiError::ConfigruationMissing(_) | AuthApiError::DatabaseError(_) => {
+                    StatusCode::INTERNAL_SERVER_ERROR
+                }
+                AuthApiError::InvalidToken => StatusCode::UNAUTHORIZED,
+                AuthApiError::InvalidCredentials | AuthApiError::EmailAlreadyExists => {
+                    StatusCode::BAD_REQUEST
+                }
+            },
+            Self::MissingToken => StatusCode::UNAUTHORIZED,
+        }
+    }
+}
 
-    Server::builder()
-        .add_service(GreeterServer::new(greeter))
-        .serve(addr)
-        .await?;
+pub struct AuthWebServiceConfiguration {
+    pub listen_address: String,
+}
+
+impl AuthWebServiceConfiguration {
+    pub fn new(listen_address: String) -> Self {
+        Self { listen_address }
+    }
+
+    pub fn from_env() -> Result<Self, AuthWebServiceError> {
+        let listen_address = std::env::var("AUTH_WEB_SERVICE_LISTEN_ADDR").map_err(|_| {
+            AuthWebServiceError::ConfigurationError("AUTH_WEB_SERVICE_LISTEN_ADDR".to_string())
+        })?;
+        Ok(Self::new(listen_address))
+    }
+}
+
+#[get("/")]
+async fn health_check() -> impl Responder {
+    HttpResponse::Ok().body("Health check ok")
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct GetUserResponse {
+    pub user: User,
+}
+
+fn get_token_from_header(req: &HttpRequest) -> Result<String, AuthWebServiceError> {
+    Ok(req
+        .headers()
+        .get("Authorization")
+        .ok_or(AuthWebServiceError::MissingToken)?
+        .to_str()
+        .map_err(|_| AuthWebServiceError::MissingToken)?
+        .to_string())
+}
+
+#[get("")]
+async fn get_user(
+    req: HttpRequest,
+    api: Data<AuthApi>,
+) -> Result<Json<GetUserResponse>, AuthWebServiceError> {
+    let token = get_token_from_header(&req)?;
+    let user = api.get_user(&token).await?;
+    Ok(Json(GetUserResponse { user }))
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct TokenPairResponse {
+    pub token_pair: TokenPair,
+}
+
+#[get("")]
+async fn refresh_token(
+    req: HttpRequest,
+    api: Data<AuthApi>,
+) -> Result<Json<TokenPairResponse>, AuthWebServiceError> {
+    let token = get_token_from_header(&req)?;
+    let token_pair = api.refresh(&token).await?;
+    Ok(Json(TokenPairResponse { token_pair }))
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct LoginRequest {
+    pub email: String,
+    pub password: String,
+}
+
+#[post("")]
+async fn login(
+    req: Json<LoginRequest>,
+    api: Data<AuthApi>,
+) -> Result<Json<TokenPairResponse>, AuthWebServiceError> {
+    let token_pair = api.login(&req.email, &req.password).await?;
+    Ok(Json(TokenPairResponse { token_pair }))
+}
+
+type StdError = Box<dyn std::error::Error + Send + Sync>;
+
+#[actix_web::main]
+async fn main() -> Result<(), StdError> {
+    let api = AuthApi::from_env().await?;
+
+    HttpServer::new(move || {
+        let user_resource = scope("/user").service(get_user);
+        let token_resource = scope("/token").service(refresh_token).service(login);
+        App::new()
+            .service(health_check)
+            .service(user_resource)
+            .service(token_resource)
+            .app_data(Data::new(api.clone()))
+    })
+    .bind(AuthWebServiceConfiguration::from_env()?.listen_address)?
+    .run()
+    .await?;
 
     Ok(())
 }
