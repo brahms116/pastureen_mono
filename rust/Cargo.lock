@@ -323,6 +323,7 @@ name = "auth_service"
 version = "0.1.0"
 dependencies = [
  "auth_api",
+ "hyper",
  "prost",
  "tokio",
  "tonic",

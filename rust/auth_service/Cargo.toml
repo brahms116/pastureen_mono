@@ -10,6 +10,7 @@ auth_api = { path = "../auth_api" }
 prost = "0.12.1"
 tokio = { version = "1.32.0", features = ["macros", "rt-multi-thread"] }
 tonic = "0.10.1"
+hyper = { version="0.14.27", features=["full", "server"] }
 
 [build-dependencies]
 tonic-build = "0.10.1"
