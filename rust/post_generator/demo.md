@@ -1,5 +1,6 @@
 ---
 tags: tech, rust
+date: 2023-09-18
 ---
 
 # Heading number 1
