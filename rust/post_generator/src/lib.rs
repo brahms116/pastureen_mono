@@ -1,37 +1,35 @@
-use markdown::{to_html_with_options, to_mdast, Constructs, Options, ParseOptions};
+use blog_site::{PostMeta, RenderedPostContentData};
+use markdown::{mdast::Node, to_html_with_options, to_mdast, Constructs, Options, ParseOptions};
 
 pub fn generate() {
     let md = include_str!("../demo.md");
 
-    let parse_options = ParseOptions {
-        constructs: Constructs {
-            frontmatter: true,
+    let parse_options = get_parse_options();
+
+    let html = to_html_with_options(
+        md,
+        &Options {
+            parse: parse_options,
             ..Default::default()
         },
-        ..Default::default()
+    )
+    .expect("Failed to parse markdown");
+
+    let meta = extract_meta(md);
+    let _post_content_data = RenderedPostContentData {
+        meta,
+        post_content_html: html,
     };
-
-    // println!("{}", to_html_with_options(md, &Options{
-    //     parse: ParseOptions{
-    //         constructs: Constructs{
-    //             frontmatter: true,
-    //             ..Default::default()
-    //         },
-    //         ..Default::default()
-    //     },
-    //     ..Default::default()
-    // }).unwrap());
-
-    println!("{:?}", to_mdast(md, &parse_options).unwrap().to_string())
-}
-
-pub struct PostMeta {
-    pub date: String,
-    pub tags: Vec<String>,
 }
 
 pub fn extract_meta(post: &str) -> PostMeta {
-    todo!()
+    let yaml = extract_yaml(post);
+    println!("{:?}", yaml);
+    if let Some(yaml) = yaml {
+        let meta: PostMeta = serde_yaml::from_str(&yaml).expect("Failed to parse YAML");
+        return meta;
+    }
+    PostMeta::default()
 }
 
 fn get_parse_options() -> ParseOptions {
@@ -44,7 +42,14 @@ fn get_parse_options() -> ParseOptions {
     }
 }
 
-pub fn extract_yaml(post: &str) -> String {
+pub fn extract_yaml(post: &str) -> Option<String> {
     let ast = to_mdast(post, &get_parse_options()).unwrap();
-    todo!()
+
+    for node in ast.children().unwrap().into_iter() {
+        match node {
+            Node::Yaml(yaml) => return Some(yaml.value.clone()),
+            _ => continue,
+        }
+    }
+    None
 }

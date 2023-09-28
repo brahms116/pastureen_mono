@@ -1,10 +1,10 @@
-use components::{layout, LayoutProps, NavbarProps, NavItemProps};
+use components::{layout, LayoutProps, NavItemProps, NavbarProps};
 use maud::{html, Markup, PreEscaped};
+use serde::{Deserialize, Serialize};
 
 const CSS: &'static str = include_str!("../blog.css");
 
 const POSTS_JS: &'static str = include_str!("../posts.js");
-
 
 #[derive(Clone, PartialEq)]
 pub enum Page {
@@ -12,8 +12,11 @@ pub enum Page {
     Posts,
 }
 
-pub fn get_navbar_props(config: &PagesConfig, page: &Page)-> NavbarProps {
+fn get_pastureen_css_src(config: &PagesConfig) -> String {
+    format!("{}/styles.css", config.assets_url)
+}
 
+pub fn get_navbar_props(config: &PagesConfig, page: &Page) -> NavbarProps {
     let base_url = &config.base_url;
 
     let index_link = base_url.to_string();
@@ -149,7 +152,6 @@ pub struct PagesConfig {
 }
 
 pub fn index(props: PagesConfig) -> Markup {
-
     let navbar_props = get_navbar_props(&props, &Page::Index);
 
     let body_props = IndexBodyProps {
@@ -161,18 +163,18 @@ pub fn index(props: PagesConfig) -> Markup {
         title: "Pastureen".to_string(),
         custom_css: PreEscaped(CSS.to_string()),
         navbar_props,
+        css_src: get_pastureen_css_src(&props),
         body: index_body(body_props),
     };
 
     layout(layout_props)
 }
 
-
-struct PostBodyProps<'a> {
+struct PostsBodyProps<'a> {
     htmx_search_url: &'a str,
 }
 
-fn posts_body(props: PostBodyProps) -> Markup {
+fn posts_body(props: PostsBodyProps) -> Markup {
     html! {
         .content-wrapper{
             .content{
@@ -180,10 +182,10 @@ fn posts_body(props: PostBodyProps) -> Markup {
                     h1.main-posts__title { "Me recently... " }
                     form.main-posts__search {
                         .form-item {
-                            input 
-                                type="text" 
-                                name="search" 
-                                id="search" 
+                            input
+                                type="text"
+                                name="search"
+                                id="search"
                                 hx-post=(props.htmx_search_url)
                                 hx-trigger="customLoad,keyup changed delay:0.5s"
                                 placeholder="Search posts" {}
@@ -204,9 +206,92 @@ pub fn posts_page(props: PagesConfig) -> Markup {
         title: "Pastureen - Posts".to_string(),
         custom_css: PreEscaped(CSS.to_string()),
         navbar_props,
-        body: posts_body(PostBodyProps {
+        css_src: get_pastureen_css_src(&props),
+        body: posts_body(PostsBodyProps {
             htmx_search_url: &format!("{}/posts/search", props.htmx_url),
         }),
     };
     layout(layout_props)
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PostMeta {
+    pub date: String,
+    pub tags: Vec<String>,
+    pub title: String,
+}
+
+impl Default for PostMeta {
+    fn default() -> Self {
+        Self {
+            date: chrono::Utc::now().format("%Y-%m-%d").to_string(),
+            tags: Vec::new(),
+            title: "Untitled".to_string(),
+        }
+    }
+}
+
+pub struct RenderedPostContentData {
+    pub meta: PostMeta,
+    pub post_content_html: String,
+}
+
+pub struct RenderedPost {
+    pub meta: PostMeta,
+    pub post_page_html: String,
+}
+
+struct PostBodyProps<'a> {
+    pub content_html: &'a str,
+    pub title: &'a str,
+    pub date: &'a str,
+    pub tags: &'a [&'a str],
+}
+
+fn post_body(props: PostBodyProps) -> Markup {
+    html! {
+        .content-wrapper{
+            .content{
+                .post{
+                    h1.post__title { (props.title) }
+                    h3.post__date { (props.date) }
+                    .post__tags {
+                        @for tag in props.tags {
+                            .tag { (tag) }
+                        }
+                    }
+                    .post__content {
+                        (PreEscaped(props.content_html))
+                    }
+                }
+            }
+        }
+    }
+}
+
+pub fn post_page(page_config: PagesConfig, data: RenderedPostContentData) -> RenderedPost {
+    let body_props = PostBodyProps {
+        content_html: &data.post_content_html,
+        title: &data.meta.title,
+        date: &data.meta.date,
+        tags: &data
+            .meta
+            .tags
+            .iter()
+            .map(|s| s.as_str())
+            .collect::<Vec<&str>>(),
+    };
+
+    let layout_props = LayoutProps {
+        title: format!("Pastureen - {}", data.meta.title),
+        custom_css: PreEscaped("".to_string()),
+        navbar_props: get_navbar_props(&page_config, &Page::Posts),
+        css_src: get_pastureen_css_src(&page_config),
+        body: post_body(body_props),
+    };
+
+    RenderedPost {
+        meta: data.meta,
+        post_page_html: layout(layout_props).into_string(),
+    }
 }

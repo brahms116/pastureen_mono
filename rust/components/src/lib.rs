@@ -1,11 +1,5 @@
 use maud::{html, Markup, PreEscaped};
 
-const PASTUREEN_CSS: &str = include_str!("../../../styles/styles.css");
-
-fn pastureen_css() -> Markup {
-    PreEscaped(PASTUREEN_CSS.to_string())
-}
-
 fn correct_alpine_directives(markup: Markup) -> Markup {
     let string = markup.into_string();
     let string = string.replace("x-on:click-outside", "x-on:click.outside");
@@ -54,6 +48,7 @@ fn alpinejs() -> Markup {
 pub struct LayoutProps {
     pub title: String,
     pub navbar_props: NavbarProps,
+    pub css_src: String,
     pub custom_css: Markup,
     pub body: Markup,
 }
@@ -72,7 +67,7 @@ pub fn layout(props: LayoutProps) -> Markup {
                 (fonts())
                 (tailwind_reset())
                 (alpinejs())
-                style { (pastureen_css()) }
+                link rel="stylesheet" href=(props.css_src) {}
                 style { (props.custom_css) }
             }
         }

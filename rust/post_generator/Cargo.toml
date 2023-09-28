@@ -6,6 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+chrono = "0.4.31"
 markdown = "1.0.0-alpha.14"
 serde = { version = "1.0.188", features = ["derive"] }
 serde_yaml = "0.9.25"
+blog_site = { path = "../blog_site" }
