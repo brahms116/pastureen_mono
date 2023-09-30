@@ -231,14 +231,15 @@ impl Default for PostMeta {
     }
 }
 
-pub struct RenderedPostContentData {
+pub struct RenderedPostContent {
     pub meta: PostMeta,
     pub post_content_html: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct RenderedPost {
     pub meta: PostMeta,
-    pub post_page_html: String,
+    pub post_html: String,
 }
 
 struct PostBodyProps<'a> {
@@ -269,7 +270,13 @@ fn post_body(props: PostBodyProps) -> Markup {
     }
 }
 
-pub fn post_page(page_config: PagesConfig, data: RenderedPostContentData) -> RenderedPost {
+impl RenderedPostContent {
+    pub fn render_post_page(self, page_config: PagesConfig) -> RenderedPost {
+        post_page(page_config, self)
+    }
+}
+
+pub fn post_page(page_config: PagesConfig, data: RenderedPostContent) -> RenderedPost {
     let body_props = PostBodyProps {
         content_html: &data.post_content_html,
         title: &data.meta.title,
@@ -292,6 +299,6 @@ pub fn post_page(page_config: PagesConfig, data: RenderedPostContentData) -> Ren
 
     RenderedPost {
         meta: data.meta,
-        post_page_html: layout(layout_props).into_string(),
+        post_html: layout(layout_props).into_string(),
     }
 }

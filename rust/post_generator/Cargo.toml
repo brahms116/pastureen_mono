@@ -11,3 +11,4 @@ markdown = "1.0.0-alpha.14"
 serde = { version = "1.0.188", features = ["derive"] }
 serde_yaml = "0.9.25"
 blog_site = { path = "../blog_site" }
+thiserror = "1.0.49"
