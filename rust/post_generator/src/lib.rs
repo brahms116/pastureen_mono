@@ -19,6 +19,13 @@ pub struct GeneratePostResponse {
     pub generated_post: RenderedPost,
 }
 
+/// HTTP response body to an error
+#[derive(Serialize, Deserialize, Debug)]
+pub struct HttpErrResponse {
+    /// Error message
+    pub error: String,
+}
+
 // ERRORS
 
 #[derive(Error, Debug)]
@@ -42,7 +49,9 @@ pub enum GeneratorError {
 
 // CONFIG
 
+
 /// Configuration for the post generator
+#[derive(Debug, Clone)]
 pub struct GeneratorConfig {
     /// URL to where the assets are hosted, this is where the CSS and other static assets will be
     /// fetched from
@@ -54,6 +63,9 @@ pub struct GeneratorConfig {
 
     /// URL to where htmx requests are sent to for the site, allowing for dynamic content
     pub htmx_url: String,
+
+    /// Address for the service listen on
+    pub listen_address: String,
 }
 
 fn get_env_var(name: &str) -> Result<String, GeneratorError> {
@@ -70,15 +82,18 @@ impl GeneratorConfig {
     ///  navigation between the pages of the site
     ///  - `POST_GENERATOR_HTMX_URL`: URL to where htmx requests are sent to for the site, allowing
     ///  for dynamic content
+    ///  - `POST_GENERATOR_LISTEN_ADDRESS`: Address for the service listen on
     pub fn from_env() -> Result<Self, GeneratorError> {
         let assets_url = get_env_var("POST_GENERATOR_ASSETS_URL")?;
         let base_url = get_env_var("POST_GENERATOR_BASE_URL")?;
         let htmx_url = get_env_var("POST_GENERATOR_HTMX_URL")?;
+        let listen_address = get_env_var("POST_GENERATOR_LISTEN_ADDRESS")?;
 
         let config = Self {
             assets_url,
             base_url,
             htmx_url,
+            listen_address,
         };
         Ok(config)
     }
