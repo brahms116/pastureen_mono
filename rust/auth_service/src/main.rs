@@ -126,6 +126,7 @@ async fn get_user(
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TokenPairResponse {
     pub token_pair: TokenPair,
 }

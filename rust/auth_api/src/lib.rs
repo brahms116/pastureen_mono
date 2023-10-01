@@ -117,6 +117,7 @@ pub struct AuthApiConfig {
 
 /// A pair of tokens, an access token and a refresh token
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TokenPair {
     pub access_token: String,
     pub refresh_token: String,
