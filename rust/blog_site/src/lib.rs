@@ -228,6 +228,7 @@ pub struct RenderedPostContent {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct RenderedPost {
     pub meta: PostMeta,
     pub post_html: String,
