@@ -88,8 +88,8 @@ impl AuthWebServiceConfiguration {
     }
 
     pub fn from_env() -> Result<Self, AuthWebServiceError> {
-        let listen_address = std::env::var("AUTH_WEB_SERVICE_LISTEN_ADDR").map_err(|_| {
-            AuthWebServiceError::ConfigurationError("AUTH_WEB_SERVICE_LISTEN_ADDR".to_string())
+        let listen_address = std::env::var("AUTH_SERVICE_LISTEN_ADDR").map_err(|_| {
+            AuthWebServiceError::ConfigurationError("AUTH_SERVICE_LISTEN_ADDR".to_string())
         })?;
         Ok(Self::new(listen_address))
     }
