@@ -24,6 +24,8 @@ impl From<GeneratorError> for JsonErrResponse {
             GeneratorError::MissingMetaData
             | GeneratorError::ParseMdError(_)
             | GeneratorError::ParseMetadataError(_) => StatusCode::BAD_REQUEST,
+            GeneratorError::Unauthenticated => StatusCode::UNAUTHORIZED,
+            GeneratorError::Forbidden => StatusCode::FORBIDDEN,
         };
 
         JsonErrResponse(
@@ -62,6 +64,7 @@ async fn main() {
         );
         std::process::exit(1);
     });
+    println!("Listening on {}", socket_addr);
 
     Server::bind(&socket_addr)
         .serve(app.into_make_service())
@@ -71,7 +74,10 @@ async fn main() {
             std::process::exit(1);
         });
 
-    println!("Listening on {}", socket_addr);
+}
+
+async fn auth_middleware<B>()->Result<Response, StatusCode>  {
+
 }
 
 

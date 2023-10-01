@@ -6,6 +6,7 @@ use actix_web::{
     web::{scope, Data, Json},
     App, HttpRequest, HttpResponse, HttpServer, Responder,
 };
+
 use auth_api::*;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -31,6 +32,7 @@ impl AuthWebServiceError {
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AuthWebServiceErrResponse {
     pub error_type: String,
     pub message: String,

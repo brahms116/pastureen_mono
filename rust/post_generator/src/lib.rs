@@ -23,9 +23,11 @@ pub struct GeneratePostResponse {
 
 /// HTTP response body to an error
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct HttpErrResponse {
-    /// Error message
-    pub error: String,
+    /// The type of error
+    pub error_type: String,
+    pub message: String,
 }
 
 // ERRORS
@@ -47,6 +49,14 @@ pub enum GeneratorError {
     /// Error when meta data is missing
     #[error("Missing meta data")]
     MissingMetaData,
+
+    /// Unauthenticated error
+    #[error("Unauthenticated, no credentials provided")]
+    Unauthenticated,
+
+    /// Unauthorized error
+    #[error("Unauthorized, invalid credentials provided")]
+    Forbidden,
 }
 
 // CONFIG
