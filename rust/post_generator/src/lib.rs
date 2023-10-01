@@ -7,6 +7,7 @@ use thiserror::Error;
 
 /// HTTP request body to generate a post from markdown
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct GeneratePostRequest {
     /// Markdown string to generate post from
     pub markdown_str: String,
@@ -14,6 +15,7 @@ pub struct GeneratePostRequest {
 
 /// HTTP response body to generate a post from markdown
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct GeneratePostResponse {
     /// The generated post
     pub generated_post: RenderedPost,
