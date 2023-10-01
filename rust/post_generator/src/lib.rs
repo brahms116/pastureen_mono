@@ -7,9 +7,9 @@ use thiserror::Error;
 
 /// HTTP request body to generate a post from markdown
 #[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
 pub struct GeneratePostRequest {
     /// Markdown string to generate post from
+    #[serde(rename = "markdown")]
     pub markdown_str: String,
 }
 
@@ -143,7 +143,7 @@ pub fn generate_post(md_str: &str, config: PagesConfig) -> Result<RenderedPost, 
 /// Extracts the meta data from a markdown string
 fn extract_meta(post: &str) -> Result<PostMeta, GeneratorError> {
     let yaml = extract_yaml(post).ok_or(GeneratorError::MissingMetaData)?;
-    let meta: PostMeta = serde_yaml::from_str(&yaml).expect("Failed to parse YAML");
+    let meta: PostMeta = serde_yaml::from_str(&yaml)?;
     return Ok(meta);
 }
 
