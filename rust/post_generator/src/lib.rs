@@ -27,6 +27,8 @@ pub struct GeneratePostResponse {
 pub struct HttpErrResponse {
     /// The type of error
     pub error_type: String,
+
+    /// The error message
     pub message: String,
 }
 
@@ -54,9 +56,32 @@ pub enum GeneratorError {
     #[error("Unauthenticated, no credentials provided")]
     Unauthenticated,
 
-    /// Unauthorized error
-    #[error("Unauthorized, invalid credentials provided")]
+    /// Forbidden error
+    #[error("Forbidden, invalid credentials provided")]
     Forbidden,
+
+    /// Error when the auth service returns an error
+    #[error("Auth service error: {0}")]
+    AuthServiceError(String),
+
+    /// Error when the authentication check request fails
+    #[error("Authentication check request failed")]
+    AuthCheckRequestFailed(String),
+}
+
+impl GeneratorError {
+    pub fn error_type(&self) -> String {
+        match self {
+            Self::EnvMissing(_) => "EnvMissing".to_string(),
+            Self::ParseMdError(_) => "ParseMdError".to_string(),
+            Self::ParseMetadataError(_) => "ParseMetadataError".to_string(),
+            Self::MissingMetaData => "MissingMetaData".to_string(),
+            Self::Unauthenticated => "Unauthenticated".to_string(),
+            Self::Forbidden => "Forbidden".to_string(),
+            Self::AuthServiceError(_) => "AuthServiceError".to_string(),
+            Self::AuthCheckRequestFailed(_) => "AuthCheckRequestFailed".to_string(),
+        }
+    }
 }
 
 // CONFIG
@@ -78,6 +103,9 @@ pub struct GeneratorConfig {
 
     /// Address for the service listen on
     pub listen_address: String,
+
+    /// URL for the auth service used for authentication
+    pub auth_service_url: String,
 }
 
 fn get_env_var(name: &str) -> Result<String, GeneratorError> {
@@ -95,17 +123,20 @@ impl GeneratorConfig {
     ///  - `POST_GENERATOR_HTMX_URL`: URL to where htmx requests are sent to for the site, allowing
     ///  for dynamic content
     ///  - `POST_GENERATOR_LISTEN_ADDRESS`: Address for the service listen on
+    ///  - `POST_GENERATOR_AUTH_SERVICE_URL`: URL for the auth service used for authentication
     pub fn from_env() -> Result<Self, GeneratorError> {
         let assets_url = get_env_var("POST_GENERATOR_ASSETS_URL")?;
         let base_url = get_env_var("POST_GENERATOR_BASE_URL")?;
         let htmx_url = get_env_var("POST_GENERATOR_HTMX_URL")?;
         let listen_address = get_env_var("POST_GENERATOR_LISTEN_ADDRESS")?;
+        let auth_service_url = get_env_var("POST_GENERATOR_AUTH_SERVICE_URL")?;
 
         let config = Self {
             assets_url,
             base_url,
             htmx_url,
             listen_address,
+            auth_service_url,
         };
         Ok(config)
     }

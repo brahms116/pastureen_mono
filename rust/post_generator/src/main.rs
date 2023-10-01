@@ -1,13 +1,14 @@
-use std::{net::SocketAddr, sync::Arc};
-
 use axum::{
-    extract::{Json, State},
-    http::StatusCode,
-    response::IntoResponse,
+    extract::{Json, State, TypedHeader},
+    headers::authorization::{Authorization, Bearer},
+    http::{Request, StatusCode},
+    middleware::{self, Next},
+    response::{IntoResponse, Response},
     routing::post,
     Router, Server,
 };
 use post_generator::*;
+use std::{net::SocketAddr, sync::Arc};
 
 type JsonHandlerResponse<T> = Result<Json<T>, JsonErrResponse>;
 pub struct JsonErrResponse(pub StatusCode, pub Json<HttpErrResponse>);
@@ -20,7 +21,9 @@ impl IntoResponse for JsonErrResponse {
 impl From<GeneratorError> for JsonErrResponse {
     fn from(err: GeneratorError) -> Self {
         let status_code = match err {
-            GeneratorError::EnvMissing(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            GeneratorError::EnvMissing(_)
+            | GeneratorError::AuthServiceError(_)
+            | GeneratorError::AuthCheckRequestFailed(_) => StatusCode::INTERNAL_SERVER_ERROR,
             GeneratorError::MissingMetaData
             | GeneratorError::ParseMdError(_)
             | GeneratorError::ParseMetadataError(_) => StatusCode::BAD_REQUEST,
@@ -31,7 +34,8 @@ impl From<GeneratorError> for JsonErrResponse {
         JsonErrResponse(
             status_code,
             Json(HttpErrResponse {
-                error: err.to_string(),
+                error_type: err.error_type(),
+                message: err.to_string(),
             }),
         )
     }
@@ -51,11 +55,17 @@ async fn main() {
         std::process::exit(1);
     });
 
+    let state = Arc::new(GeneratorState {
+        config: config.clone(),
+    });
+
     let app = Router::new()
         .route("/", post(handle))
-        .with_state(Arc::new(GeneratorState {
-            config: config.clone(),
-        }));
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            auth_middleware,
+        ))
+        .with_state(state);
 
     let socket_addr: SocketAddr = config.listen_address.parse().unwrap_or_else(|err| {
         eprintln!(
@@ -73,13 +83,35 @@ async fn main() {
             eprintln!("Failed to start server: {}", err);
             std::process::exit(1);
         });
-
 }
 
-async fn auth_middleware<B>()->Result<Response, StatusCode>  {
+async fn auth_middleware<B>(
+    State(state): State<Arc<GeneratorState>>,
+    TypedHeader(auth): TypedHeader<Authorization<Bearer>>,
+    request: Request<B>,
+    next: Next<B>,
+) -> Result<Response, JsonErrResponse> {
+    let token = auth.token();
+    let client = reqwest::Client::new();
+    let response = client
+        .get(format!("{}/user", state.config.auth_service_url))
+        .bearer_auth(token)
+        .send()
+        .await
+        .map_err(|e| GeneratorError::AuthCheckRequestFailed(e.to_string()))?;
+
+    match response.status() {
+        StatusCode::OK => Ok(next.run(request).await),
+        StatusCode::FORBIDDEN => Err(GeneratorError::Forbidden.into()),
+        _ => Err(GeneratorError::AuthServiceError(
+            response.text().await.unwrap_or_else(|_| {
+                "Failed to get error message from auth service".to_string()
+            }),
+        )
+        .into()),
+    }
 
 }
-
 
 async fn handle(
     State(state): State<Arc<GeneratorState>>,
