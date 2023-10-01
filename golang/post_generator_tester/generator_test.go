@@ -93,8 +93,7 @@ func TestGenerator(t *testing.T) {
   }
 
   if len(resultTags) != len(expectedTags) {
-    t.Errorf("Unexpected tags: %v, expected %v", resultTags, expectedTags)
-    return
+    t.Fatalf("Unexpected tags: %v, expected %v", resultTags, expectedTags)
   }
 
   for i, tag := range resultTags {
