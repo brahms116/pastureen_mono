@@ -8,5 +8,4 @@ edition = "2021"
 [dependencies]
 components = { path = "../components" }
 maud = "0.25.0"
-chrono = "0.4.31"
 serde = { version = "1.0.188", features = ["derive"] }

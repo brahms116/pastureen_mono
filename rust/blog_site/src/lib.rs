@@ -216,19 +216,10 @@ pub fn posts_page(props: PagesConfig) -> Markup {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct PostMeta {
+    pub title: String,
     pub date: String,
     pub tags: Vec<String>,
-    pub title: String,
-}
-
-impl Default for PostMeta {
-    fn default() -> Self {
-        Self {
-            date: chrono::Utc::now().format("%Y-%m-%d").to_string(),
-            tags: Vec::new(),
-            title: "Untitled".to_string(),
-        }
-    }
+    pub slug: String,
 }
 
 pub struct RenderedPostContent {
