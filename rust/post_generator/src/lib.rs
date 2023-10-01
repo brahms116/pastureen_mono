@@ -105,7 +105,7 @@ pub struct GeneratorConfig {
     pub listen_address: String,
 
     /// URL for the auth service used for authentication
-    pub auth_service_url: String,
+    pub auth_url: String,
 }
 
 fn get_env_var(name: &str) -> Result<String, GeneratorError> {
@@ -129,14 +129,14 @@ impl GeneratorConfig {
         let base_url = get_env_var("POST_GENERATOR_BASE_URL")?;
         let htmx_url = get_env_var("POST_GENERATOR_HTMX_URL")?;
         let listen_address = get_env_var("POST_GENERATOR_LISTEN_ADDRESS")?;
-        let auth_service_url = get_env_var("POST_GENERATOR_AUTH_SERVICE_URL")?;
+        let auth_url = get_env_var("POST_GENERATOR_AUTH_URL")?;
 
         let config = Self {
             assets_url,
             base_url,
             htmx_url,
             listen_address,
-            auth_service_url,
+            auth_url,
         };
         Ok(config)
     }
