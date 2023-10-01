@@ -41,7 +41,7 @@ type PostMeta struct {
 }
 
 type RenderedPost struct {
-	PostMeta PostMeta `json:"postMeta"`
+	PostMeta PostMeta `json:"meta"`
 	PostHtml string   `json:"postHtml"`
 }
 
