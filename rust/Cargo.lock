@@ -431,7 +431,6 @@ dependencies = [
 name = "blog_site"
 version = "0.1.0"
 dependencies = [
- "chrono",
  "components",
  "maud",
  "serde",
