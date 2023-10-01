@@ -94,7 +94,7 @@ async fn auth_middleware<B>(
     let token = auth.token();
     let client = reqwest::Client::new();
     let response = client
-        .get(format!("{}/user", state.config.auth_service_url))
+        .get(format!("{}/user", state.config.auth_url))
         .bearer_auth(token)
         .send()
         .await
