@@ -34,8 +34,8 @@ jobs:
         uses: actions/checkout@v3
       - name: Deploy auth service
         env:
-          AUTH_API_SECRET: ${{ secrets.AUTH_API_SECRET }}
-          AUTH_API_DB_CONN_STR: ${{ secrets.AUTH_API_DB_CONN_STR }}
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+          AUTH_DB_CONN_STR: ${{ secrets.AUTH_DB_CONN_STR }}
           AUTH_SERVICE_LISTEN_ADDR: ${{ vars.LAMBDA_LISTEN_ADDR }}
         run: cd rust/auth_service && ./deploy.sh $ENV
 

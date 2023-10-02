@@ -18,8 +18,8 @@ echo "Deploying to $env"
 aws lambda update-function-code --function-name auth_service_$env --zip-file fileb://./lambda.zip
 aws lambda update-function-configuration --function-name auth_service_$env --environment \
   Variables="{\
-    AUTH_API_SECRET=$AUTH_API_SECRET,\
-    AUTH_API_DB_CONN_STR=$AUTH_API_DB_CONN_STR,\
+    AUTH_SECRET=$AUTH_SECRET,\
+    AUTH_DB_CONN_STR=$AUTH_DB_CONN_STR,\
     AUTH_SERVICE_LISTEN_ADDR=$AUTH_SERVICE_LISTEN_ADDR,\
     READINESS_CHECK_PATH='/healthcheck'\
   }"
