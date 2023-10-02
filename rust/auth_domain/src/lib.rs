@@ -8,6 +8,8 @@ use uuid::Uuid;
 
 use serde::{Deserialize, Serialize};
 
+use auth_contracts::{Claims, TokenType, User, TokenPair};
+
 /// Errors that can occur when using Auth
 #[derive(Error, Debug)]
 pub enum AuthError {
@@ -48,62 +50,25 @@ impl AuthError {
     }
 }
 
-/// A user representation in Auth
-#[derive(Debug, Serialize, Deserialize)]
-pub struct User {
-    /// The first name of the user
-    pub fname: String,
-    /// The last name of the user
-    pub lname: String,
-    /// A unique email address for the user
-    pub email: String,
+/// Encode the claims with a secret into a JWT, using the JWT default settings
+pub fn encode_token(claims: &Claims, secret: &str) -> String {
+    encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(secret.as_bytes()),
+    )
+    .expect("failed to encode token")
 }
 
-/// Type of token issued by Auth
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
-pub enum TokenType {
-    #[serde(rename = "ACCESS")]
-    Access,
-    #[serde(rename = "REFRESH")]
-    Refresh,
-}
-
-/// A representation of the claims the tokens provided by Auth
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Claims {
-    /// The subject of the token, this is the user email
-    pub sub: String,
-    /// The expiration time of the token
-    pub exp: u64,
-    /// The time the token was issued
-    pub iat: u64,
-    /// The type of the token
-    pub token_type: TokenType,
-    /// A unique identifier for the token, this is currently just to make tokens unique and serves no other purpose
-    pub id: String,
-}
-
-impl Claims {
-    /// Encode the claims with a secret into a JWT, using the JWT default settings
-    pub fn encode(&self, secret: &str) -> String {
-        encode(
-            &Header::default(),
-            &self,
-            &EncodingKey::from_secret(secret.as_bytes()),
-        )
-        .expect("failed to encode token")
-    }
-
-    /// Decode a JWT into a Claims struct by passing a secret, using the default JWT validation settings
-    pub fn from_token(token: &str, secret: &str) -> Result<Self, AuthError> {
-        let token_data = decode::<Claims>(
-            token,
-            &DecodingKey::from_secret(secret.as_bytes()),
-            &Validation::default(),
-        )
-        .map_err(|_| AuthError::InvalidToken)?;
-        Ok(token_data.claims)
-    }
+/// Decode a JWT into a Claims struct by passing a secret, using the default JWT validation settings
+pub fn decode_token(token: &str, secret: &str) -> Result<Claims, AuthError> {
+    let token_data = decode::<Claims>(
+        token,
+        &DecodingKey::from_secret(secret.as_bytes()),
+        &Validation::default(),
+    )
+    .map_err(|_| AuthError::InvalidToken)?;
+    Ok(token_data.claims)
 }
 
 /// Configuration for Auth
@@ -113,14 +78,6 @@ pub struct AuthConfig {
     pub secret: String,
     /// The postgres connection string
     pub db_conn_str: String,
-}
-
-/// A pair of tokens, an access token and a refresh token
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TokenPair {
-    pub access_token: String,
-    pub refresh_token: String,
 }
 
 /// Auth
@@ -142,9 +99,8 @@ impl Auth {
     pub async fn from_env() -> Result<Self, AuthError> {
         let api_secret = std::env::var("AUTH_SECRET")
             .map_err(|_| AuthError::ConfigruationMissing("AUTH_SECRET".to_string()))?;
-        let db_conn_str = std::env::var("AUTH_DB_CONN_STR").map_err(|_| {
-            AuthError::ConfigruationMissing("AUTH_DB_CONN_STR".to_string())
-        })?;
+        let db_conn_str = std::env::var("AUTH_DB_CONN_STR")
+            .map_err(|_| AuthError::ConfigruationMissing("AUTH_DB_CONN_STR".to_string()))?;
 
         Self::from_config(AuthConfig {
             secret: api_secret,
@@ -174,7 +130,7 @@ impl Auth {
     /// # Arguments
     /// * `token` - The token to retrieve user information from
     pub async fn get_user(&self, token: &str) -> Result<User, AuthError> {
-        let token_data = Claims::from_token(token, &self.secret)?;
+        let token_data = decode_token(token, &self.secret)?;
 
         if token_data.token_type != TokenType::Access {
             return Err(AuthError::InvalidToken);
@@ -341,7 +297,7 @@ impl Auth {
             token_type: TokenType::Access,
             id: Uuid::new_v4().to_string(),
         };
-        claim.encode(&self.secret)
+        encode_token(&claim, &self.secret)
     }
 
     fn create_refresh_token(&self, id: &str) -> String {
@@ -353,7 +309,7 @@ impl Auth {
             token_type: TokenType::Refresh,
             id: Uuid::new_v4().to_string(),
         };
-        claim.encode(&self.secret)
+        encode_token(&claim, &self.secret)
     }
 }
 
