@@ -9,6 +9,7 @@ use uuid::Uuid;
 use serde::{Deserialize, Serialize};
 
 use auth_models::*;
+use shared_models::*;
 
 /// Errors that can occur when using Auth
 #[derive(Error, Debug)]
@@ -38,8 +39,8 @@ pub enum AuthError {
     EmailAlreadyExists,
 }
 
-impl AuthError {
-    pub fn error_type(&self) -> String {
+impl TypedErr for AuthError {
+    fn error_type(&self) -> String {
         match self {
             AuthError::ConfigruationMissing(_) => "ConfigurationError".to_string(),
             AuthError::InvalidToken => "InvalidToken".to_string(),

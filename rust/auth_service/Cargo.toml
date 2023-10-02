@@ -12,3 +12,4 @@ serde = { version = "1.0.183", features = ["derive"] }
 auth = { path = "../auth" }
 auth_models = { path = "../auth_models" }
 auth_service_models = { path = "../auth_service_models" }
+shared_models = { path = "../shared_models" }

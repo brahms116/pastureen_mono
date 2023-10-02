@@ -6,11 +6,11 @@ use actix_web::{
     web::{scope, Data, Json},
     App, HttpRequest, HttpResponse, HttpServer, Responder,
 };
+use shared_models::*;
 
 use auth::*;
-use serde::{Deserialize, Serialize};
-use thiserror::Error;
 use auth_service_models::*;
+use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum AuthWebServiceError {
@@ -22,8 +22,8 @@ pub enum AuthWebServiceError {
     MissingToken,
 }
 
-impl AuthWebServiceError {
-    pub fn error_type(&self) -> String {
+impl TypedErr for AuthWebServiceError {
+    fn error_type(&self) -> String {
         match self {
             Self::ConfigurationError(_) => "ConfigurationError".to_string(),
             Self::ServiceError(err) => err.error_type(),
@@ -32,34 +32,15 @@ impl AuthWebServiceError {
     }
 }
 
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AuthWebServiceErrResponse {
-    pub error_type: String,
-    pub message: String,
-}
-
-impl From<&AuthError> for AuthWebServiceErrResponse {
-    fn from(err: &AuthError) -> Self {
-        Self {
-            error_type: err.error_type(),
-            message: err.to_string(),
-        }
-    }
-}
-
-impl From<&AuthWebServiceError> for AuthWebServiceErrResponse {
-    fn from(err: &AuthWebServiceError) -> Self {
-        Self {
-            error_type: err.error_type(),
-            message: err.to_string(),
-        }
+impl TypedErr for &AuthWebServiceError {
+    fn error_type(&self) -> String {
+        TypedErr::error_type(*self)
     }
 }
 
 impl ResponseError for AuthWebServiceError {
     fn error_response(&self) -> HttpResponse {
-        HttpResponse::build(self.status_code()).json(AuthWebServiceErrResponse::from(self))
+        HttpResponse::build(self.status_code()).json(HttpErrResponseBody::from(self))
     }
 
     fn status_code(&self) -> actix_web::http::StatusCode {

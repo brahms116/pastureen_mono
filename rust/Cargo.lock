@@ -285,6 +285,7 @@ dependencies = [
  "auth_models",
  "jsonwebtoken",
  "serde",
+ "shared_models",
  "sqlx",
  "thiserror",
  "tokio",
@@ -307,6 +308,7 @@ dependencies = [
  "auth_models",
  "auth_service_models",
  "serde",
+ "shared_models",
  "thiserror",
 ]
 
@@ -2013,6 +2015,13 @@ dependencies = [
  "cfg-if",
  "cpufeatures",
  "digest",
+]
+
+[[package]]
+name = "shared_models"
+version = "0.1.0"
+dependencies = [
+ "serde",
 ]
 
 [[package]]

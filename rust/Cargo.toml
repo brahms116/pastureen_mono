@@ -8,6 +8,7 @@ members = [
   "auth",
   "auth_service",
   "auth_service_models",
+  "shared_models",
   "reverse_proxy",
   "components",
   "blog_site",
