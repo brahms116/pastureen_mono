@@ -16,7 +16,7 @@ pub enum AuthWebServiceError {
     #[error("Missing environment variable {0}")]
     ConfigurationError(String),
     #[error(transparent)]
-    ServiceError(#[from] AuthApiError),
+    ServiceError(#[from] AuthError),
     #[error("Missing token in authorization header")]
     MissingToken,
 }
@@ -38,8 +38,8 @@ pub struct AuthWebServiceErrResponse {
     pub message: String,
 }
 
-impl From<&AuthApiError> for AuthWebServiceErrResponse {
-    fn from(err: &AuthApiError) -> Self {
+impl From<&AuthError> for AuthWebServiceErrResponse {
+    fn from(err: &AuthError) -> Self {
         Self {
             error_type: err.error_type(),
             message: err.to_string(),
@@ -65,11 +65,11 @@ impl ResponseError for AuthWebServiceError {
         match self {
             Self::ConfigurationError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Self::ServiceError(err) => match err {
-                AuthApiError::ConfigruationMissing(_) | AuthApiError::DatabaseError(_) => {
+                AuthError::ConfigruationMissing(_) | AuthError::DatabaseError(_) => {
                     StatusCode::INTERNAL_SERVER_ERROR
                 }
-                AuthApiError::InvalidToken => StatusCode::UNAUTHORIZED,
-                AuthApiError::InvalidCredentials | AuthApiError::EmailAlreadyExists => {
+                AuthError::InvalidToken => StatusCode::UNAUTHORIZED,
+                AuthError::InvalidCredentials | AuthError::EmailAlreadyExists => {
                     StatusCode::BAD_REQUEST
                 }
             },
@@ -118,7 +118,7 @@ fn get_token_from_header(req: &HttpRequest) -> Result<String, AuthWebServiceErro
 #[get("")]
 async fn get_user(
     req: HttpRequest,
-    api: Data<AuthApi>,
+    api: Data<Auth>,
 ) -> Result<Json<GetUserResponse>, AuthWebServiceError> {
     let token = get_token_from_header(&req)?;
     let user = api.get_user(&token).await?;
@@ -134,7 +134,7 @@ pub struct TokenPairResponse {
 #[get("")]
 async fn refresh_token(
     req: HttpRequest,
-    api: Data<AuthApi>,
+    api: Data<Auth>,
 ) -> Result<Json<TokenPairResponse>, AuthWebServiceError> {
     let token = get_token_from_header(&req)?;
     let token_pair = api.refresh(&token).await?;
@@ -150,7 +150,7 @@ pub struct LoginRequest {
 #[post("")]
 async fn login(
     req: Json<LoginRequest>,
-    api: Data<AuthApi>,
+    api: Data<Auth>,
 ) -> Result<Json<TokenPairResponse>, AuthWebServiceError> {
     let token_pair = api.login(&req.email, &req.password).await?;
     Ok(Json(TokenPairResponse { token_pair }))
@@ -160,7 +160,7 @@ type StdError = Box<dyn std::error::Error + Send + Sync>;
 
 #[actix_web::main]
 async fn main() -> Result<(), StdError> {
-    let api = AuthApi::from_env().await?;
+    let api = Auth::from_env().await?;
 
     HttpServer::new(move || {
         let user_resource = scope("/user").service(get_user);

@@ -1,6 +1,6 @@
 mod common;
 use common::*;
-use auth_api::*;
+use auth_domain::*;
 
 #[tokio::test]
 async fn login() {
@@ -41,7 +41,7 @@ async fn get_user() {
     assert!(incorrect.is_err());
     assert!(matches!(
         incorrect.unwrap_err(),
-        AuthApiError::InvalidToken
+        AuthError::InvalidToken
     ));
 
     // Expired token
@@ -50,7 +50,7 @@ async fn get_user() {
     assert!(expired.is_err());
     assert!(matches!(
         expired.unwrap_err(),
-        AuthApiError::InvalidToken
+        AuthError::InvalidToken
     ));
 
     delete_user(&email).await;
@@ -71,7 +71,7 @@ async fn refresh() {
     assert!(incorrect.is_err());
     assert!(matches!(
         incorrect.unwrap_err(),
-        AuthApiError::InvalidToken
+        AuthError::InvalidToken
     ));
 
     // expired refresh token
@@ -80,7 +80,7 @@ async fn refresh() {
     assert!(expired.is_err());
     assert!(matches!(
         expired.unwrap_err(),
-        AuthApiError::InvalidToken
+        AuthError::InvalidToken
     ));
 
     // correct refresh token
@@ -93,7 +93,7 @@ async fn refresh() {
     assert!(res2.is_err());
     assert!(matches!(
         res2.unwrap_err(),
-        AuthApiError::InvalidToken
+        AuthError::InvalidToken
     ));
 
     // using the new refresh token
@@ -101,7 +101,7 @@ async fn refresh() {
     assert!(res3.is_err());
     assert!(matches!(
         res3.unwrap_err(),
-        AuthApiError::InvalidToken
+        AuthError::InvalidToken
     ));
 
     delete_user(&email).await;

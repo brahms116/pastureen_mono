@@ -8,9 +8,9 @@ use uuid::Uuid;
 
 use serde::{Deserialize, Serialize};
 
-/// Errors that can occur when using the AuthApi
+/// Errors that can occur when using Auth
 #[derive(Error, Debug)]
-pub enum AuthApiError {
+pub enum AuthError {
     /// An Env var is missing
     #[error("Missing Environment Variable {0}")]
     ConfigruationMissing(String),
@@ -36,19 +36,19 @@ pub enum AuthApiError {
     EmailAlreadyExists,
 }
 
-impl AuthApiError {
+impl AuthError {
     pub fn error_type(&self) -> String {
         match self {
-            AuthApiError::ConfigruationMissing(_) => "ConfigurationError".to_string(),
-            AuthApiError::InvalidToken => "InvalidToken".to_string(),
-            AuthApiError::DatabaseError(_) => "DatabaseError".to_string(),
-            AuthApiError::InvalidCredentials => "InvalidCredentials".to_string(),
-            AuthApiError::EmailAlreadyExists => "EmailAlreadyExists".to_string(),
+            AuthError::ConfigruationMissing(_) => "ConfigurationError".to_string(),
+            AuthError::InvalidToken => "InvalidToken".to_string(),
+            AuthError::DatabaseError(_) => "DatabaseError".to_string(),
+            AuthError::InvalidCredentials => "InvalidCredentials".to_string(),
+            AuthError::EmailAlreadyExists => "EmailAlreadyExists".to_string(),
         }
     }
 }
 
-/// A user representation in the Auth Api
+/// A user representation in Auth
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
     /// The first name of the user
@@ -59,7 +59,7 @@ pub struct User {
     pub email: String,
 }
 
-/// Type of token issued by the Auth Api
+/// Type of token issued by Auth
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TokenType {
     #[serde(rename = "ACCESS")]
@@ -68,7 +68,7 @@ pub enum TokenType {
     Refresh,
 }
 
-/// A representation of the claims the tokens provided by the Auth Api
+/// A representation of the claims the tokens provided by Auth
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     /// The subject of the token, this is the user email
@@ -95,20 +95,20 @@ impl Claims {
     }
 
     /// Decode a JWT into a Claims struct by passing a secret, using the default JWT validation settings
-    pub fn from_token(token: &str, secret: &str) -> Result<Self, AuthApiError> {
+    pub fn from_token(token: &str, secret: &str) -> Result<Self, AuthError> {
         let token_data = decode::<Claims>(
             token,
             &DecodingKey::from_secret(secret.as_bytes()),
             &Validation::default(),
         )
-        .map_err(|_| AuthApiError::InvalidToken)?;
+        .map_err(|_| AuthError::InvalidToken)?;
         Ok(token_data.claims)
     }
 }
 
-/// Configuration for the AuthApi
+/// Configuration for Auth
 #[derive(Debug, Serialize, Deserialize)]
-pub struct AuthApiConfig {
+pub struct AuthConfig {
     /// The secret used to sign JWTs
     pub secret: String,
     /// The postgres connection string
@@ -123,41 +123,41 @@ pub struct TokenPair {
     pub refresh_token: String,
 }
 
-/// The AuthApi
+/// Auth
 ///
-/// This is the main interface for the Auth Api
+/// This is the main interface for Auth
 /// It is used to retrieve user information and to login
 #[derive(Debug, Clone)]
-pub struct AuthApi {
+pub struct Auth {
     secret: String,
     db: PgPool,
 }
 
-impl AuthApi {
-    /// Create an AuthApi configured from environment variables
+impl Auth {
+    /// Creates Auth configured from environment variables
     ///
     /// The following environment variables are used:
     /// - AUTH_SECRET, the secret used to sign JWTs
     /// - AUTH_DB_CONN_STR, the connection string of the database
-    pub async fn from_env() -> Result<Self, AuthApiError> {
+    pub async fn from_env() -> Result<Self, AuthError> {
         let api_secret = std::env::var("AUTH_SECRET")
-            .map_err(|_| AuthApiError::ConfigruationMissing("AUTH_SECRET".to_string()))?;
+            .map_err(|_| AuthError::ConfigruationMissing("AUTH_SECRET".to_string()))?;
         let db_conn_str = std::env::var("AUTH_DB_CONN_STR").map_err(|_| {
-            AuthApiError::ConfigruationMissing("AUTH_DB_CONN_STR".to_string())
+            AuthError::ConfigruationMissing("AUTH_DB_CONN_STR".to_string())
         })?;
 
-        Self::from_config(AuthApiConfig {
+        Self::from_config(AuthConfig {
             secret: api_secret,
             db_conn_str,
         })
         .await
     }
 
-    /// Create an AuthApi from a configuration
+    /// Creates Auth from a configuration
     ///
     /// # Arguments
     /// * `config` - The configuration to use
-    pub async fn from_config(config: AuthApiConfig) -> Result<Self, AuthApiError> {
+    pub async fn from_config(config: AuthConfig) -> Result<Self, AuthError> {
         let db = PgPool::connect(&config.db_conn_str).await?;
 
         Ok(Self {
@@ -168,16 +168,16 @@ impl AuthApi {
 
     /// Retreives user information from a token
     ///
-    /// If the token is invalid, a [AuthApiError::InvalidToken] is returned. Please see
-    /// [AuthApiError] for more information
+    /// If the token is invalid, a [AuthError::InvalidToken] is returned. Please see
+    /// [AuthError] for more information
     ///
     /// # Arguments
     /// * `token` - The token to retrieve user information from
-    pub async fn get_user(&self, token: &str) -> Result<User, AuthApiError> {
+    pub async fn get_user(&self, token: &str) -> Result<User, AuthError> {
         let token_data = Claims::from_token(token, &self.secret)?;
 
         if token_data.token_type != TokenType::Access {
-            return Err(AuthApiError::InvalidToken);
+            return Err(AuthError::InvalidToken);
         }
 
         let email = token_data.sub;
@@ -206,14 +206,14 @@ impl AuthApi {
 
     /// Login a user and return a pair of tokens
     ///
-    /// If the credentials are invalid, a [AuthApiError::InvalidCredentials] is returned. Please see
-    /// [AuthApiError] for more information
+    /// If the credentials are invalid, a [AuthError::InvalidCredentials] is returned. Please see
+    /// [AuthError] for more information
     ///
     /// # Arguments
     /// * `email` - The email of the user
     /// * `password` - The password of the user
     ///
-    pub async fn login(&self, email: &str, password: &str) -> Result<TokenPair, AuthApiError> {
+    pub async fn login(&self, email: &str, password: &str) -> Result<TokenPair, AuthError> {
         let query_result = sqlx::query(
             "SELECT 
                 email,
@@ -224,7 +224,7 @@ impl AuthApi {
         .fetch_optional(&self.db)
         .await?;
 
-        let result = query_result.ok_or(AuthApiError::InvalidCredentials)?;
+        let result = query_result.ok_or(AuthError::InvalidCredentials)?;
 
         let stored_password: String = result.try_get("password")?;
 
@@ -234,7 +234,7 @@ impl AuthApi {
         // When the time comes, I'll migrate this service to use a proper identity provider, or
         // look at security more seriously
         if stored_password != password {
-            return Err(AuthApiError::InvalidCredentials);
+            return Err(AuthError::InvalidCredentials);
         }
 
         let email: String = result.try_get("email")?;
@@ -262,12 +262,12 @@ impl AuthApi {
     /// The refresh token is rotated, meaning that the old refresh token will no longer be valid.
     /// In an attempt to use the old refresh token, all tokens generated from it will be invalidated as well
     ///
-    /// If the refresh token is invalid, a [AuthApiError::InvalidToken] is returned. Please see
-    /// [AuthApiError] for more information
+    /// If the refresh token is invalid, a [AuthError::InvalidToken] is returned. Please see
+    /// [AuthError] for more information
     ///
     /// # Arguments
     /// * `refresh_token` - The refresh token to use
-    pub async fn refresh(&self, refresh_token: &str) -> Result<TokenPair, AuthApiError> {
+    pub async fn refresh(&self, refresh_token: &str) -> Result<TokenPair, AuthError> {
         let val = Validation::default();
 
         let token_data = decode::<Claims>(
@@ -275,17 +275,17 @@ impl AuthApi {
             &DecodingKey::from_secret(self.secret.as_bytes()),
             &val,
         )
-        .map_err(|_| AuthApiError::InvalidToken)?;
+        .map_err(|_| AuthError::InvalidToken)?;
 
         if token_data.claims.token_type != TokenType::Refresh {
-            return Err(AuthApiError::InvalidToken);
+            return Err(AuthError::InvalidToken);
         }
 
         let row = sqlx::query("SELECT * FROM refresh_token WHERE token = $1")
             .bind(&refresh_token)
             .fetch_optional(&self.db)
             .await?
-            .ok_or(AuthApiError::InvalidToken)?;
+            .ok_or(AuthError::InvalidToken)?;
 
         let root_token: String = row.try_get("root_token")?;
 
@@ -297,21 +297,21 @@ impl AuthApi {
         .await?;
 
         let most_recent_token_string: String = most_recent_token
-            .ok_or(AuthApiError::InvalidToken)?
+            .ok_or(AuthError::InvalidToken)?
             .try_get("token")
-            .map_err(|_| AuthApiError::InvalidToken)?;
+            .map_err(|_| AuthError::InvalidToken)?;
 
         if most_recent_token_string != refresh_token {
             sqlx::query("DELETE FROM refresh_token WHERE root_token = $1")
                 .bind(&root_token)
                 .execute(&self.db)
                 .await?;
-            return Err(AuthApiError::InvalidToken);
+            return Err(AuthError::InvalidToken);
         }
 
         let user_email: String = row.try_get("user_email")?;
         if user_email != token_data.claims.sub {
-            return Err(AuthApiError::InvalidToken);
+            return Err(AuthError::InvalidToken);
         }
 
         let access_token = self.create_access_token(&user_email);

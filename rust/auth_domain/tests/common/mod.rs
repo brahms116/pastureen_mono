@@ -1,4 +1,4 @@
-use auth_api::*;
+use auth_domain::*;
 use sqlx::postgres::PgPool;
 use sqlx::Row;
 use uuid::Uuid;
@@ -11,7 +11,7 @@ pub struct SetupTokenPairOutput {
     pub refresh_token: String,
 }
 
-pub async fn setup_token_pair(api: &AuthApi)-> SetupTokenPairOutput {
+pub async fn setup_token_pair(api: &Auth)-> SetupTokenPairOutput {
     let email = format!("{}@login.com", Uuid::new_v4().to_string());
     insert_user(&email, "password").await;
     let res = api.login(&email, "password").await.unwrap();
@@ -27,8 +27,8 @@ pub async fn setup_token_pair(api: &AuthApi)-> SetupTokenPairOutput {
     }
 }
 
-pub async fn get_api() -> AuthApi {
-    AuthApi::from_env().await.unwrap()
+pub async fn get_api() -> Auth {
+    Auth::from_env().await.unwrap()
 }
 
 fn get_connection_string() -> String {
