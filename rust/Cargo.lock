@@ -279,17 +279,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "auth_contracts"
-version = "0.1.0"
-dependencies = [
- "serde",
-]
-
-[[package]]
 name = "auth_domain"
 version = "0.1.0"
 dependencies = [
- "auth_contracts",
+ "auth_models",
  "jsonwebtoken",
  "serde",
  "sqlx",
@@ -299,12 +292,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "auth_models"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "auth_service"
 version = "0.1.0"
 dependencies = [
  "actix-web",
- "auth_contracts",
  "auth_domain",
+ "auth_models",
  "serde",
  "thiserror",
 ]

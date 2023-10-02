@@ -4,7 +4,7 @@ members = [
   "csv_iterator",
   "cli",
   "actix_poc",
-  "auth_contracts",
+  "auth_models",
   "auth_domain",
   "auth_service",
   "reverse_proxy",

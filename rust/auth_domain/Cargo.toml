@@ -11,7 +11,7 @@ serde = { version = "1.0.183", features = ["derive"] }
 sqlx = { version = "0.7.1", features = ["postgres", "uuid", "runtime-tokio"] }
 jsonwebtoken = "8.3.0"
 uuid = { version = "1.4.1", features = ["v4"] }
-auth_contracts = { path = "../auth_contracts" }
+auth_models = { path = "../auth_models" }
 
 [dev-dependencies]
 tokio = { version = "1.5.0", features = ["full"] }

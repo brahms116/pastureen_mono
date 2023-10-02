@@ -1,7 +1,7 @@
 mod common;
 use common::*;
 use auth_domain::*;
-use auth_contracts::TokenType;
+use auth_models::*;
 
 #[tokio::test]
 async fn login() {

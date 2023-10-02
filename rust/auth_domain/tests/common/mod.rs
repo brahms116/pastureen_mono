@@ -2,7 +2,7 @@ use auth_domain::*;
 use sqlx::postgres::PgPool;
 use sqlx::Row;
 use uuid::Uuid;
-use auth_contracts::*;
+use auth_models::*;
 
 
 pub struct SetupTokenPairOutput {
