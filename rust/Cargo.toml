@@ -12,3 +12,5 @@ members = [
   "blog_site",
   "post_generator"
 ]
+
+resolver = "2"
