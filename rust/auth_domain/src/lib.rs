@@ -137,13 +137,13 @@ impl AuthApi {
     /// Create an AuthApi configured from environment variables
     ///
     /// The following environment variables are used:
-    /// - AUTH_API_SECRET, the secret used to sign JWTs
-    /// - AUTH_API_DB_CONN_STR, the connection string of the database
+    /// - AUTH_SECRET, the secret used to sign JWTs
+    /// - AUTH_DB_CONN_STR, the connection string of the database
     pub async fn from_env() -> Result<Self, AuthApiError> {
-        let api_secret = std::env::var("AUTH_API_SECRET")
-            .map_err(|_| AuthApiError::ConfigruationMissing("AUTH_API_SECRET".to_string()))?;
-        let db_conn_str = std::env::var("AUTH_API_DB_CONN_STR").map_err(|_| {
-            AuthApiError::ConfigruationMissing("AUTH_API_DB_CONN_STR".to_string())
+        let api_secret = std::env::var("AUTH_SECRET")
+            .map_err(|_| AuthApiError::ConfigruationMissing("AUTH_SECRET".to_string()))?;
+        let db_conn_str = std::env::var("AUTH_DB_CONN_STR").map_err(|_| {
+            AuthApiError::ConfigruationMissing("AUTH_DB_CONN_STR".to_string())
         })?;
 
         Self::from_config(AuthApiConfig {

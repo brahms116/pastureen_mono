@@ -5,7 +5,7 @@ members = [
   "cli",
   "actix_poc",
   "auth_contracts",
-  "auth_api",
+  "auth_domain",
   "auth_service",
   "reverse_proxy",
   "components",

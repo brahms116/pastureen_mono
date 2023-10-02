@@ -279,7 +279,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "auth_api"
+name = "auth_contracts"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "auth_domain"
 version = "0.1.0"
 dependencies = [
  "jsonwebtoken",
@@ -291,18 +298,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "auth_contracts"
-version = "0.1.0"
-dependencies = [
- "serde",
-]
-
-[[package]]
 name = "auth_service"
 version = "0.1.0"
 dependencies = [
  "actix-web",
- "auth_api",
+ "auth_domain",
  "serde",
  "thiserror",
 ]
