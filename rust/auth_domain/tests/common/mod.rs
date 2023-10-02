@@ -2,6 +2,7 @@ use auth_domain::*;
 use sqlx::postgres::PgPool;
 use sqlx::Row;
 use uuid::Uuid;
+use auth_contracts::*;
 
 
 pub struct SetupTokenPairOutput {
@@ -77,7 +78,7 @@ pub fn get_expired_access_token(email: &str) -> String {
         exp: 0,
         id: Uuid::new_v4().to_string()
     };
-    claims.encode(&get_secret())
+    encode_token(&claims, &get_secret())
 }
 
 pub fn get_expired_refresh_token(email: &str) -> String {
@@ -88,9 +89,9 @@ pub fn get_expired_refresh_token(email: &str) -> String {
         exp: 0,
         id: Uuid::new_v4().to_string()
     };
-    claims.encode(&get_secret())
+    encode_token(&claims, &get_secret())
 }
 
-pub fn decode_token(token: &str) -> Claims {
-    Claims::from_token(token, &get_secret()).unwrap()
+pub fn decode_token_helper(token: &str) -> Claims {
+    decode_token(token, &get_secret()).unwrap()
 }

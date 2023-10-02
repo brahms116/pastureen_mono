@@ -8,6 +8,7 @@ use actix_web::{
 };
 
 use auth_domain::*;
+use auth_contracts::*;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 

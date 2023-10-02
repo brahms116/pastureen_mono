@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use serde::{Deserialize, Serialize};
 
-use auth_contracts::{Claims, TokenType, User, TokenPair};
+use auth_contracts::*;
 
 /// Errors that can occur when using Auth
 #[derive(Error, Debug)]

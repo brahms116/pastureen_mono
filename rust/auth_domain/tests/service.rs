@@ -13,11 +13,11 @@ async fn login() {
         ..
     } = setup_token_pair(&api).await;
 
-    let access_token = decode_token(&access_token);
+    let access_token = decode_token_helper(&access_token);
     assert_eq!(access_token.sub, email);
     assert_eq!(access_token.token_type, TokenType::Access);
 
-    let refresh_token = decode_token(&refresh_token);
+    let refresh_token = decode_token_helper(&refresh_token);
     assert_eq!(refresh_token.sub, email);
     assert_eq!(refresh_token.token_type, TokenType::Refresh);
 
@@ -86,7 +86,7 @@ async fn refresh() {
 
     // correct refresh token
     let correct_res = api.refresh(&refresh_token).await.unwrap();
-    let access_token = decode_token(&correct_res.access_token);
+    let access_token = decode_token_helper(&correct_res.access_token);
     assert_eq!(access_token.sub, email);
 
     // using the old refresh token
