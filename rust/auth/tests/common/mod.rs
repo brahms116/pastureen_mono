@@ -28,16 +28,16 @@ pub async fn setup_token_pair(api: &Auth)-> SetupTokenPairOutput {
     }
 }
 
-pub async fn get_api() -> Auth {
+pub async fn get_auth() -> Auth {
     Auth::from_env().await.unwrap()
 }
 
 fn get_connection_string() -> String {
-    std::env::var("AUTH_API_DB_CONN_STR").unwrap()
+    std::env::var("AUTH_DB_CONN_STR").unwrap()
 }
 
 fn get_secret() -> String {
-    std::env::var("AUTH_API_SECRET").unwrap()
+    std::env::var("AUTH_SECRET").unwrap()
 }
 
 pub async fn insert_user(email: &str, password: &str) -> String {

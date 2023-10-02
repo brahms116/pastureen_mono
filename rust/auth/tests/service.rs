@@ -5,7 +5,7 @@ use auth_models::*;
 
 #[tokio::test]
 async fn login() {
-    let api = get_api().await;
+    let api = get_auth().await;
     let SetupTokenPairOutput {
         access_token,
         refresh_token,
@@ -26,7 +26,7 @@ async fn login() {
 
 #[tokio::test]
 async fn get_user() {
-    let api = get_api().await;
+    let api = get_auth().await;
     let SetupTokenPairOutput {
         access_token,
         refresh_token,
@@ -59,7 +59,7 @@ async fn get_user() {
 
 #[tokio::test]
 async fn refresh() {
-    let api = get_api().await;
+    let api = get_auth().await;
     let SetupTokenPairOutput {
         access_token,
         refresh_token,
