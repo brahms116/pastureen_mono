@@ -1,5 +1,5 @@
 #!/bin/bash
 
-cargo test -p auth_api
+cargo test -p auth
 
 
