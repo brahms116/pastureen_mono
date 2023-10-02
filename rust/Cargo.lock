@@ -305,6 +305,7 @@ dependencies = [
  "actix-web",
  "auth",
  "auth_models",
+ "auth_service_models",
  "serde",
  "thiserror",
 ]

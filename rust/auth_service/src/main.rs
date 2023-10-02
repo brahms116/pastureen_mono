@@ -8,9 +8,9 @@ use actix_web::{
 };
 
 use auth::*;
-use auth_models::*;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+use auth_service_models::*;
 
 #[derive(Error, Debug)]
 pub enum AuthWebServiceError {
@@ -101,11 +101,6 @@ async fn health_check() -> impl Responder {
     HttpResponse::Ok().body("Health check ok")
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct GetUserResponse {
-    pub user: User,
-}
-
 fn get_token_from_header(req: &HttpRequest) -> Result<String, AuthWebServiceError> {
     Ok(req
         .headers()
@@ -126,12 +121,6 @@ async fn get_user(
     Ok(Json(GetUserResponse { user }))
 }
 
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TokenPairResponse {
-    pub token_pair: TokenPair,
-}
-
 #[get("")]
 async fn refresh_token(
     req: HttpRequest,
@@ -140,12 +129,6 @@ async fn refresh_token(
     let token = get_token_from_header(&req)?;
     let token_pair = api.refresh(&token).await?;
     Ok(Json(TokenPairResponse { token_pair }))
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct LoginRequest {
-    pub email: String,
-    pub password: String,
 }
 
 #[post("")]
