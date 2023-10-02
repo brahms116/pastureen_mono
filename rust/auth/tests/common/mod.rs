@@ -1,4 +1,4 @@
-use auth_domain::*;
+use auth::*;
 use sqlx::postgres::PgPool;
 use sqlx::Row;
 use uuid::Uuid;

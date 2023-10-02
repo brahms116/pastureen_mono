@@ -7,7 +7,7 @@ use actix_web::{
     App, HttpRequest, HttpResponse, HttpServer, Responder,
 };
 
-use auth_domain::*;
+use auth::*;
 use auth_models::*;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;

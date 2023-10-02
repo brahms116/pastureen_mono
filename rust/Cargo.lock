@@ -279,7 +279,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "auth_domain"
+name = "auth"
 version = "0.1.0"
 dependencies = [
  "auth_models",
@@ -303,7 +303,7 @@ name = "auth_service"
 version = "0.1.0"
 dependencies = [
  "actix-web",
- "auth_domain",
+ "auth",
  "auth_models",
  "serde",
  "thiserror",

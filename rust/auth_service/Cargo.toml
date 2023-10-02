@@ -9,5 +9,5 @@ edition = "2021"
 actix-web = "4"
 thiserror = "1.0.46"
 serde = { version = "1.0.183", features = ["derive"] }
-auth_domain = { path = "../auth_domain" }
+auth = { path = "../auth" }
 auth_models = { path = "../auth_models" }
