@@ -1,6 +1,5 @@
-use serde::{Deserialize, Serialize};
 use auth_models::*;
-
+use serde::{Deserialize, Serialize};
 
 // SERVICE_CONTRACTS
 
