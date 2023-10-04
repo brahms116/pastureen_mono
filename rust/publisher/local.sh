@@ -6,5 +6,5 @@ set -a
 . ./.local.env
 set +a
 
-cargo run -p post_generator
+cargo run -p publisher
 

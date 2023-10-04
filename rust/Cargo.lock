@@ -1630,20 +1630,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "26072860ba924cbfa98ea39c8c19b4dd6a4a25423dbdf219c1eca91aa0cf6964"
 
 [[package]]
-name = "post_generator"
-version = "0.1.0"
-dependencies = [
- "axum",
- "blog",
- "markdown",
- "reqwest",
- "serde",
- "serde_yaml",
- "thiserror",
- "tokio",
-]
-
-[[package]]
 name = "ppv-lite86"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1684,6 +1670,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "18fb31db3f9bddb2ea821cde30a9f70117e3f119938b5ee630b7403aa6e2ead9"
 dependencies = [
  "unicode-ident",
+]
+
+[[package]]
+name = "publisher"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "blog",
+ "markdown",
+ "reqwest",
+ "serde",
+ "serde_yaml",
+ "thiserror",
+ "tokio",
 ]
 
 [[package]]
