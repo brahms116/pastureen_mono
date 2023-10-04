@@ -13,7 +13,9 @@ members = [
   "components",
   "blog",
   "blog_skeleton",
-  "publisher"
+  "publisher",
+  "auth_client",
+  "reqwest_utils"
 ]
 
 resolver = "2"
