@@ -4,23 +4,23 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"pastureen/auth-models"
 )
 
-func getErrorFromReader(reader io.Reader) error {
-	content, err := io.ReadAll(reader)
-	if err != nil {
-		return err
-	}
-	return errors.New(string(content))
-}
-
 func handle200Response(response *http.Response, v any) error {
 	defer response.Body.Close()
 	if response.StatusCode != 200 {
-		return getErrorFromReader(response.Body)
+		content, err := io.ReadAll(response.Body)
+		if err != nil {
+			return err
+		}
+		if len(content) == 0 {
+			return errors.New(fmt.Sprintf("Response: %v+", response))
+		}
+		return errors.New(string(content))
 	}
 	return json.NewDecoder(response.Body).Decode(v)
 }
@@ -35,24 +35,24 @@ func GetUser(endpoint string, accessToken string) (models.User, error) {
 	if err != nil {
 		return models.User{}, err
 	}
-	var user models.User
+	var user models.GetUserReponse
 	err = handle200Response(response, &user)
-	return user, err
+	return user.User, err
 }
 
-func RefreshToken(endpoint string, refresh string) (models.TokenPair, error) {
+func RefreshToken(endpoint string, refreshToken string) (models.TokenPair, error) {
 	request, err := http.NewRequest("GET", endpoint+"/token", nil)
 	if err != nil {
 		return models.TokenPair{}, err
 	}
-	request.Header.Set("Authorization", "Bearer "+refresh)
+	request.Header.Set("Authorization", "Bearer "+refreshToken)
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return models.TokenPair{}, err
 	}
-	var tokenPair models.TokenPair
+	var tokenPair models.TokenPairResponse
 	err = handle200Response(response, &tokenPair)
-	return tokenPair, err
+	return tokenPair.TokenPair, err
 }
 
 func Login(endpoint string, loginRequest models.LoginRequest) (models.TokenPair, error) {
@@ -60,11 +60,11 @@ func Login(endpoint string, loginRequest models.LoginRequest) (models.TokenPair,
 	if err != nil {
 		return models.TokenPair{}, err
 	}
-	response, err := http.Post(endpoint+"/login", "application/json", bytes.NewBuffer(body))
+	response, err := http.Post(endpoint+"/token", "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		return models.TokenPair{}, err
 	}
-	var tokenPair models.TokenPair
+	var tokenPair models.TokenPairResponse
 	err = handle200Response(response, &tokenPair)
-	return tokenPair, err
+	return tokenPair.TokenPair, err
 }

@@ -83,13 +83,19 @@ async fn health_check() -> impl Responder {
 }
 
 fn get_token_from_header(req: &HttpRequest) -> Result<String, AuthWebServiceError> {
-    Ok(req
+    let auth_header = req
         .headers()
         .get("Authorization")
         .ok_or(AuthWebServiceError::MissingToken)?
         .to_str()
         .map_err(|_| AuthWebServiceError::MissingToken)?
-        .to_string())
+        .to_string();
+
+    if auth_header.starts_with("Bearer ") {
+        Ok(auth_header[7..].to_string())
+    } else {
+        Err(AuthWebServiceError::MissingToken)
+    }
 }
 
 #[get("")]
