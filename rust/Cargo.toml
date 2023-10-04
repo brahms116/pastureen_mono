@@ -11,6 +11,7 @@ members = [
   "shared_models",
   "reverse_proxy",
   "components",
+  "blog",
   "blog_site",
   "post_generator"
 ]

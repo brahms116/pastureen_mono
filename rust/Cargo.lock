@@ -434,6 +434,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "blog"
+version = "0.1.0"
+dependencies = [
+ "components",
+ "maud",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "blog_site"
 version = "0.1.0"
 dependencies = [
