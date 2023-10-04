@@ -1,27 +1,6 @@
-use blog_site::*;
+use blog::*;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
-
-struct BlogSiteConfig {
-    pub base_url: String,
-    pub assets_url: String,
-    pub htmx_url: String,
-}
-
-impl BlogSiteConfig {
-    fn from_env() -> Self {
-        let base_url = std::env::var("BLOG_SITE_BASE_URL").expect("BLOG_SITE_BASE_URL not set");
-        let assets_url =
-            std::env::var("BLOG_SITE_ASSETS_URL").expect("BLOG_SITE_ASSETS_URL not set");
-
-        let htmx_url = std::env::var("BLOG_SITE_HTMX_URL").expect("BLOG_SITE_HTMX_URL not set");
-        Self {
-            base_url,
-            assets_url,
-            htmx_url,
-        }
-    }
-}
 
 fn get_file_descriptor(path: &str) -> File {
     OpenOptions::new()
@@ -33,22 +12,20 @@ fn get_file_descriptor(path: &str) -> File {
 }
 
 fn build() {
-    let config = BlogSiteConfig::from_env();
-    let page_config = PagesConfig {
-        assets_url: config.assets_url,
-        base_url: config.base_url,
-        htmx_url: config.htmx_url,
-    };
+    let page_config = BlogConfig::from_env().unwrap_or_else(|e| {
+        println!("Could not load config from env : {:?}", e);
+        std::process::exit(1);
+    });
 
     let mut index_file = get_file_descriptor("./build/index.html");
 
     index_file
-        .write_all(index(page_config.clone()).into_string().as_bytes())
+        .write_all(render_index_page(page_config.clone()).as_bytes())
         .expect("Could not write to index file");
 
     let mut posts_file = get_file_descriptor("./build/posts.html");
     posts_file
-        .write_all(posts_page(page_config.clone()).into_string().as_bytes())
+        .write_all(render_posts_page(page_config.clone()).as_bytes())
         .expect("Could not write to posts file");
 }
 

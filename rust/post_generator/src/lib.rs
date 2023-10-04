@@ -1,4 +1,4 @@
-use blog_site::{PagesConfig, PostMeta, RenderedPost, RenderedPostContent};
+use blog::*;
 use markdown::{mdast::Node, to_html_with_options, to_mdast, Constructs, Options, ParseOptions};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -18,7 +18,7 @@ pub struct GeneratePostRequest {
 #[serde(rename_all = "camelCase")]
 pub struct GeneratePostResponse {
     /// The generated post
-    pub generated_post: RenderedPost,
+    pub generated_post: Post,
 }
 
 /// HTTP response body to an error
@@ -142,7 +142,7 @@ impl GeneratorConfig {
     }
 }
 
-impl From<GeneratorConfig> for PagesConfig {
+impl From<GeneratorConfig> for BlogConfig {
     fn from(config: GeneratorConfig) -> Self {
         Self {
             assets_url: config.assets_url,
@@ -160,7 +160,7 @@ impl From<GeneratorConfig> for PagesConfig {
 /// * `md_str` - Markdown string to generate post from
 /// * `config` - Configuration for the post generator
 ///
-pub fn generate_post(md_str: &str, config: PagesConfig) -> Result<RenderedPost, GeneratorError> {
+pub fn generate_post(md_str: &str, config: BlogConfig) -> Result<Post, GeneratorError> {
     let parse_options = parse_options();
 
     let html = to_html_with_options(
@@ -173,12 +173,12 @@ pub fn generate_post(md_str: &str, config: PagesConfig) -> Result<RenderedPost, 
     .map_err(|e| GeneratorError::ParseMdError(e.to_string()))?;
 
     let meta = extract_meta(md_str)?;
-    let post_content_data = RenderedPostContent {
+    let post_content_data = PostProps {
         meta,
         post_content_html: html,
     };
 
-    Ok(post_content_data.render_post_page(config))
+    Ok(render_post(config, post_content_data))
 }
 
 /// Extracts the meta data from a markdown string

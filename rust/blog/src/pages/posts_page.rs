@@ -1,4 +1,3 @@
-use super::svgs::*;
 use super::utils::*;
 use super::contracts::*;
 use components::*;

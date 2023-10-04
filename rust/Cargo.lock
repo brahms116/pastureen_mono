@@ -447,6 +447,7 @@ dependencies = [
 name = "blog_site"
 version = "0.1.0"
 dependencies = [
+ "blog",
  "components",
  "maud",
  "serde",
@@ -1633,6 +1634,7 @@ name = "post_generator"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "blog",
  "blog_site",
  "markdown",
  "reqwest",

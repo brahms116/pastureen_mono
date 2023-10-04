@@ -9,3 +9,4 @@ edition = "2021"
 components = { path = "../components" }
 maud = "0.25.0"
 serde = { version = "1.0.188", features = ["derive"] }
+blog = { path = "../blog" }
