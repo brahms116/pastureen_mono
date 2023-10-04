@@ -1682,6 +1682,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_yaml",
+ "shared_models",
  "thiserror",
  "tokio",
 ]

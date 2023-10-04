@@ -2,6 +2,7 @@ use blog::*;
 use markdown::{mdast::Node, to_html_with_options, to_mdast, Constructs, Options, ParseOptions};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+use shared_models::*;
 
 // CONTRACTS
 
@@ -19,17 +20,6 @@ pub struct GeneratePostRequest {
 pub struct GeneratePostResponse {
     /// The generated post
     pub generated_post: Post,
-}
-
-/// HTTP response body to an error
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct HttpErrResponse {
-    /// The type of error
-    pub error_type: String,
-
-    /// The error message
-    pub message: String,
 }
 
 // ERRORS
@@ -69,8 +59,8 @@ pub enum PublisherError {
     AuthCheckRequestFailed(String),
 }
 
-impl PublisherError {
-    pub fn error_type(&self) -> String {
+impl TypedErr for PublisherError {
+    fn error_type(&self) -> String {
         match self {
             Self::EnvMissing(_) => "EnvMissing".to_string(),
             Self::ParseMdError(_) => "ParseMdError".to_string(),

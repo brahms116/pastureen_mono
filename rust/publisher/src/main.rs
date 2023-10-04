@@ -7,11 +7,14 @@ use axum::{
     routing::post,
     Router, Server,
 };
+
+use shared_models::*;
+
 use publisher::*;
 use std::{net::SocketAddr, sync::Arc};
 
 type JsonHandlerResponse<T> = Result<Json<T>, JsonErrResponse>;
-pub struct JsonErrResponse(pub StatusCode, pub Json<HttpErrResponse>);
+pub struct JsonErrResponse(pub StatusCode, pub Json<HttpErrResponseBody>);
 impl IntoResponse for JsonErrResponse {
     fn into_response(self) -> axum::response::Response {
         (self.0, self.1).into_response()
@@ -31,13 +34,7 @@ impl From<PublisherError> for JsonErrResponse {
             PublisherError::Forbidden => StatusCode::FORBIDDEN,
         };
 
-        JsonErrResponse(
-            status_code,
-            Json(HttpErrResponse {
-                error_type: err.error_type(),
-                message: err.to_string(),
-            }),
-        )
+        JsonErrResponse(status_code, Json(HttpErrResponseBody::from(err)))
     }
 }
 
@@ -104,13 +101,13 @@ async fn auth_middleware<B>(
         StatusCode::OK => Ok(next.run(request).await),
         StatusCode::FORBIDDEN => Err(PublisherError::Forbidden.into()),
         _ => Err(PublisherError::AuthServiceError(
-            response.text().await.unwrap_or_else(|_| {
-                "Failed to get error message from auth service".to_string()
-            }),
+            response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Failed to get error message from auth service".to_string()),
         )
         .into()),
     }
-
 }
 
 async fn handle(
