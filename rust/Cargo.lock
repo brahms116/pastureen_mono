@@ -444,7 +444,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "blog_site"
+name = "blog_skeleton"
 version = "0.1.0"
 dependencies = [
  "blog",
@@ -1635,7 +1635,6 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "blog",
- "blog_site",
  "markdown",
  "reqwest",
  "serde",

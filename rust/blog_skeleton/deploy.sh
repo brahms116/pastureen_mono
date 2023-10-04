@@ -16,7 +16,7 @@ mkdir ./build
 
 echo "Building skeleton"
 
-cargo run --release -p blog_site 
+cargo run --release -p blog_skeleton
 
 echo "Uploading blog skeleton to S3 $env"
 

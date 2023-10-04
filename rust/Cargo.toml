@@ -12,7 +12,7 @@ members = [
   "reverse_proxy",
   "components",
   "blog",
-  "blog_site",
+  "blog_skeleton",
   "post_generator"
 ]
 

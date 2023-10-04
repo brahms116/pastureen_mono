@@ -13,5 +13,4 @@ thiserror = "1.0.49"
 tokio = { version = "1.32.0", features = ["full"] }
 axum =  { version = "0.6.20", features = ["headers"] }
 reqwest = { version = "0.11.20", features = ["json"] }
-blog_site = { path = "../blog_site" }
 blog = { path = "../blog" }
