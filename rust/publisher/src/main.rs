@@ -4,7 +4,7 @@ use axum::{
     http::{Request, StatusCode},
     middleware::{self, Next},
     response::{IntoResponse, Response},
-    routing::post,
+    routing::{post, get},
     Router, Server,
 };
 
@@ -60,6 +60,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/", post(handle))
+        .route("/healthcheck", get(healthcheck))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             auth_middleware,
@@ -106,6 +107,10 @@ async fn auth_middleware<B>(
         return Err(PublisherError::Forbidden.into())
     }
     Ok(next.run(request).await)
+}
+
+async fn healthcheck() -> &'static str {
+    "OK"
 }
 
 async fn handle(
