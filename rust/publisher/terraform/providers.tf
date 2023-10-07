@@ -4,7 +4,7 @@ provider "aws" {
 
 terraform {
   backend "s3" {
-    key    = "pastureen/auth_service.tfstate"
+    key    = "pastureen/publisher.tfstate"
     bucket = "pastureen-tf-state-store"
     region = "ap-southeast-2"
   }
