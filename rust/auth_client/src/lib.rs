@@ -8,7 +8,7 @@ pub async fn get_user(endpoint: &str, access_token: &str) -> Result<User, Client
     let client = Client::new();
 
     let res = client
-        .post(&format!("{}/user", endpoint))
+        .get(&format!("{}/user", endpoint))
         .bearer_auth(access_token)
         .send()
         .await;
@@ -32,7 +32,10 @@ pub async fn refresh_token(
         .map(|res| res.token_pair)
 }
 
-pub async fn login(endpoint: &str, request:&LoginRequest) -> Result<TokenPair, ClientHttpResponseError> {
+pub async fn login(
+    endpoint: &str,
+    request: &LoginRequest,
+) -> Result<TokenPair, ClientHttpResponseError> {
     let client = Client::new();
     let res = client
         .post(&format!("{}/token", endpoint))

@@ -25,8 +25,6 @@ where
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ClientHttpResponseError {
-    ClientErr(String),
-    DeserializeErr(String),
     RawErr(String),
     TypedServiceErr(HttpErrResponseBody),
 }

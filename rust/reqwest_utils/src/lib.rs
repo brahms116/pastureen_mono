@@ -10,9 +10,7 @@ where
 {
     match res {
         Err(err) => Err(ClientHttpResponseError::RawErr(format!("{:?}", err))),
-        Ok(res) => {
-            handle_reqwest_response::<T>(res).await
-        }
+        Ok(res) => handle_reqwest_response::<T>(res).await,
     }
 }
 
@@ -22,15 +20,22 @@ where
 {
     let status = res.status();
     if status.is_success() {
-        return res
-            .json::<T>()
-            .await
-            .map_err(|err| ClientHttpResponseError::DeserializeErr(format!("{:?}", err)));
+        return res.json::<T>().await.map_err(|err| {
+            ClientHttpResponseError::RawErr(format!("Failed to deserialize {:?}", err))
+        });
     } else {
-        return res
-            .json::<HttpErrResponseBody>()
-            .await
-            .map_err(|err| ClientHttpResponseError::DeserializeErr(format!("{:?}", err)))
-            .and_then(|err| Err(ClientHttpResponseError::TypedServiceErr(err)));
+        let body_contents = res.bytes().await.map_err(|err| {
+            ClientHttpResponseError::RawErr(format!("Failed to get bytes from body: {:?}", err))
+        })?;
+
+        serde_json::from_slice::<HttpErrResponseBody>(&body_contents)
+            .map_err(|_| {
+                ClientHttpResponseError::RawErr(format!(
+                    "Status: {:?}\nBody: {}",
+                    status,
+                    String::from_utf8_lossy(&body_contents)
+                ))
+            })
+            .and_then(|body| Err(ClientHttpResponseError::TypedServiceErr(body)))
     }
 }
