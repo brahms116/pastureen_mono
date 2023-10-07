@@ -1688,6 +1688,8 @@ dependencies = [
 name = "publisher"
 version = "0.1.0"
 dependencies = [
+ "auth_client",
+ "auth_models",
  "axum",
  "blog",
  "markdown",

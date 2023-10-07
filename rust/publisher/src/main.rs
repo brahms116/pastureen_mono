@@ -10,6 +10,8 @@ use axum::{
 
 use shared_models::*;
 
+use auth_client::*;
+use auth_models::*;
 use publisher::*;
 use std::{net::SocketAddr, sync::Arc};
 
@@ -82,6 +84,15 @@ async fn main() {
         });
 }
 
+async fn get_user_wrapper(endpoint: &str, token: &str) -> Result<User, PublisherError> {
+    get_user(endpoint, token).await.map_err(|err| match err {
+        ClientHttpResponseError::RawErr(msg) => PublisherError::AuthCheckRequestFailed(msg),
+        ClientHttpResponseError::TypedServiceErr(body) => {
+            PublisherError::AuthServiceError(format!("{:?}", body))
+        }
+    })
+}
+
 async fn auth_middleware<B>(
     State(state): State<Arc<PublisherState>>,
     TypedHeader(auth): TypedHeader<Authorization<Bearer>>,
@@ -89,25 +100,12 @@ async fn auth_middleware<B>(
     next: Next<B>,
 ) -> Result<Response, JsonErrResponse> {
     let token = auth.token();
-    let client = reqwest::Client::new();
-    let response = client
-        .get(format!("{}/user", state.config.auth_url))
-        .bearer_auth(token)
-        .send()
-        .await
-        .map_err(|e| PublisherError::AuthCheckRequestFailed(e.to_string()))?;
-
-    match response.status() {
-        StatusCode::OK => Ok(next.run(request).await),
-        StatusCode::FORBIDDEN => Err(PublisherError::Forbidden.into()),
-        _ => Err(PublisherError::AuthServiceError(
-            response
-                .text()
-                .await
-                .unwrap_or_else(|_| "Failed to get error message from auth service".to_string()),
-        )
-        .into()),
+    let endpoint = &state.config.auth_url;
+    let user = get_user_wrapper(endpoint, token).await?;
+    if user.email != state.config.admin_email {
+        return Err(PublisherError::Forbidden.into())
     }
+    Ok(next.run(request).await)
 }
 
 async fn handle(

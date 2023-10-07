@@ -95,6 +95,9 @@ pub struct PublisherConfig {
 
     /// URL for the auth service used for authentication
     pub auth_url: String,
+
+    /// Email of the admin user who is allowed to publish posts
+    pub admin_email: String,
 }
 
 fn get_env_var(name: &str) -> Result<String, PublisherError> {
@@ -119,6 +122,7 @@ impl PublisherConfig {
         let htmx_url = get_env_var("PUBLISHER_HTMX_URL")?;
         let listen_address = get_env_var("PUBLISHER_LISTEN_ADDRESS")?;
         let auth_url = get_env_var("PUBLISHER_AUTH_URL")?;
+        let admin_email = get_env_var("PUBLISHER_ADMIN_EMAIL")?;
 
         let config = Self {
             assets_url,
@@ -126,6 +130,7 @@ impl PublisherConfig {
             htmx_url,
             listen_address,
             auth_url,
+            admin_email,
         };
         Ok(config)
     }
