@@ -68,6 +68,23 @@ jobs:
           REVERSE_PROXY_AUTH_URL: ${{ vars.AUTH_SERVICE_URL }}
         run: cd rust/reverse_proxy && ./deploy.sh $ENV
 
+  deploy_publisher:
+    runs-on: ubuntu-latest
+    if: inputs.service == 'publisher' || inputs.service == 'everything'
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Deploy publisher
+        env:
+          PUBLISHER_ASSETS_URL: ${{ vars.REVERSE_PROXY_URL }}/static
+          PUBLISHER_BASE_URL: ${{ vars.REVERSE_PROXY_URL }}/blog
+          PUBLISHER_HTMX_URL: ${{ vars.REVERSE_PROXY_URL }}/blog-htmx
+          PUBLISHER_AUTH_URL: ${{ vars.REVERSE_PROXY_URL }}/auth
+          PUBLISHER_ADMIN_EMAIL: ${{ vars.ADMIN_EMAIL }}
+          PUBLISHER_LISTEN_ADDR: ${{ vars.LAMBDA_LISTEN_ADDR }}
+        run: cd rust/publisher && ./deploy.sh $ENV
+
   deploy_static_assets:
     runs-on: ubuntu-latest
     if: inputs.service == 'static_assets' || inputs.service == 'everything'
