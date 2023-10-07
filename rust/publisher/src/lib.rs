@@ -120,7 +120,7 @@ impl PublisherConfig {
         let assets_url = get_env_var("PUBLISHER_ASSETS_URL")?;
         let base_url = get_env_var("PUBLISHER_BASE_URL")?;
         let htmx_url = get_env_var("PUBLISHER_HTMX_URL")?;
-        let listen_address = get_env_var("PUBLISHER_LISTEN_ADDRESS")?;
+        let listen_address = get_env_var("PUBLISHER_LISTEN_ADDR")?;
         let auth_url = get_env_var("PUBLISHER_AUTH_URL")?;
         let admin_email = get_env_var("PUBLISHER_ADMIN_EMAIL")?;
 

@@ -1,24 +1,30 @@
 package client
 
 import (
-	"bytes"
 	"net/http"
 	"pastureen/publisher-models"
 	"pastureen/http-utils"
   "encoding/json"
+  "io"
 )
 
-func Publish(endpoint string, accessToken string, generatePostReq models.GeneratePostRequest) (models.Post, error) {
-  body, err := json.Marshal(generatePostReq)
-  if err != nil {
-    return models.Post{}, err
-  }
+func Generate(endpoint string, accessToken string, generatePostReq models.GeneratePostRequest) (models.Post, error) {
 
-	request, err := http.NewRequest("POST", endpoint, bytes.NewBuffer(body))
+  read, write := io.Pipe()
+
+  go func() {
+    defer write.Close()
+    encoder := json.NewEncoder(write)
+    encoder.SetEscapeHTML(false)
+    encoder.Encode(generatePostReq)
+  }()
+
+	request, err := http.NewRequest("POST", endpoint, read)
 	if err != nil {
 		return models.Post{}, err
 	}
 	request.Header.Set("Authorization", "Bearer "+accessToken)
+  request.Header.Set("Content-Type", "application/json")
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {

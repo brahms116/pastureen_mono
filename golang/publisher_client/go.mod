@@ -11,6 +11,8 @@ replace pastureen/auth-models => ../auth_models
 go 1.21.1
 
 require (
+	pastureen/auth-client v0.0.0-00010101000000-000000000000
+	pastureen/auth-models v0.0.0-00010101000000-000000000000
 	pastureen/http-utils v0.0.0-00010101000000-000000000000
 	pastureen/publisher-models v0.0.0-00010101000000-000000000000
 )
