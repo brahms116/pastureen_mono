@@ -67,6 +67,7 @@ jobs:
           REVERSE_PROXY_BLOG_URL: ${{ vars.BLOG_URL }}
           REVERSE_PROXY_BASE_URL: ${{ vars.REVERSE_PROXY_URL }}
           REVERSE_PROXY_AUTH_URL: ${{ vars.AUTH_SERVICE_URL }}
+          REVERSE_PROXY_PUBLISHER_URL: ${{ vars.PUBLISHER_URL }}
         run: cd rust/reverse_proxy && ./deploy.sh $ENV
 
   deploy_publisher:

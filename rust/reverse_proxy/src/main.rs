@@ -29,6 +29,7 @@ pub struct ReverseProxyConfig {
     pub blog_url: String,
     pub base_url: String,
     pub auth_url: String,
+    pub publisher_url: String,
 }
 
 fn get_url_from_env(key: &str) -> Result<String, ReverseProxyError> {
@@ -43,6 +44,7 @@ impl ReverseProxyConfig {
         let blog_url = get_url_from_env("REVERSE_PROXY_BLOG_URL")?;
         let base_url = get_url_from_env("REVERSE_PROXY_BASE_URL")?;
         let auth_url = get_url_from_env("REVERSE_PROXY_AUTH_URL")?;
+        let publisher_url = get_url_from_env("REVERSE_PROXY_PUBLISHER_URL")?;
         Ok(Self {
             listen_addr,
             design_system_url,
@@ -50,6 +52,7 @@ impl ReverseProxyConfig {
             blog_url,
             auth_url,
             base_url,
+            publisher_url,
         })
     }
 }
@@ -62,6 +65,7 @@ pub enum Route {
     StaticAssets(String),
     Blog(String),
     Auth(String),
+    Publisher(String),
     NotFound,
     HealthCheck,
     Root,
@@ -74,6 +78,7 @@ impl From<&str> for Route {
         let static_assets_slug = "/static";
         let blog_slug = "/blog";
         let auth_slug = "/auth";
+        let publisher_slug = "/publisher";
 
         if path == "/" || path.is_empty() {
             return Route::Root;
@@ -93,6 +98,10 @@ impl From<&str> for Route {
 
         if matches_path(path, static_assets_slug) {
             return Route::StaticAssets(strip_prefix(path, static_assets_slug));
+        }
+
+        if matches_path(path, publisher_slug) {
+            return Route::Publisher(strip_prefix(path, publisher_slug));
         }
 
         if matches_path(path, healthcheck_slug) {
@@ -152,6 +161,7 @@ pub enum ProxyRoute {
     StaticAssets(String),
     Blog(String),
     Auth(String),
+    Publisher(String),
 }
 
 impl ProxyRoute {
@@ -176,6 +186,9 @@ fn get_proxied_uri(route: &ProxyRoute, config: &ReverseProxyConfig) -> String {
         ProxyRoute::Auth(slug) => {
             format!("{}{}", config.auth_url, slug)
         }
+        ProxyRoute::Publisher(slug) => {
+            format!("{}{}", config.publisher_url, slug)
+        }
     }
 }
 
@@ -199,6 +212,7 @@ pub enum ClassifiedRoute {
 impl From<Route> for ClassifiedRoute {
     fn from(route: Route) -> Self {
         match route {
+            Route::Publisher(path) => ClassifiedRoute::Proxy(ProxyRoute::Publisher(path)),
             Route::Blog(path) => ClassifiedRoute::Proxy(ProxyRoute::Blog(path)),
             Route::DesignSystem(path) => ClassifiedRoute::Proxy(ProxyRoute::DesignSystem(path)),
             Route::Auth(path) => ClassifiedRoute::Proxy(ProxyRoute::Auth(path)),
