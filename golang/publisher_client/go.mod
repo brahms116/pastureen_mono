@@ -1,0 +1,16 @@
+module pastureen/publisher-client
+
+replace pastureen/publisher-models => ../publisher_models
+
+replace pastureen/http-utils => ../http_utils
+
+replace pastureen/auth-client => ../auth_client
+
+replace pastureen/auth-models => ../auth_models
+
+go 1.21.1
+
+require (
+	pastureen/http-utils v0.0.0-00010101000000-000000000000
+	pastureen/publisher-models v0.0.0-00010101000000-000000000000
+)

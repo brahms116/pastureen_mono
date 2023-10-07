@@ -3,27 +3,10 @@ package client
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
-	"fmt"
-	"io"
 	"net/http"
 	"pastureen/auth-models"
+  httpUtils "pastureen/http-utils"
 )
-
-func handle200Response(response *http.Response, v any) error {
-	defer response.Body.Close()
-	if response.StatusCode != 200 {
-		content, err := io.ReadAll(response.Body)
-		if err != nil {
-			return err
-		}
-		if len(content) == 0 {
-			return errors.New(fmt.Sprintf("Response: %v+", response))
-		}
-		return errors.New(string(content))
-	}
-	return json.NewDecoder(response.Body).Decode(v)
-}
 
 func GetUser(endpoint string, accessToken string) (models.User, error) {
 	request, err := http.NewRequest("GET", endpoint+"/user", nil)
@@ -36,7 +19,7 @@ func GetUser(endpoint string, accessToken string) (models.User, error) {
 		return models.User{}, err
 	}
 	var user models.GetUserReponse
-	err = handle200Response(response, &user)
+	err = httpUtils.HandleResponse(response, &user)
 	return user.User, err
 }
 
@@ -51,7 +34,7 @@ func RefreshToken(endpoint string, refreshToken string) (models.TokenPair, error
 		return models.TokenPair{}, err
 	}
 	var tokenPair models.TokenPairResponse
-	err = handle200Response(response, &tokenPair)
+	err = httpUtils.HandleResponse(response, &tokenPair)
 	return tokenPair.TokenPair, err
 }
 
@@ -65,6 +48,6 @@ func Login(endpoint string, loginRequest models.LoginRequest) (models.TokenPair,
 		return models.TokenPair{}, err
 	}
 	var tokenPair models.TokenPairResponse
-	err = handle200Response(response, &tokenPair)
+	err = httpUtils.HandleResponse(response, &tokenPair)
 	return tokenPair.TokenPair, err
 }
