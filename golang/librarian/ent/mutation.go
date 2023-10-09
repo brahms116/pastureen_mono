@@ -44,8 +44,8 @@ type DbLinkMutation struct {
 	image_url     *string
 	image_alt     *string
 	clearedFields map[string]struct{}
-	tags          map[uuid.UUID]struct{}
-	removedtags   map[uuid.UUID]struct{}
+	tags          map[string]struct{}
+	removedtags   map[string]struct{}
 	clearedtags   bool
 	done          bool
 	oldValue      func(context.Context) (*DbLink, error)
@@ -435,9 +435,9 @@ func (m *DbLinkMutation) ResetImageAlt() {
 }
 
 // AddTagIDs adds the "tags" edge to the DbTag entity by ids.
-func (m *DbLinkMutation) AddTagIDs(ids ...uuid.UUID) {
+func (m *DbLinkMutation) AddTagIDs(ids ...string) {
 	if m.tags == nil {
-		m.tags = make(map[uuid.UUID]struct{})
+		m.tags = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.tags[ids[i]] = struct{}{}
@@ -455,9 +455,9 @@ func (m *DbLinkMutation) TagsCleared() bool {
 }
 
 // RemoveTagIDs removes the "tags" edge to the DbTag entity by IDs.
-func (m *DbLinkMutation) RemoveTagIDs(ids ...uuid.UUID) {
+func (m *DbLinkMutation) RemoveTagIDs(ids ...string) {
 	if m.removedtags == nil {
-		m.removedtags = make(map[uuid.UUID]struct{})
+		m.removedtags = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.tags, ids[i])
@@ -466,7 +466,7 @@ func (m *DbLinkMutation) RemoveTagIDs(ids ...uuid.UUID) {
 }
 
 // RemovedTags returns the removed IDs of the "tags" edge to the DbTag entity.
-func (m *DbLinkMutation) RemovedTagsIDs() (ids []uuid.UUID) {
+func (m *DbLinkMutation) RemovedTagsIDs() (ids []string) {
 	for id := range m.removedtags {
 		ids = append(ids, id)
 	}
@@ -474,7 +474,7 @@ func (m *DbLinkMutation) RemovedTagsIDs() (ids []uuid.UUID) {
 }
 
 // TagsIDs returns the "tags" edge IDs in the mutation.
-func (m *DbLinkMutation) TagsIDs() (ids []uuid.UUID) {
+func (m *DbLinkMutation) TagsIDs() (ids []string) {
 	for id := range m.tags {
 		ids = append(ids, id)
 	}
@@ -825,8 +825,7 @@ type DbTagMutation struct {
 	config
 	op            Op
 	typ           string
-	id            *uuid.UUID
-	name          *string
+	id            *string
 	clearedFields map[string]struct{}
 	links         map[uuid.UUID]struct{}
 	removedlinks  map[uuid.UUID]struct{}
@@ -856,7 +855,7 @@ func newDbTagMutation(c config, op Op, opts ...dbtagOption) *DbTagMutation {
 }
 
 // withDbTagID sets the ID field of the mutation.
-func withDbTagID(id uuid.UUID) dbtagOption {
+func withDbTagID(id string) dbtagOption {
 	return func(m *DbTagMutation) {
 		var (
 			err   error
@@ -908,13 +907,13 @@ func (m DbTagMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of DbTag entities.
-func (m *DbTagMutation) SetID(id uuid.UUID) {
+func (m *DbTagMutation) SetID(id string) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *DbTagMutation) ID() (id uuid.UUID, exists bool) {
+func (m *DbTagMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -925,12 +924,12 @@ func (m *DbTagMutation) ID() (id uuid.UUID, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *DbTagMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+func (m *DbTagMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []uuid.UUID{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -938,42 +937,6 @@ func (m *DbTagMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
-}
-
-// SetName sets the "name" field.
-func (m *DbTagMutation) SetName(s string) {
-	m.name = &s
-}
-
-// Name returns the value of the "name" field in the mutation.
-func (m *DbTagMutation) Name() (r string, exists bool) {
-	v := m.name
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldName returns the old "name" field's value of the DbTag entity.
-// If the DbTag object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *DbTagMutation) OldName(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldName is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldName requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldName: %w", err)
-	}
-	return oldValue.Name, nil
-}
-
-// ResetName resets all changes to the "name" field.
-func (m *DbTagMutation) ResetName() {
-	m.name = nil
 }
 
 // AddLinkIDs adds the "links" edge to the DbLink entity by ids.
@@ -1064,10 +1027,7 @@ func (m *DbTagMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *DbTagMutation) Fields() []string {
-	fields := make([]string, 0, 1)
-	if m.name != nil {
-		fields = append(fields, dbtag.FieldName)
-	}
+	fields := make([]string, 0, 0)
 	return fields
 }
 
@@ -1075,10 +1035,6 @@ func (m *DbTagMutation) Fields() []string {
 // return value indicates that this field was not set, or was not defined in the
 // schema.
 func (m *DbTagMutation) Field(name string) (ent.Value, bool) {
-	switch name {
-	case dbtag.FieldName:
-		return m.Name()
-	}
 	return nil, false
 }
 
@@ -1086,10 +1042,6 @@ func (m *DbTagMutation) Field(name string) (ent.Value, bool) {
 // returned if the mutation operation is not UpdateOne, or the query to the
 // database failed.
 func (m *DbTagMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
-	switch name {
-	case dbtag.FieldName:
-		return m.OldName(ctx)
-	}
 	return nil, fmt.Errorf("unknown DbTag field %s", name)
 }
 
@@ -1098,13 +1050,6 @@ func (m *DbTagMutation) OldField(ctx context.Context, name string) (ent.Value, e
 // type.
 func (m *DbTagMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case dbtag.FieldName:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetName(v)
-		return nil
 	}
 	return fmt.Errorf("unknown DbTag field %s", name)
 }
@@ -1126,8 +1071,6 @@ func (m *DbTagMutation) AddedField(name string) (ent.Value, bool) {
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
 func (m *DbTagMutation) AddField(name string, value ent.Value) error {
-	switch name {
-	}
 	return fmt.Errorf("unknown DbTag numeric field %s", name)
 }
 
@@ -1153,11 +1096,6 @@ func (m *DbTagMutation) ClearField(name string) error {
 // ResetField resets all changes in the mutation for the field with the given name.
 // It returns an error if the field is not defined in the schema.
 func (m *DbTagMutation) ResetField(name string) error {
-	switch name {
-	case dbtag.FieldName:
-		m.ResetName()
-		return nil
-	}
 	return fmt.Errorf("unknown DbTag field %s", name)
 }
 

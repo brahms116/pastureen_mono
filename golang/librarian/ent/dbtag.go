@@ -9,16 +9,13 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/google/uuid"
 )
 
 // DbTag is the model entity for the DbTag schema.
 type DbTag struct {
-	config `json:"-"`
+	config
 	// ID of the ent.
-	ID uuid.UUID `json:"id,omitempty"`
-	// Name holds the value of the "name" field.
-	Name string `json:"name,omitempty"`
+	ID string `json:"id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the DbTagQuery when eager-loading is set.
 	Edges        DbTagEdges `json:"edges"`
@@ -48,10 +45,8 @@ func (*DbTag) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case dbtag.FieldName:
-			values[i] = new(sql.NullString)
 		case dbtag.FieldID:
-			values[i] = new(uuid.UUID)
+			values[i] = new(sql.NullString)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -68,16 +63,10 @@ func (dt *DbTag) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case dbtag.FieldID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value != nil {
-				dt.ID = *value
-			}
-		case dbtag.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field name", values[i])
+				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value.Valid {
-				dt.Name = value.String
+				dt.ID = value.String
 			}
 		default:
 			dt.selectValues.Set(columns[i], values[i])
@@ -119,9 +108,7 @@ func (dt *DbTag) Unwrap() *DbTag {
 func (dt *DbTag) String() string {
 	var builder strings.Builder
 	builder.WriteString("DbTag(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", dt.ID))
-	builder.WriteString("name=")
-	builder.WriteString(dt.Name)
+	builder.WriteString(fmt.Sprintf("id=%v", dt.ID))
 	builder.WriteByte(')')
 	return builder.String()
 }

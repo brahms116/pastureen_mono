@@ -406,7 +406,7 @@ func (dlq *DbLinkQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*DbLi
 func (dlq *DbLinkQuery) loadTags(ctx context.Context, query *DbTagQuery, nodes []*DbLink, init func(*DbLink), assign func(*DbLink, *DbTag)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
 	byID := make(map[uuid.UUID]*DbLink)
-	nids := make(map[uuid.UUID]map[*DbLink]struct{})
+	nids := make(map[string]map[*DbLink]struct{})
 	for i, node := range nodes {
 		edgeIDs[i] = node.ID
 		byID[node.ID] = node
@@ -439,7 +439,7 @@ func (dlq *DbLinkQuery) loadTags(ctx context.Context, query *DbTagQuery, nodes [
 			}
 			spec.Assign = func(columns []string, values []any) error {
 				outValue := *values[0].(*uuid.UUID)
-				inValue := *values[1].(*uuid.UUID)
+				inValue := values[1].(*sql.NullString).String
 				if nids[inValue] == nil {
 					nids[inValue] = map[*DbLink]struct{}{byID[outValue]: {}}
 					return assign(columns[1:], values[1:])

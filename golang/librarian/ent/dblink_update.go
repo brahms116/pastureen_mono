@@ -14,7 +14,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 )
 
 // DbLinkUpdate is the builder for updating DbLink entities.
@@ -101,14 +100,14 @@ func (dlu *DbLinkUpdate) ClearImageAlt() *DbLinkUpdate {
 }
 
 // AddTagIDs adds the "tags" edge to the DbTag entity by IDs.
-func (dlu *DbLinkUpdate) AddTagIDs(ids ...uuid.UUID) *DbLinkUpdate {
+func (dlu *DbLinkUpdate) AddTagIDs(ids ...string) *DbLinkUpdate {
 	dlu.mutation.AddTagIDs(ids...)
 	return dlu
 }
 
 // AddTags adds the "tags" edges to the DbTag entity.
 func (dlu *DbLinkUpdate) AddTags(d ...*DbTag) *DbLinkUpdate {
-	ids := make([]uuid.UUID, len(d))
+	ids := make([]string, len(d))
 	for i := range d {
 		ids[i] = d[i].ID
 	}
@@ -127,14 +126,14 @@ func (dlu *DbLinkUpdate) ClearTags() *DbLinkUpdate {
 }
 
 // RemoveTagIDs removes the "tags" edge to DbTag entities by IDs.
-func (dlu *DbLinkUpdate) RemoveTagIDs(ids ...uuid.UUID) *DbLinkUpdate {
+func (dlu *DbLinkUpdate) RemoveTagIDs(ids ...string) *DbLinkUpdate {
 	dlu.mutation.RemoveTagIDs(ids...)
 	return dlu
 }
 
 // RemoveTags removes "tags" edges to DbTag entities.
 func (dlu *DbLinkUpdate) RemoveTags(d ...*DbTag) *DbLinkUpdate {
-	ids := make([]uuid.UUID, len(d))
+	ids := make([]string, len(d))
 	for i := range d {
 		ids[i] = d[i].ID
 	}
@@ -212,7 +211,7 @@ func (dlu *DbLinkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: dblink.TagsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -225,7 +224,7 @@ func (dlu *DbLinkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: dblink.TagsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -241,7 +240,7 @@ func (dlu *DbLinkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: dblink.TagsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -340,14 +339,14 @@ func (dluo *DbLinkUpdateOne) ClearImageAlt() *DbLinkUpdateOne {
 }
 
 // AddTagIDs adds the "tags" edge to the DbTag entity by IDs.
-func (dluo *DbLinkUpdateOne) AddTagIDs(ids ...uuid.UUID) *DbLinkUpdateOne {
+func (dluo *DbLinkUpdateOne) AddTagIDs(ids ...string) *DbLinkUpdateOne {
 	dluo.mutation.AddTagIDs(ids...)
 	return dluo
 }
 
 // AddTags adds the "tags" edges to the DbTag entity.
 func (dluo *DbLinkUpdateOne) AddTags(d ...*DbTag) *DbLinkUpdateOne {
-	ids := make([]uuid.UUID, len(d))
+	ids := make([]string, len(d))
 	for i := range d {
 		ids[i] = d[i].ID
 	}
@@ -366,14 +365,14 @@ func (dluo *DbLinkUpdateOne) ClearTags() *DbLinkUpdateOne {
 }
 
 // RemoveTagIDs removes the "tags" edge to DbTag entities by IDs.
-func (dluo *DbLinkUpdateOne) RemoveTagIDs(ids ...uuid.UUID) *DbLinkUpdateOne {
+func (dluo *DbLinkUpdateOne) RemoveTagIDs(ids ...string) *DbLinkUpdateOne {
 	dluo.mutation.RemoveTagIDs(ids...)
 	return dluo
 }
 
 // RemoveTags removes "tags" edges to DbTag entities.
 func (dluo *DbLinkUpdateOne) RemoveTags(d ...*DbTag) *DbLinkUpdateOne {
-	ids := make([]uuid.UUID, len(d))
+	ids := make([]string, len(d))
 	for i := range d {
 		ids[i] = d[i].ID
 	}
@@ -481,7 +480,7 @@ func (dluo *DbLinkUpdateOne) sqlSave(ctx context.Context) (_node *DbLink, err er
 			Columns: dblink.TagsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeString),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -494,7 +493,7 @@ func (dluo *DbLinkUpdateOne) sqlSave(ctx context.Context) (_node *DbLink, err er
 			Columns: dblink.TagsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {
@@ -510,7 +509,7 @@ func (dluo *DbLinkUpdateOne) sqlSave(ctx context.Context) (_node *DbLink, err er
 			Columns: dblink.TagsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

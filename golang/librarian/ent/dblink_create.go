@@ -95,14 +95,14 @@ func (dlc *DbLinkCreate) SetNillableID(u *uuid.UUID) *DbLinkCreate {
 }
 
 // AddTagIDs adds the "tags" edge to the DbTag entity by IDs.
-func (dlc *DbLinkCreate) AddTagIDs(ids ...uuid.UUID) *DbLinkCreate {
+func (dlc *DbLinkCreate) AddTagIDs(ids ...string) *DbLinkCreate {
 	dlc.mutation.AddTagIDs(ids...)
 	return dlc
 }
 
 // AddTags adds the "tags" edges to the DbTag entity.
 func (dlc *DbLinkCreate) AddTags(d ...*DbTag) *DbLinkCreate {
-	ids := make([]uuid.UUID, len(d))
+	ids := make([]string, len(d))
 	for i := range d {
 		ids[i] = d[i].ID
 	}
@@ -238,7 +238,7 @@ func (dlc *DbLinkCreate) createSpec() (*DbLink, *sqlgraph.CreateSpec) {
 			Columns: dblink.TagsPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

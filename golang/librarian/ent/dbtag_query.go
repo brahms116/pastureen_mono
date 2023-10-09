@@ -107,8 +107,8 @@ func (dtq *DbTagQuery) FirstX(ctx context.Context) *DbTag {
 
 // FirstID returns the first DbTag ID from the query.
 // Returns a *NotFoundError when no DbTag ID was found.
-func (dtq *DbTagQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (dtq *DbTagQuery) FirstID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = dtq.Limit(1).IDs(setContextOp(ctx, dtq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -120,7 +120,7 @@ func (dtq *DbTagQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (dtq *DbTagQuery) FirstIDX(ctx context.Context) uuid.UUID {
+func (dtq *DbTagQuery) FirstIDX(ctx context.Context) string {
 	id, err := dtq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -158,8 +158,8 @@ func (dtq *DbTagQuery) OnlyX(ctx context.Context) *DbTag {
 // OnlyID is like Only, but returns the only DbTag ID in the query.
 // Returns a *NotSingularError when more than one DbTag ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (dtq *DbTagQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (dtq *DbTagQuery) OnlyID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = dtq.Limit(2).IDs(setContextOp(ctx, dtq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -175,7 +175,7 @@ func (dtq *DbTagQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (dtq *DbTagQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+func (dtq *DbTagQuery) OnlyIDX(ctx context.Context) string {
 	id, err := dtq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -203,7 +203,7 @@ func (dtq *DbTagQuery) AllX(ctx context.Context) []*DbTag {
 }
 
 // IDs executes the query and returns a list of DbTag IDs.
-func (dtq *DbTagQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+func (dtq *DbTagQuery) IDs(ctx context.Context) (ids []string, err error) {
 	if dtq.ctx.Unique == nil && dtq.path != nil {
 		dtq.Unique(true)
 	}
@@ -215,7 +215,7 @@ func (dtq *DbTagQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (dtq *DbTagQuery) IDsX(ctx context.Context) []uuid.UUID {
+func (dtq *DbTagQuery) IDsX(ctx context.Context) []string {
 	ids, err := dtq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -295,18 +295,6 @@ func (dtq *DbTagQuery) WithLinks(opts ...func(*DbLinkQuery)) *DbTagQuery {
 
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
-//
-// Example:
-//
-//	var v []struct {
-//		Name string `json:"name,omitempty"`
-//		Count int `json:"count,omitempty"`
-//	}
-//
-//	client.DbTag.Query().
-//		GroupBy(dbtag.FieldName).
-//		Aggregate(ent.Count()).
-//		Scan(ctx, &v)
 func (dtq *DbTagQuery) GroupBy(field string, fields ...string) *DbTagGroupBy {
 	dtq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &DbTagGroupBy{build: dtq}
@@ -318,16 +306,6 @@ func (dtq *DbTagQuery) GroupBy(field string, fields ...string) *DbTagGroupBy {
 
 // Select allows the selection one or more fields/columns for the given query,
 // instead of selecting all fields in the entity.
-//
-// Example:
-//
-//	var v []struct {
-//		Name string `json:"name,omitempty"`
-//	}
-//
-//	client.DbTag.Query().
-//		Select(dbtag.FieldName).
-//		Scan(ctx, &v)
 func (dtq *DbTagQuery) Select(fields ...string) *DbTagSelect {
 	dtq.ctx.Fields = append(dtq.ctx.Fields, fields...)
 	sbuild := &DbTagSelect{DbTagQuery: dtq}
@@ -405,7 +383,7 @@ func (dtq *DbTagQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*DbTag
 
 func (dtq *DbTagQuery) loadLinks(ctx context.Context, query *DbLinkQuery, nodes []*DbTag, init func(*DbTag), assign func(*DbTag, *DbLink)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[uuid.UUID]*DbTag)
+	byID := make(map[string]*DbTag)
 	nids := make(map[uuid.UUID]map[*DbTag]struct{})
 	for i, node := range nodes {
 		edgeIDs[i] = node.ID
@@ -435,10 +413,10 @@ func (dtq *DbTagQuery) loadLinks(ctx context.Context, query *DbLinkQuery, nodes 
 				if err != nil {
 					return nil, err
 				}
-				return append([]any{new(uuid.UUID)}, values...), nil
+				return append([]any{new(sql.NullString)}, values...), nil
 			}
 			spec.Assign = func(columns []string, values []any) error {
-				outValue := *values[0].(*uuid.UUID)
+				outValue := values[0].(*sql.NullString).String
 				inValue := *values[1].(*uuid.UUID)
 				if nids[inValue] == nil {
 					nids[inValue] = map[*DbTag]struct{}{byID[outValue]: {}}
@@ -475,7 +453,7 @@ func (dtq *DbTagQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (dtq *DbTagQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(dbtag.Table, dbtag.Columns, sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewQuerySpec(dbtag.Table, dbtag.Columns, sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeString))
 	_spec.From = dtq.sql
 	if unique := dtq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

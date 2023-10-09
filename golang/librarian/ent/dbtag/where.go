@@ -7,122 +7,61 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/google/uuid"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id uuid.UUID) predicate.DbTag {
+func ID(id string) predicate.DbTag {
 	return predicate.DbTag(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id uuid.UUID) predicate.DbTag {
+func IDEQ(id string) predicate.DbTag {
 	return predicate.DbTag(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id uuid.UUID) predicate.DbTag {
+func IDNEQ(id string) predicate.DbTag {
 	return predicate.DbTag(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...uuid.UUID) predicate.DbTag {
+func IDIn(ids ...string) predicate.DbTag {
 	return predicate.DbTag(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...uuid.UUID) predicate.DbTag {
+func IDNotIn(ids ...string) predicate.DbTag {
 	return predicate.DbTag(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id uuid.UUID) predicate.DbTag {
+func IDGT(id string) predicate.DbTag {
 	return predicate.DbTag(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id uuid.UUID) predicate.DbTag {
+func IDGTE(id string) predicate.DbTag {
 	return predicate.DbTag(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id uuid.UUID) predicate.DbTag {
+func IDLT(id string) predicate.DbTag {
 	return predicate.DbTag(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id uuid.UUID) predicate.DbTag {
+func IDLTE(id string) predicate.DbTag {
 	return predicate.DbTag(sql.FieldLTE(FieldID, id))
 }
 
-// Name applies equality check predicate on the "name" field. It's identical to NameEQ.
-func Name(v string) predicate.DbTag {
-	return predicate.DbTag(sql.FieldEQ(FieldName, v))
+// IDEqualFold applies the EqualFold predicate on the ID field.
+func IDEqualFold(id string) predicate.DbTag {
+	return predicate.DbTag(sql.FieldEqualFold(FieldID, id))
 }
 
-// NameEQ applies the EQ predicate on the "name" field.
-func NameEQ(v string) predicate.DbTag {
-	return predicate.DbTag(sql.FieldEQ(FieldName, v))
-}
-
-// NameNEQ applies the NEQ predicate on the "name" field.
-func NameNEQ(v string) predicate.DbTag {
-	return predicate.DbTag(sql.FieldNEQ(FieldName, v))
-}
-
-// NameIn applies the In predicate on the "name" field.
-func NameIn(vs ...string) predicate.DbTag {
-	return predicate.DbTag(sql.FieldIn(FieldName, vs...))
-}
-
-// NameNotIn applies the NotIn predicate on the "name" field.
-func NameNotIn(vs ...string) predicate.DbTag {
-	return predicate.DbTag(sql.FieldNotIn(FieldName, vs...))
-}
-
-// NameGT applies the GT predicate on the "name" field.
-func NameGT(v string) predicate.DbTag {
-	return predicate.DbTag(sql.FieldGT(FieldName, v))
-}
-
-// NameGTE applies the GTE predicate on the "name" field.
-func NameGTE(v string) predicate.DbTag {
-	return predicate.DbTag(sql.FieldGTE(FieldName, v))
-}
-
-// NameLT applies the LT predicate on the "name" field.
-func NameLT(v string) predicate.DbTag {
-	return predicate.DbTag(sql.FieldLT(FieldName, v))
-}
-
-// NameLTE applies the LTE predicate on the "name" field.
-func NameLTE(v string) predicate.DbTag {
-	return predicate.DbTag(sql.FieldLTE(FieldName, v))
-}
-
-// NameContains applies the Contains predicate on the "name" field.
-func NameContains(v string) predicate.DbTag {
-	return predicate.DbTag(sql.FieldContains(FieldName, v))
-}
-
-// NameHasPrefix applies the HasPrefix predicate on the "name" field.
-func NameHasPrefix(v string) predicate.DbTag {
-	return predicate.DbTag(sql.FieldHasPrefix(FieldName, v))
-}
-
-// NameHasSuffix applies the HasSuffix predicate on the "name" field.
-func NameHasSuffix(v string) predicate.DbTag {
-	return predicate.DbTag(sql.FieldHasSuffix(FieldName, v))
-}
-
-// NameEqualFold applies the EqualFold predicate on the "name" field.
-func NameEqualFold(v string) predicate.DbTag {
-	return predicate.DbTag(sql.FieldEqualFold(FieldName, v))
-}
-
-// NameContainsFold applies the ContainsFold predicate on the "name" field.
-func NameContainsFold(v string) predicate.DbTag {
-	return predicate.DbTag(sql.FieldContainsFold(FieldName, v))
+// IDContainsFold applies the ContainsFold predicate on the ID field.
+func IDContainsFold(id string) predicate.DbTag {
+	return predicate.DbTag(sql.FieldContainsFold(FieldID, id))
 }
 
 // HasLinks applies the HasEdge predicate on the "links" edge.

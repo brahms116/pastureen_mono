@@ -414,7 +414,7 @@ func (c *DbTagClient) UpdateOne(dt *DbTag) *DbTagUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *DbTagClient) UpdateOneID(id uuid.UUID) *DbTagUpdateOne {
+func (c *DbTagClient) UpdateOneID(id string) *DbTagUpdateOne {
 	mutation := newDbTagMutation(c.config, OpUpdateOne, withDbTagID(id))
 	return &DbTagUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -431,7 +431,7 @@ func (c *DbTagClient) DeleteOne(dt *DbTag) *DbTagDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *DbTagClient) DeleteOneID(id uuid.UUID) *DbTagDeleteOne {
+func (c *DbTagClient) DeleteOneID(id string) *DbTagDeleteOne {
 	builder := c.Delete().Where(dbtag.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -448,12 +448,12 @@ func (c *DbTagClient) Query() *DbTagQuery {
 }
 
 // Get returns a DbTag entity by its id.
-func (c *DbTagClient) Get(ctx context.Context, id uuid.UUID) (*DbTag, error) {
+func (c *DbTagClient) Get(ctx context.Context, id string) (*DbTag, error) {
 	return c.Query().Where(dbtag.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *DbTagClient) GetX(ctx context.Context, id uuid.UUID) *DbTag {
+func (c *DbTagClient) GetX(ctx context.Context, id string) *DbTag {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)

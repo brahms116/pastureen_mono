@@ -5,7 +5,6 @@ package dbtag
 import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/google/uuid"
 )
 
 const (
@@ -13,8 +12,6 @@ const (
 	Label = "db_tag"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldName holds the string denoting the name field in the database.
-	FieldName = "name"
 	// EdgeLinks holds the string denoting the links edge name in mutations.
 	EdgeLinks = "links"
 	// Table holds the table name of the dbtag in the database.
@@ -29,7 +26,6 @@ const (
 // Columns holds all SQL columns for dbtag fields.
 var Columns = []string{
 	FieldID,
-	FieldName,
 }
 
 var (
@@ -48,22 +44,12 @@ func ValidColumn(column string) bool {
 	return false
 }
 
-var (
-	// DefaultID holds the default value on creation for the "id" field.
-	DefaultID func() uuid.UUID
-)
-
 // OrderOption defines the ordering options for the DbTag queries.
 type OrderOption func(*sql.Selector)
 
 // ByID orders the results by the id field.
 func ByID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldID, opts...).ToFunc()
-}
-
-// ByName orders the results by the name field.
-func ByName(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldName, opts...).ToFunc()
 }
 
 // ByLinksCount orders the results by links count.

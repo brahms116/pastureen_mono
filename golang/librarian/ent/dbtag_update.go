@@ -29,12 +29,6 @@ func (dtu *DbTagUpdate) Where(ps ...predicate.DbTag) *DbTagUpdate {
 	return dtu
 }
 
-// SetName sets the "name" field.
-func (dtu *DbTagUpdate) SetName(s string) *DbTagUpdate {
-	dtu.mutation.SetName(s)
-	return dtu
-}
-
 // AddLinkIDs adds the "links" edge to the DbLink entity by IDs.
 func (dtu *DbTagUpdate) AddLinkIDs(ids ...uuid.UUID) *DbTagUpdate {
 	dtu.mutation.AddLinkIDs(ids...)
@@ -104,16 +98,13 @@ func (dtu *DbTagUpdate) ExecX(ctx context.Context) {
 }
 
 func (dtu *DbTagUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	_spec := sqlgraph.NewUpdateSpec(dbtag.Table, dbtag.Columns, sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(dbtag.Table, dbtag.Columns, sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeString))
 	if ps := dtu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
-	}
-	if value, ok := dtu.mutation.Name(); ok {
-		_spec.SetField(dbtag.FieldName, field.TypeString, value)
 	}
 	if dtu.mutation.LinksCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -178,12 +169,6 @@ type DbTagUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *DbTagMutation
-}
-
-// SetName sets the "name" field.
-func (dtuo *DbTagUpdateOne) SetName(s string) *DbTagUpdateOne {
-	dtuo.mutation.SetName(s)
-	return dtuo
 }
 
 // AddLinkIDs adds the "links" edge to the DbLink entity by IDs.
@@ -268,7 +253,7 @@ func (dtuo *DbTagUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (dtuo *DbTagUpdateOne) sqlSave(ctx context.Context) (_node *DbTag, err error) {
-	_spec := sqlgraph.NewUpdateSpec(dbtag.Table, dbtag.Columns, sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(dbtag.Table, dbtag.Columns, sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeString))
 	id, ok := dtuo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "DbTag.id" for update`)}
@@ -292,9 +277,6 @@ func (dtuo *DbTagUpdateOne) sqlSave(ctx context.Context) (_node *DbTag, err erro
 				ps[i](selector)
 			}
 		}
-	}
-	if value, ok := dtuo.mutation.Name(); ok {
-		_spec.SetField(dbtag.FieldName, field.TypeString, value)
 	}
 	if dtuo.mutation.LinksCleared() {
 		edge := &sqlgraph.EdgeSpec{

@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"pastureen/librarian/ent/dblink"
 	"pastureen/librarian/ent/dbtag"
@@ -21,23 +20,9 @@ type DbTagCreate struct {
 	hooks    []Hook
 }
 
-// SetName sets the "name" field.
-func (dtc *DbTagCreate) SetName(s string) *DbTagCreate {
-	dtc.mutation.SetName(s)
-	return dtc
-}
-
 // SetID sets the "id" field.
-func (dtc *DbTagCreate) SetID(u uuid.UUID) *DbTagCreate {
-	dtc.mutation.SetID(u)
-	return dtc
-}
-
-// SetNillableID sets the "id" field if the given value is not nil.
-func (dtc *DbTagCreate) SetNillableID(u *uuid.UUID) *DbTagCreate {
-	if u != nil {
-		dtc.SetID(*u)
-	}
+func (dtc *DbTagCreate) SetID(s string) *DbTagCreate {
+	dtc.mutation.SetID(s)
 	return dtc
 }
 
@@ -63,7 +48,6 @@ func (dtc *DbTagCreate) Mutation() *DbTagMutation {
 
 // Save creates the DbTag in the database.
 func (dtc *DbTagCreate) Save(ctx context.Context) (*DbTag, error) {
-	dtc.defaults()
 	return withHooks(ctx, dtc.sqlSave, dtc.mutation, dtc.hooks)
 }
 
@@ -89,19 +73,8 @@ func (dtc *DbTagCreate) ExecX(ctx context.Context) {
 	}
 }
 
-// defaults sets the default values of the builder before save.
-func (dtc *DbTagCreate) defaults() {
-	if _, ok := dtc.mutation.ID(); !ok {
-		v := dbtag.DefaultID()
-		dtc.mutation.SetID(v)
-	}
-}
-
 // check runs all checks and user-defined validators on the builder.
 func (dtc *DbTagCreate) check() error {
-	if _, ok := dtc.mutation.Name(); !ok {
-		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "DbTag.name"`)}
-	}
 	return nil
 }
 
@@ -117,10 +90,10 @@ func (dtc *DbTagCreate) sqlSave(ctx context.Context) (*DbTag, error) {
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
-			_node.ID = *id
-		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
-			return nil, err
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected DbTag.ID type: %T", _spec.ID.Value)
 		}
 	}
 	dtc.mutation.id = &_node.ID
@@ -131,15 +104,11 @@ func (dtc *DbTagCreate) sqlSave(ctx context.Context) (*DbTag, error) {
 func (dtc *DbTagCreate) createSpec() (*DbTag, *sqlgraph.CreateSpec) {
 	var (
 		_node = &DbTag{config: dtc.config}
-		_spec = sqlgraph.NewCreateSpec(dbtag.Table, sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeUUID))
+		_spec = sqlgraph.NewCreateSpec(dbtag.Table, sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeString))
 	)
 	if id, ok := dtc.mutation.ID(); ok {
 		_node.ID = id
-		_spec.ID.Value = &id
-	}
-	if value, ok := dtc.mutation.Name(); ok {
-		_spec.SetField(dbtag.FieldName, field.TypeString, value)
-		_node.Name = value
+		_spec.ID.Value = id
 	}
 	if nodes := dtc.mutation.LinksIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -178,7 +147,6 @@ func (dtcb *DbTagCreateBulk) Save(ctx context.Context) ([]*DbTag, error) {
 	for i := range dtcb.builders {
 		func(i int, root context.Context) {
 			builder := dtcb.builders[i]
-			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*DbTagMutation)
 				if !ok {

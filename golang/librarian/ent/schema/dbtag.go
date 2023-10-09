@@ -4,7 +4,6 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/edge"
-	"github.com/google/uuid"
 )
 
 // DbTag holds the schema definition for the DbTag entity.
@@ -15,8 +14,7 @@ type DbTag struct {
 // Fields of the DbTag.
 func (DbTag) Fields() []ent.Field {
   return []ent.Field{
-		field.UUID("id", uuid.UUID{}).Default(uuid.New).Unique(),
-    field.String("name"),
+    field.String("id").Unique(),
   }
 }
 

@@ -40,7 +40,7 @@ func (dtd *DbTagDelete) ExecX(ctx context.Context) int {
 }
 
 func (dtd *DbTagDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := sqlgraph.NewDeleteSpec(dbtag.Table, sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewDeleteSpec(dbtag.Table, sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeString))
 	if ps := dtd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {

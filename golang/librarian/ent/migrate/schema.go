@@ -34,8 +34,7 @@ var (
 	}
 	// DbTagsColumns holds the columns for the "db_tags" table.
 	DbTagsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID, Unique: true},
-		{Name: "name", Type: field.TypeString},
+		{Name: "id", Type: field.TypeString, Unique: true},
 	}
 	// DbTagsTable holds the schema information for the "db_tags" table.
 	DbTagsTable = &schema.Table{
@@ -46,7 +45,7 @@ var (
 	// DbLinkTagsColumns holds the columns for the "db_link_tags" table.
 	DbLinkTagsColumns = []*schema.Column{
 		{Name: "db_link_id", Type: field.TypeUUID},
-		{Name: "db_tag_id", Type: field.TypeUUID},
+		{Name: "db_tag_id", Type: field.TypeString},
 	}
 	// DbLinkTagsTable holds the schema information for the "db_link_tags" table.
 	DbLinkTagsTable = &schema.Table{

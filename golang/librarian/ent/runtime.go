@@ -4,7 +4,6 @@ package ent
 
 import (
 	"pastureen/librarian/ent/dblink"
-	"pastureen/librarian/ent/dbtag"
 	"pastureen/librarian/ent/schema"
 
 	"github.com/google/uuid"
@@ -20,10 +19,4 @@ func init() {
 	dblinkDescID := dblinkFields[0].Descriptor()
 	// dblink.DefaultID holds the default value on creation for the id field.
 	dblink.DefaultID = dblinkDescID.Default.(func() uuid.UUID)
-	dbtagFields := schema.DbTag{}.Fields()
-	_ = dbtagFields
-	// dbtagDescID is the schema descriptor for id field.
-	dbtagDescID := dbtagFields[0].Descriptor()
-	// dbtag.DefaultID holds the default value on creation for the id field.
-	dbtag.DefaultID = dbtagDescID.Default.(func() uuid.UUID)
 }
