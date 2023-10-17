@@ -1,0 +1,164 @@
+use maud::{html, Markup, PreEscaped};
+
+const CSS: &'static str = include_str!("../refresh.css");
+
+fn refresh_css() -> Markup {
+    html! {
+        style {
+            (PreEscaped(CSS))
+        }
+    }
+}
+
+fn correct_alpine_directives(markup: Markup) -> Markup {
+    let string = markup.into_string();
+    let string = string.replace("x-on:click-", "x-on:click.");
+    let string = string.replace("x-on:keydown-", "x-on:keydown.");
+    PreEscaped(string)
+}
+
+fn htmx() -> Markup {
+    html! {
+        script
+            src="https://unpkg.com/htmx.org@1.9.5"
+            integrity="sha384-xcuj3WpfgjlKF+FXhSQFQ0ZNr39ln+hwjN3npfM9VBnUskLolQAcN80McRIVOPuO"
+            crossorigin="anonymous" {}
+    }
+}
+
+fn fonts() -> Markup {
+    html! {
+        link
+            rel="preconnect"
+            href="https://fonts.gstatic.com"
+            crossorigin {}
+        link
+            rel="preconnect"
+            href="https://fonts.googleapis.com" {}
+        link
+            href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap"
+            rel="stylesheet" {}
+    }
+}
+
+fn tailwind_reset() -> Markup {
+    html! {
+        link
+            rel="stylesheet"
+            href="https://unpkg.com/tailwindcss@3.3.3/src/css/preflight.css" {}
+    }
+}
+
+fn alpinejs() -> Markup {
+    html! {
+        script
+            src="//unpkg.com/alpinejs" {}
+    }
+}
+
+pub struct NavbarProps {
+    pub htmx_url: String,
+    pub assets_url: String,
+}
+
+pub struct LayoutProps {
+    pub title: String,
+    pub css_src: String,
+    pub custom_css: Markup,
+    pub body: Markup,
+    pub navbar_props: NavbarProps,
+}
+
+pub fn layout(props: LayoutProps) -> Markup {
+    html! {
+        html {
+            head {
+                title { (props.title) }
+                meta
+                    charset="utf-8";
+                meta
+                    name="viewport"
+                    content="width=device-width, initial-scale=1" {}
+                (htmx())
+                (fonts())
+                (tailwind_reset())
+                (alpinejs())
+                // link rel="stylesheet" href=(props.css_src) {}
+                (refresh_css())
+                style { (props.custom_css) }
+            }
+            body {
+                (navbar(props.navbar_props))
+                (props.body)
+            }
+        }
+    }
+}
+
+fn search_icon_svg(class_str:&str) -> Markup {
+    html! {
+        svg
+            class=(class_str)
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            stroke="blue"
+        {
+            g {
+                path
+                    id="Vector"
+                    d="M21 21L15.803 15.803M15.803 15.803C17.2096 14.3964 17.9998 12.4887 17.9998 10.4995C17.9998 8.5103 17.2096 6.60258 15.803 5.196C14.3964 3.78942 12.4887 2.99922 10.4995 2.99922C8.51029 2.99922 6.60256 3.78942 5.19599 5.196C3.78941 6.60258 2.99921 8.5103 2.99921 10.4995C2.99921 12.4887 3.78941 14.3964 5.19599 15.803C6.60256 17.2096 8.51029 17.9998 10.4995 17.9998C12.4887 17.9998 14.3964 17.2096 15.803 15.803"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round";
+            }
+        }
+    }
+}
+
+fn close_icon_svg(class_str:&str) -> Markup {
+    html! {
+        svg
+            class=(class_str)
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+        {
+            g {
+                path
+                    id="Vector"
+                    d="M6 18L18 6M6 6L18 18"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round";
+            }
+        }
+    }
+}
+
+pub fn navbar(props: NavbarProps) -> Markup {
+    html! {
+        .navbarctl
+            x-data="{ open: false }"
+            x-on:keydown-escape="open = false"
+        {
+            .navbar
+                id="navbar"
+                x-on:click="open = true"
+            {
+                img.navbar__logo
+                    src=(format!("{}/logo.png", props.assets_url))
+                    alt="Pastureen"
+                {}
+                input.navbar__input
+                    type="text"
+                {}
+                (close_icon_svg(".navbar__icon"))
+                .navbar__helptext{
+                   ("ESC")
+                }
+            }
+        }
+    }
+}
+

@@ -1,0 +1,14 @@
+:root {
+  --text-color: #EBF0F5;
+  --bg-color: #1F2327;
+  --accent-color: #A7FF54;
+  --text-subdued-color: #757575;
+  --block-color: #16181B;
+  --navbar-color: #212529;
+  --bg-highlight-color: #25292D;
+  --paragraph-color: #BEBEBE;
+}
+
+html {
+  background: var(--bg-color);
+}
