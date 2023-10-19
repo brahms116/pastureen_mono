@@ -12,6 +12,8 @@ set -a
 . ./.$env.env
 set +a
 
-./deploy.sh dev
+cargo run -p blog_skeleton
+
+python3 -m http.server 8000 --directory ./build
 
 

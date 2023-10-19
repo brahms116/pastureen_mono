@@ -56,12 +56,12 @@ pub struct Post {
     pub post_html: String,
 }
 
-
 pub fn render_index_page(config: BlogConfig) -> String {
     let layout_props = LayoutProps {
         navbar_props: NavbarProps {
             htmx_url: config.htmx_url,
             assets_url: config.assets_url,
+            state: NavbarState::Closed,
         },
         body: PreEscaped("".to_string()),
         css_src: "".to_string(),

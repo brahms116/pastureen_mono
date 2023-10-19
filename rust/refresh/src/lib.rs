@@ -10,12 +10,12 @@ fn refresh_css() -> Markup {
     }
 }
 
-fn correct_alpine_directives(markup: Markup) -> Markup {
-    let string = markup.into_string();
-    let string = string.replace("x-on:click-", "x-on:click.");
-    let string = string.replace("x-on:keydown-", "x-on:keydown.");
-    PreEscaped(string)
-}
+// fn correct_alpine_directives(markup: Markup) -> Markup {
+//     let string = markup.into_string();
+//     let string = string.replace("x-on:click-", "x-on:click.");
+//     let string = string.replace("x-on:keydown-", "x-on:keydown.");
+//     PreEscaped(string)
+// }
 
 fn htmx() -> Markup {
     html! {
@@ -36,7 +36,7 @@ fn fonts() -> Markup {
             rel="preconnect"
             href="https://fonts.googleapis.com" {}
         link
-            href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap"
+            href="https://fonts.googleapis.com/css2?family=PT+Mono&display=swap"
             rel="stylesheet" {}
     }
 }
@@ -56,9 +56,15 @@ fn alpinejs() -> Markup {
     }
 }
 
+pub enum NavbarState {
+    Open { search_input: String },
+    Closed,
+}
+
 pub struct NavbarProps {
     pub htmx_url: String,
     pub assets_url: String,
+    pub state: NavbarState,
 }
 
 pub struct LayoutProps {
@@ -89,13 +95,16 @@ pub fn layout(props: LayoutProps) -> Markup {
             }
             body {
                 (navbar(props.navbar_props))
+                div
+                    id="navbar-open-target"
+                {}
                 (props.body)
             }
         }
     }
 }
 
-fn search_icon_svg(class_str:&str) -> Markup {
+fn search_icon_svg(class_str: &str) -> Markup {
     html! {
         svg
             class=(class_str)
@@ -116,10 +125,9 @@ fn search_icon_svg(class_str:&str) -> Markup {
     }
 }
 
-fn close_icon_svg(class_str:&str) -> Markup {
+fn close_icon_svg() -> Markup {
     html! {
         svg
-            class=(class_str)
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -136,29 +144,78 @@ fn close_icon_svg(class_str:&str) -> Markup {
     }
 }
 
-pub fn navbar(props: NavbarProps) -> Markup {
+pub struct SearchComponentProps {
+    pub search_body: Markup,
+    pub search_input_str: String,
+    pub htmx_url: String,
+    pub assets_url: String,
+}
+
+pub fn search_component(props: SearchComponentProps) -> Markup {
+
+    let navbar_props = NavbarProps {
+        htmx_url: props.htmx_url.clone(),
+        assets_url: props.assets_url.clone(),
+        state: NavbarState::Open {
+            search_input: props.search_input_str.clone(),
+        },
+    };
+
     html! {
-        .navbarctl
-            x-data="{ open: false }"
-            x-on:keydown-escape="open = false"
+        .search_component {
+            (navbar(navbar_props))
+            (props.search_body)
+        }
+    }
+}
+
+pub fn navbar(props: NavbarProps) -> Markup {
+    let search_input = match &props.state {
+        NavbarState::Open { search_input } => search_input.clone(),
+        NavbarState::Closed => "".to_string(),
+    };
+    let is_open = match &props.state {
+        NavbarState::Open { .. } => true,
+        NavbarState::Closed => false,
+    };
+
+    let navbar_hx_target: Option<String> = match &props.state {
+        NavbarState::Closed { .. } => Some("#navbar-open-target".to_string()),
+        _ => None,
+    };
+
+    let navbar_hx_get: Option<String> = match &props.state {
+        NavbarState::Closed { .. } => Some(props.htmx_url.clone()),
+        _ => None,
+    };
+
+    html! {
+        .navbar.navbar--open[is_open]
+            hx-get=[navbar_hx_get]
+            hx-target=[navbar_hx_target]
+            hx-swap="innerHTML swap:1s"
         {
-            .navbar
-                id="navbar"
-                x-on:click="open = true"
-            {
-                img.navbar__logo
-                    src=(format!("{}/logo.png", props.assets_url))
-                    alt="Pastureen"
-                {}
+            img.navbar__logo.pixel-art
+                src=(format!("{}/logo.png", props.assets_url))
+                alt="Pastureen" {}
+            @if is_open {
                 input.navbar__input
                     type="text"
-                {}
-                (close_icon_svg(".navbar__icon"))
+                    value=(search_input){}
+                .navbar__icon {
+                    (close_icon_svg())
+                }
                 .navbar__helptext{
                    ("ESC")
+                }
+            }
+            @else {
+                .navbar__input{}
+                (search_icon_svg("navbar__icon"))
+                .navbar__helptext{
+                   ("CMD+K")
                 }
             }
         }
     }
 }
-
