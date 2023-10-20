@@ -15,22 +15,52 @@ html {
   font-family: 'PT Mono', monospace;
 }
 
-#navbar-open-target {
-  opacity: 1;
+[type="text"]:focus,
+[type="email"]:focus,
+[type="url"]:focus,
+[type="password"]:focus,
+[type="number"]:focus,
+[type="date"]:focus,
+[type="datetime-local"]:focus,
+[type="month"]:focus,
+[type="search"]:focus,
+[type="tel"]:focus,
+[type="time"]:focus,
+[type="week"]:focus,
+[multiple]:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  appearance: none;
 }
 
-#navbar-open-target.htmx-swapping,
-#navbar-open-target.htmx-added {
-  opacity: 0;
-  transition: opacity 1s ease-in-out;
+[type="text"],
+[type="email"],
+[type="url"],
+[type="password"],
+[type="number"],
+[type="date"],
+[type="datetime-local"],
+[type="month"],
+[type="search"],
+[type="tel"],
+[type="time"],
+[type="week"],
+[multiple],
+textarea,
+select {
+  background-color: transparent;
+  border: none;
 }
+
+[x-cloak] { display: none !important; }
 
 .pixel-art {
   image-rendering: pixelated;
 }
 
 .navbar {
-  cursor: pointer;
+  z-index: 10;
   background: var(--navbar-color);
   position: fixed;
   width: 100%;
@@ -42,6 +72,10 @@ html {
   padding: 0 2rem;
 }
 
+.navbar.navbar--closed {
+  cursor: pointer;
+}
+
 .navbar__logo {
   height: 2.875rem;
   width: 2.875rem;
@@ -50,6 +84,8 @@ html {
 
 .navbar__input {
   flex: 1;
+  font-size: 0.875rem;
+  color: var(--text-color);
 }
 
 .navbar__icon {
@@ -65,6 +101,11 @@ html {
   display: none
 }
 
+.navbar.navbar--open .navbar__helptext,
+.navbar.navbar--open .navbar__icon {
+  cursor: pointer;
+}
+
 .navbar:hover .navbar__icon {
   stroke: var(--accent-hightlight-color);
 }
@@ -73,4 +114,11 @@ html {
   .navbar__helptext {
     display: block;
   }
+}
+
+.global-search {
+  position: fixed;
+  background: var(--text-subdued-color);
+  width: 100%;
+  height: 100vh;
 }

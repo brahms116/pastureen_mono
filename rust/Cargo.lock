@@ -456,6 +456,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "blog_htmx"
+version = "0.1.0"
+
+[[package]]
 name = "blog_skeleton"
 version = "0.1.0"
 dependencies = [

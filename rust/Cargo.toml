@@ -15,6 +15,7 @@ members = [
   "refresh_blog",
   "blog",
   "blog_skeleton",
+  "blog_htmx",
   "publisher",
   "auth_client",
   "reqwest_utils"

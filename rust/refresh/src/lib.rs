@@ -1,6 +1,7 @@
 use maud::{html, Markup, PreEscaped};
 
 const CSS: &'static str = include_str!("../refresh.css");
+const JS: &'static str = include_str!("../refresh.js");
 
 fn refresh_css() -> Markup {
     html! {
@@ -10,12 +11,20 @@ fn refresh_css() -> Markup {
     }
 }
 
-// fn correct_alpine_directives(markup: Markup) -> Markup {
-//     let string = markup.into_string();
-//     let string = string.replace("x-on:click-", "x-on:click.");
-//     let string = string.replace("x-on:keydown-", "x-on:keydown.");
-//     PreEscaped(string)
-// }
+fn refresh_js() -> Markup {
+    html! {
+        script {
+            (PreEscaped(JS))
+        }
+    }
+}
+
+fn correct_alpine_directives(markup: Markup) -> Markup {
+    let string = markup.into_string();
+    let string = string.replace("x-on:click-", "x-on:click.");
+    let string = string.replace("x-on:keydown-", "x-on:keydown.");
+    PreEscaped(string)
+}
 
 fn htmx() -> Markup {
     html! {
@@ -52,7 +61,9 @@ fn tailwind_reset() -> Markup {
 fn alpinejs() -> Markup {
     html! {
         script
-            src="//unpkg.com/alpinejs" {}
+            src="//unpkg.com/alpinejs"
+            defer
+        {}
     }
 }
 
@@ -92,6 +103,7 @@ pub fn layout(props: LayoutProps) -> Markup {
                 // link rel="stylesheet" href=(props.css_src) {}
                 (refresh_css())
                 style { (props.custom_css) }
+                (refresh_js())
             }
             body {
                 (navbar(props.navbar_props))
@@ -104,14 +116,12 @@ pub fn layout(props: LayoutProps) -> Markup {
     }
 }
 
-fn search_icon_svg(class_str: &str) -> Markup {
+fn search_icon_svg() -> Markup {
     html! {
         svg
-            class=(class_str)
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            stroke="blue"
         {
             g {
                 path
@@ -174,48 +184,66 @@ pub fn navbar(props: NavbarProps) -> Markup {
         NavbarState::Open { search_input } => search_input.clone(),
         NavbarState::Closed => "".to_string(),
     };
+
     let is_open = match &props.state {
-        NavbarState::Open { .. } => true,
+        NavbarState::Open { search_input: _ } => true,
         NavbarState::Closed => false,
     };
 
-    let navbar_hx_target: Option<String> = match &props.state {
-        NavbarState::Closed { .. } => Some("#navbar-open-target".to_string()),
-        _ => None,
-    };
 
-    let navbar_hx_get: Option<String> = match &props.state {
-        NavbarState::Closed { .. } => Some(props.htmx_url.clone()),
-        _ => None,
-    };
+    let x_data = format!("{{ isOpen: {}, searchInput: '{}' }}", is_open, search_input);
 
-    html! {
-        .navbar.navbar--open[is_open]
-            hx-get=[navbar_hx_get]
-            hx-target=[navbar_hx_target]
-            hx-swap="innerHTML swap:1s"
+
+    correct_alpine_directives(html! {
+        div 
+            x-data=(x_data)
         {
-            img.navbar__logo.pixel-art
-                src=(format!("{}/logo.png", props.assets_url))
-                alt="Pastureen" {}
-            @if is_open {
-                input.navbar__input
+            .navbar
+                x-bind:class="isOpen ? 'navbar--open' : 'navbar--closed'"
+                x-on:click="if (!isOpen) { isOpen = true; focusGlobalSearch() }"
+            {
+                img.navbar__logo.pixel-art
+                    src=(format!("{}/logo.png", props.assets_url))
+                    alt="Pastureen" {}
+                input.navbar__input #global-search-input
+                    x-cloak
+                    x-ref="searchInput"
+                    x-show="isOpen"
+                    x-model="searchInput"
                     type="text"
-                    value=(search_input){}
-                .navbar__icon {
+                    {}
+                .navbar__icon
+                    x-cloak
+                    x-on:click-stop="isOpen=false; clearGlobalSearch()"
+                    x-show="isOpen"
+                {
                     (close_icon_svg())
                 }
-                .navbar__helptext{
+                .navbar__helptext
+                    x-cloak
+                    x-on:click-stop="isOpen=false; clearGlobalSearch()"
+                    x-show="isOpen"
+                {
                    ("ESC")
                 }
-            }
-            @else {
-                .navbar__input{}
-                (search_icon_svg("navbar__icon"))
-                .navbar__helptext{
+                .navbar__input 
+                    x-show="!isOpen" {}
+                .navbar__icon 
+                    x-show="!isOpen"
+                {
+                    (search_icon_svg())
+                }
+                .navbar__helptext
+                    x-show="!isOpen"
+                {
                    ("CMD+K")
                 }
             }
+            .global-search 
+                x-cloak
+                x-show="isOpen"
+                x-transition
+            {}
         }
-    }
+    })
 }
