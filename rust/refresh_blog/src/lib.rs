@@ -61,19 +61,34 @@ pub struct Post {
 pub fn render_global_search_results(_query: &str) -> Markup {
     let default_menu = MenuProps {
         sections: vec![MenuSectionProps {
-            label: "Search by Category".to_string(),
+            label: "Common search tags".to_string(),
             items: vec![
                 MenuItemProps {
                     label: "Faith".to_string(),
-                    actionable: None,
+                    actionable: Some(
+                        Actionable::Alpine("
+                            searchInput+=' tag:faith'
+                            $dispatch('focusglobalsearch')
+                        ".to_string())
+                    ),
                 },
                 MenuItemProps {
                     label: "Tech".to_string(),
-                    actionable: None,
+                    actionable: Some(
+                        Actionable::Alpine("
+                            searchInput+=' tag:tech'
+                            $dispatch('focusglobalsearch')
+                        ".to_string())
+                    ),
                 },
                 MenuItemProps {
                     label: "Music".to_string(),
-                    actionable: None,
+                    actionable: Some(
+                        Actionable::Alpine("
+                            searchInput+=' tag:music'
+                            $dispatch('focusglobalsearch')
+                        ".to_string())
+                    ),
                 },
             ],
         }],

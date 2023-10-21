@@ -15,9 +15,7 @@ fn correct_alpine_directives(markup: Markup) -> Markup {
     let string = string.replace("x-on:click-", "x-on:click.");
     let string = string.replace("x-on:keydown-", "x-on:keydown.");
     let string = string.replace("ctrl-k-", "ctrl.k.");
-    let string = string.replace("esc-", "esc.");
-    let string = string.replace("window-", "esc.");
-    let string = string.replace("load-", "load.");
+    let string = string.replace("-window", ".window");
     PreEscaped(string)
 }
 
@@ -72,6 +70,7 @@ pub struct HtmxOptions {
 pub enum Actionable {
     Link(String),
     Htmx(HtmxOptions),
+    Alpine(String),
 }
 
 pub enum NavbarState {
@@ -184,6 +183,12 @@ pub fn menu_item(props: MenuItemProps) -> Markup {
                     (props.label)
                 }
             },
+            Some(Actionable::Alpine(options)) =>
+            .menu-item
+                x-on:click-stop=(options)
+            {
+                (props.label)
+            },
             Some(Actionable::Htmx(options)) =>
             .menu-item
                 hx-get=[options.url]
@@ -243,9 +248,7 @@ pub fn global_search(props: GlobalSearchProps) -> Markup {
     correct_alpine_directives(html! {
         .global-search #global-search
             x-data=(x_data)
-            x-on:openglobalsearch="
-                isOpen = true
-                document.body.style.overflowY='hidden'
+            x-on:focusglobalsearch-window="
                 setTimeout(() => {
                     $refs.searchInput.focus() 
                     const value = $refs.searchInput.value
@@ -253,10 +256,17 @@ pub fn global_search(props: GlobalSearchProps) -> Markup {
                     $refs.searchInput.value = value
                 }, 100)
             "
-            x-on:closeglobalsearch="
+            x-on:openglobalsearch-window="
+                isOpen = true
+                document.body.style.overflowY='hidden'
+                if (!$event.detail.isFromQuery) {
+                    $dispatch('focusglobalsearch')
+                }
+            "
+            x-on:closeglobalsearch-window="
                 isOpen = false
                 $refs.searchInput.blur()
-                $refs.searchInput.value = ''
+                searchInput = ''
                 document.body.style.overflowY='auto'
             "
             x-init="
@@ -264,7 +274,7 @@ pub fn global_search(props: GlobalSearchProps) -> Markup {
                     const querySearch = new URLSearchParams(window.location.search).get('global-search')
                     if (querySearch) {
                         searchInput = querySearch
-                        $dispatch('openglobalsearch')
+                        $dispatch('openglobalsearch', { isFromQuery: true })
                     }
                 })
             "
@@ -285,7 +295,7 @@ pub fn global_search(props: GlobalSearchProps) -> Markup {
                         x-show="isOpen"
                         x-model="searchInput"
                         x-on:keydown-enter="$el.blur()"
-                        placeholder="SEARCH ME"
+                        placeholder="CLICK TO SEARCH"
                         hx-get=[props.input_options.url]
                         hx-trigger=[props.input_options.trigger]
                         hx-swap=[props.input_options.swap]
