@@ -1,20 +1,11 @@
 use maud::{html, Markup, PreEscaped};
 
 const CSS: &'static str = include_str!("../refresh.css");
-const JS: &'static str = include_str!("../refresh.js");
 
 fn refresh_css() -> Markup {
     html! {
         style {
             (PreEscaped(CSS))
-        }
-    }
-}
-
-fn refresh_js() -> Markup {
-    html! {
-        script {
-            (PreEscaped(JS))
         }
     }
 }
@@ -25,6 +16,8 @@ fn correct_alpine_directives(markup: Markup) -> Markup {
     let string = string.replace("x-on:keydown-", "x-on:keydown.");
     let string = string.replace("ctrl-k-", "ctrl.k.");
     let string = string.replace("esc-", "esc.");
+    let string = string.replace("window-", "esc.");
+    let string = string.replace("load-", "load.");
     PreEscaped(string)
 }
 
@@ -118,7 +111,6 @@ pub fn layout(props: LayoutProps) -> Markup {
                 // link rel="stylesheet" href=(props.css_src) {}
                 (refresh_css())
                 style { (props.custom_css) }
-                (refresh_js())
             }
             body {
                 (global_search(props.global_search_props))
@@ -251,23 +243,49 @@ pub fn global_search(props: GlobalSearchProps) -> Markup {
     correct_alpine_directives(html! {
         .global-search #global-search
             x-data=(x_data)
-            x-on:keydown-ctrl-k-window="if (!isOpen) { isOpen=true; focusGlobalSearch() }"
-            x-on:keydown-esc-window="if (isOpen) { isOpen=false; clearGlobalSearch() }"
+            x-on:openglobalsearch="
+                isOpen = true
+                document.body.style.overflowY='hidden'
+                setTimeout(() => {
+                    $refs.searchInput.focus() 
+                    const value = $refs.searchInput.value
+                    $refs.searchInput.value = ''
+                    $refs.searchInput.value = value
+                }, 100)
+            "
+            x-on:closeglobalsearch="
+                isOpen = false
+                $refs.searchInput.blur()
+                $refs.searchInput.value = ''
+                document.body.style.overflowY='auto'
+            "
+            x-init="
+                $nextTick(() => {
+                    const querySearch = new URLSearchParams(window.location.search).get('global-search')
+                    if (querySearch) {
+                        searchInput = querySearch
+                        $dispatch('openglobalsearch')
+                    }
+                })
+            "
+            x-on:keydown-ctrl-k-window="if (!isOpen) { $event.preventDefault(); $dispatch('openglobalsearch') }"
+            x-on:keydown-esc-window="if (isOpen) { $dispatch('closeglobalsearch') }"
         {
             .global-search__navbar {
                 .navbar
                     x-bind:class="isOpen ? 'navbar--open' : 'navbar--closed'"
-                    x-on:click="if (!isOpen) { isOpen = true; focusGlobalSearch() }"
+                    x-on:click="if (!isOpen) { $dispatch('openglobalsearch') }"
                 {
                     img.navbar__logo.pixel-art
                         src=(format!("{}/logo.png", props.assets_url))
                         alt="Pastureen" {}
-                    input.navbar__input #global-search-input
+                    input.navbar__input
                         x-cloak
                         x-ref="searchInput"
                         x-show="isOpen"
                         x-model="searchInput"
                         x-on:keydown-enter="$el.blur()"
+                        placeholder="SEARCH ME"
                         hx-get=[props.input_options.url]
                         hx-trigger=[props.input_options.trigger]
                         hx-swap=[props.input_options.swap]
@@ -275,14 +293,14 @@ pub fn global_search(props: GlobalSearchProps) -> Markup {
                         {}
                     .navbar__icon
                         x-cloak
-                        x-on:click-stop="isOpen=false; clearGlobalSearch()"
+                        x-on:click-stop="$dispatch('closeglobalsearch')"
                         x-show="isOpen"
                     {
                         (close_icon_svg())
                     }
                     .navbar__helptext
                         x-cloak
-                        x-on:click-stop="isOpen=false; clearGlobalSearch()"
+                        x-on:click-stop="$dispatch('closeglobalsearch')"
                         x-show="isOpen"
                     {
                        ("ESC")
