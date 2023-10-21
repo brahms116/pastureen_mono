@@ -1,7 +1,9 @@
+use maud::{html, Markup, PreEscaped};
+use refresh::*;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use refresh::*;
-use maud::PreEscaped;
+
+const CSS: &'static str = include_str!("../blog.css");
 
 #[derive(Error, Debug, Clone)]
 pub enum BlogError {
@@ -56,16 +58,54 @@ pub struct Post {
     pub post_html: String,
 }
 
+pub fn render_global_search_results(_query: &str) -> Markup {
+    let default_menu = MenuProps {
+        sections: vec![MenuSectionProps {
+            label: "Search by Category".to_string(),
+            items: vec![
+                MenuItemProps {
+                    label: "Faith".to_string(),
+                    actionable: None,
+                },
+                MenuItemProps {
+                    label: "Tech".to_string(),
+                    actionable: None,
+                },
+                MenuItemProps {
+                    label: "Music".to_string(),
+                    actionable: None,
+                },
+            ],
+        }],
+    };
+
+    html! {
+        .layout-container {
+            .layout {
+                .global-search-results {
+                    (menu(default_menu))
+                }
+            }
+        }
+    }
+}
+
 pub fn render_index_page(config: BlogConfig) -> String {
     let layout_props = LayoutProps {
-        navbar_props: NavbarProps {
-            htmx_url: config.htmx_url,
+        global_search_props: GlobalSearchProps {
             assets_url: config.assets_url,
             state: NavbarState::Closed,
+            input_options: HtmxOptions {
+                trigger: Some("keyup changed delay:100ms".to_string()),
+                target: Some("global-search__body".to_string()),
+                url: Some("/search".to_string()),
+                swap: Some("innerHTML".to_string()),
+            },
+            search_body: render_global_search_results(""),
         },
         body: PreEscaped("".to_string()),
         css_src: "".to_string(),
-        custom_css: PreEscaped("".to_string()),
+        custom_css: PreEscaped(CSS.to_string()),
         title: "Pastureen".to_string(),
     };
 

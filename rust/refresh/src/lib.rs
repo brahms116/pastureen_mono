@@ -23,6 +23,8 @@ fn correct_alpine_directives(markup: Markup) -> Markup {
     let string = markup.into_string();
     let string = string.replace("x-on:click-", "x-on:click.");
     let string = string.replace("x-on:keydown-", "x-on:keydown.");
+    let string = string.replace("ctrl-k-", "ctrl.k.");
+    let string = string.replace("esc-", "esc.");
     PreEscaped(string)
 }
 
@@ -67,15 +69,28 @@ fn alpinejs() -> Markup {
     }
 }
 
+pub struct HtmxOptions {
+    pub target: Option<String>,
+    pub url: Option<String>,
+    pub swap: Option<String>,
+    pub trigger: Option<String>,
+}
+
+pub enum Actionable {
+    Link(String),
+    Htmx(HtmxOptions),
+}
+
 pub enum NavbarState {
     Open { search_input: String },
     Closed,
 }
 
-pub struct NavbarProps {
-    pub htmx_url: String,
+pub struct GlobalSearchProps {
     pub assets_url: String,
     pub state: NavbarState,
+    pub input_options: HtmxOptions,
+    pub search_body: Markup,
 }
 
 pub struct LayoutProps {
@@ -83,7 +98,7 @@ pub struct LayoutProps {
     pub css_src: String,
     pub custom_css: Markup,
     pub body: Markup,
-    pub navbar_props: NavbarProps,
+    pub global_search_props: GlobalSearchProps,
 }
 
 pub fn layout(props: LayoutProps) -> Markup {
@@ -106,7 +121,7 @@ pub fn layout(props: LayoutProps) -> Markup {
                 (refresh_js())
             }
             body {
-                (navbar(props.navbar_props))
+                (global_search(props.global_search_props))
                 div
                     id="navbar-open-target"
                 {}
@@ -154,32 +169,73 @@ fn close_icon_svg() -> Markup {
     }
 }
 
-pub struct SearchComponentProps {
-    pub search_body: Markup,
-    pub search_input_str: String,
-    pub htmx_url: String,
-    pub assets_url: String,
+pub struct MenuProps {
+    pub sections: Vec<MenuSectionProps>,
 }
 
-pub fn search_component(props: SearchComponentProps) -> Markup {
+pub struct MenuItemProps {
+    pub label: String,
+    pub actionable: Option<Actionable>,
+}
 
-    let navbar_props = NavbarProps {
-        htmx_url: props.htmx_url.clone(),
-        assets_url: props.assets_url.clone(),
-        state: NavbarState::Open {
-            search_input: props.search_input_str.clone(),
-        },
-    };
+pub struct MenuSectionProps {
+    pub label: String,
+    pub items: Vec<MenuItemProps>,
+}
 
+pub fn menu_item(props: MenuItemProps) -> Markup {
     html! {
-        .search_component {
-            (navbar(navbar_props))
-            (props.search_body)
+        @match props.actionable {
+            Some(Actionable::Link(url)) =>
+            .menu-item {
+                a href=(url) {
+                    (props.label)
+                }
+            },
+            Some(Actionable::Htmx(options)) =>
+            .menu-item
+                hx-get=[options.url]
+                hx-trigger=[options.trigger]
+                hx-swap=[options.swap]
+            {
+                (props.label)
+            },
+            None => 
+            .menu-item {
+                (props.label)
+            },
         }
     }
 }
 
-pub fn navbar(props: NavbarProps) -> Markup {
+pub fn menu_section(props: MenuSectionProps) -> Markup {
+    html! {
+        .menu-section {
+            .menu-section__label {
+                (props.label)
+            }
+            .menu-section__items {
+                @for item in props.items {
+                    (menu_item(item))
+                }
+            }
+        }
+    }
+}
+
+pub fn menu(props: MenuProps) -> Markup {
+    html! {
+        .menu {
+            .menu__secitons {
+                @for section in props.sections {
+                    (menu_section(section))
+                }
+            } 
+        }
+    }
+}
+
+pub fn global_search(props: GlobalSearchProps) -> Markup {
     let search_input = match &props.state {
         NavbarState::Open { search_input } => search_input.clone(),
         NavbarState::Closed => "".to_string(),
@@ -190,60 +246,68 @@ pub fn navbar(props: NavbarProps) -> Markup {
         NavbarState::Closed => false,
     };
 
-
     let x_data = format!("{{ isOpen: {}, searchInput: '{}' }}", is_open, search_input);
 
-
     correct_alpine_directives(html! {
-        div 
+        .global-search #global-search
             x-data=(x_data)
+            x-on:keydown-ctrl-k-window="if (!isOpen) { isOpen=true; focusGlobalSearch() }"
+            x-on:keydown-esc-window="if (isOpen) { isOpen=false; clearGlobalSearch() }"
         {
-            .navbar
-                x-bind:class="isOpen ? 'navbar--open' : 'navbar--closed'"
-                x-on:click="if (!isOpen) { isOpen = true; focusGlobalSearch() }"
-            {
-                img.navbar__logo.pixel-art
-                    src=(format!("{}/logo.png", props.assets_url))
-                    alt="Pastureen" {}
-                input.navbar__input #global-search-input
-                    x-cloak
-                    x-ref="searchInput"
-                    x-show="isOpen"
-                    x-model="searchInput"
-                    type="text"
-                    {}
-                .navbar__icon
-                    x-cloak
-                    x-on:click-stop="isOpen=false; clearGlobalSearch()"
-                    x-show="isOpen"
+            .global-search__navbar {
+                .navbar
+                    x-bind:class="isOpen ? 'navbar--open' : 'navbar--closed'"
+                    x-on:click="if (!isOpen) { isOpen = true; focusGlobalSearch() }"
                 {
-                    (close_icon_svg())
-                }
-                .navbar__helptext
-                    x-cloak
-                    x-on:click-stop="isOpen=false; clearGlobalSearch()"
-                    x-show="isOpen"
-                {
-                   ("ESC")
-                }
-                .navbar__input 
-                    x-show="!isOpen" {}
-                .navbar__icon 
-                    x-show="!isOpen"
-                {
-                    (search_icon_svg())
-                }
-                .navbar__helptext
-                    x-show="!isOpen"
-                {
-                   ("CMD+K")
+                    img.navbar__logo.pixel-art
+                        src=(format!("{}/logo.png", props.assets_url))
+                        alt="Pastureen" {}
+                    input.navbar__input #global-search-input
+                        x-cloak
+                        x-ref="searchInput"
+                        x-show="isOpen"
+                        x-model="searchInput"
+                        x-on:keydown-enter="$el.blur()"
+                        hx-get=[props.input_options.url]
+                        hx-trigger=[props.input_options.trigger]
+                        hx-swap=[props.input_options.swap]
+                        type="text"
+                        {}
+                    .navbar__icon
+                        x-cloak
+                        x-on:click-stop="isOpen=false; clearGlobalSearch()"
+                        x-show="isOpen"
+                    {
+                        (close_icon_svg())
+                    }
+                    .navbar__helptext
+                        x-cloak
+                        x-on:click-stop="isOpen=false; clearGlobalSearch()"
+                        x-show="isOpen"
+                    {
+                       ("ESC")
+                    }
+                    .navbar__input
+                        x-show="!isOpen" {}
+                    .navbar__icon
+                        x-show="!isOpen"
+                    {
+                        (search_icon_svg())
+                    }
+                    .navbar__helptext
+                        x-show="!isOpen"
+                    {
+                       ("CTRL+K")
+                    }
                 }
             }
-            .global-search 
+            .global-search__body
                 x-cloak
                 x-show="isOpen"
                 x-transition
-            {}
+            {
+                (props.search_body)
+            }
         }
     })
 }
