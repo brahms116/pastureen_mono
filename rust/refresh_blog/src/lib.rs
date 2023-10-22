@@ -58,7 +58,7 @@ pub struct Post {
     pub post_html: String,
 }
 
-pub fn render_global_search_results(_query: &str) -> Markup {
+pub fn render_global_search_results() -> Markup {
     let dummy_list = ListProps {
         items: vec![
             ListItemProps {
@@ -261,7 +261,7 @@ pub fn render_index_page(config: BlogConfig) -> String {
                 url: Some(HtmxUrl::Post("/search".to_string())),
                 swap: Some("innerHTML".to_string()),
             },
-            search_body: render_global_search_results(""),
+            search_body: render_global_search_results(),
         },
         body: index_body(IndexBodyProps {
             base_url: config.base_url,
@@ -334,7 +334,7 @@ pub fn render_post_page(config: BlogConfig, props: PostProps) -> String {
                 url: Some(HtmxUrl::Post("/search".to_string())),
                 swap: Some("innerHTML".to_string()),
             },
-            search_body: render_global_search_results(""),
+            search_body: render_global_search_results(),
         },
         body: render_post_body(body_props),
         css_src: "".to_string(),

@@ -28,3 +28,6 @@ type QueryLinksRequest struct {
 type QueryLinksResponse struct {
 	Links []Link `json:"links"`
 }
+
+type CreateNewPostRequest struct {
+}
