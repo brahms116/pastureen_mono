@@ -8,6 +8,8 @@
   --navbar-color: #212529;
   --bg-highlight-color: #25292D;
   --paragraph-color: #BEBEBE;
+  --button-color: #EBF0F5;
+  --button-hover-color: #DFF3CD;
 }
 
 html {
@@ -80,9 +82,6 @@ select {
   padding: 0 2rem;
 }
 
-.navbar.navbar--closed {
-  cursor: pointer;
-}
 
 .navbar__logo {
   height: 2.875rem;
@@ -90,40 +89,52 @@ select {
   margin-right: 1rem;
 }
 
-.navbar__input {
+.navbar__body {
+  flex: 1;
+  height: 100%;
+}
+
+.navbar-body {
+  cursor: pointer;
+  display: flex;
+  flex: 1;
+  align-items: center;
+}
+
+.navbar-body__input {
   flex: 1;
   font-size: 1rem;
   color: var(--text-color);
 }
 
-.navbar__input::placeholder {
+.navbar-body__input::placeholder {
   color: var(--text-subdued-color);
 }
 
-.navbar__icon {
+.navbar-body__icon {
   width: 1.5rem;
   height: 1.5rem;
   stroke: var(--accent-color);
 }
 
-.navbar__helptext {
+.navbar-body__helptext {
   color: var(--text-color);
   font-size: 1rem;
   margin-left: 0.5rem;
   display: none
 }
 
-.navbar.navbar--open .navbar__helptext,
-.navbar.navbar--open .navbar__icon {
+.navbar-body__helptext,
+.navbar-body__icon {
   cursor: pointer;
 }
 
-.navbar:hover .navbar__icon {
+.navbar-body__icon:hover {
   stroke: var(--accent-hightlight-color);
 }
 
 @media (min-width: 1024px) {
-  .navbar__helptext {
+  .navbar-body__helptext {
     display: block;
   }
 }
@@ -179,4 +190,24 @@ select {
   background: var(--bg-highlight-color);
 }
 
+.button {
+  cursor: pointer;
+  padding: 1rem 3rem;
+  text-transform: uppercase;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--button-color);
+  border: 1px solid var(--button-color);
+  border-radius: 0.25rem;
+}
+
+.button--small {
+  padding: 0.5rem 1.5rem;
+  font-size: 0.75rem;
+}
+
+.button:hover {
+  color: var(--button-hover-color);
+  border: 1px solid var(--button-hover-color);
+}
 

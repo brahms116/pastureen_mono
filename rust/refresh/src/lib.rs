@@ -60,9 +60,55 @@ fn alpinejs() -> Markup {
     }
 }
 
+pub enum HtmxUrl {
+    Get(String),
+    Post(String),
+    Put(String),
+    Delete(String),
+}
+
+#[derive(Default)]
+pub struct DerivedHtmxUrls {
+    pub get: Option<String>,
+    pub post: Option<String>,
+    pub put: Option<String>,
+    pub delete: Option<String>,
+}
+
+impl From<HtmxUrl> for DerivedHtmxUrls {
+    fn from(url: HtmxUrl) -> Self {
+        match url {
+            HtmxUrl::Get(url) => Self {
+                get: Some(url),
+                post: None,
+                put: None,
+                delete: None,
+            },
+            HtmxUrl::Post(url) => Self {
+                get: None,
+                post: Some(url),
+                put: None,
+                delete: None,
+            },
+            HtmxUrl::Put(url) => Self {
+                get: None,
+                post: None,
+                put: Some(url),
+                delete: None,
+            },
+            HtmxUrl::Delete(url) => Self {
+                get: None,
+                post: None,
+                put: None,
+                delete: Some(url),
+            },
+        }
+    }
+}
+
 pub struct HtmxOptions {
     pub target: Option<String>,
-    pub url: Option<String>,
+    pub url: Option<HtmxUrl>,
     pub swap: Option<String>,
     pub trigger: Option<String>,
 }
@@ -79,6 +125,7 @@ pub enum NavbarState {
 }
 
 pub struct GlobalSearchProps {
+    pub base_url: String,
     pub assets_url: String,
     pub state: NavbarState,
     pub input_options: HtmxOptions,
@@ -174,6 +221,27 @@ pub struct MenuSectionProps {
     pub items: Vec<MenuItemProps>,
 }
 
+fn htmx_menu_item(options: HtmxOptions, label: &str) -> Markup {
+    let derived_urls = options
+        .url
+        .map(|url| DerivedHtmxUrls::from(url))
+        .unwrap_or_default();
+
+    html! {
+        .menu-item
+            hx-get=[derived_urls.get]
+            hx-post=[derived_urls.post]
+            hx-put=[derived_urls.put]
+            hx-delete=[derived_urls.delete]
+            hx-trigger=[options.trigger]
+            hx-swap=[options.swap]
+            hx-target=[options.target]
+        {
+            (label)
+        }
+    }
+}
+
 pub fn menu_item(props: MenuItemProps) -> Markup {
     html! {
         @match props.actionable {
@@ -189,15 +257,8 @@ pub fn menu_item(props: MenuItemProps) -> Markup {
             {
                 (props.label)
             },
-            Some(Actionable::Htmx(options)) =>
-            .menu-item
-                hx-get=[options.url]
-                hx-trigger=[options.trigger]
-                hx-swap=[options.swap]
-            {
-                (props.label)
-            },
-            None => 
+            Some(Actionable::Htmx(options)) => (htmx_menu_item(options, &props.label)),
+            None =>
             .menu-item {
                 (props.label)
             },
@@ -227,7 +288,7 @@ pub fn menu(props: MenuProps) -> Markup {
                 @for section in props.sections {
                     (menu_section(section))
                 }
-            } 
+            }
         }
     }
 }
@@ -244,6 +305,12 @@ pub fn global_search(props: GlobalSearchProps) -> Markup {
     };
 
     let x_data = format!("{{ isOpen: {}, searchInput: '{}' }}", is_open, search_input);
+
+    let derived_htmx_urls = props
+        .input_options
+        .url
+        .map(|url| DerivedHtmxUrls::from(url))
+        .unwrap_or_default();
 
     correct_alpine_directives(html! {
         .global-search #global-search
@@ -284,49 +351,54 @@ pub fn global_search(props: GlobalSearchProps) -> Markup {
             .global-search__navbar {
                 .navbar
                     x-bind:class="isOpen ? 'navbar--open' : 'navbar--closed'"
-                    x-on:click="if (!isOpen) { $dispatch('openglobalsearch') }"
                 {
-                    img.navbar__logo.pixel-art
-                        src=(format!("{}/logo.png", props.assets_url))
-                        alt="Pastureen" {}
-                    input.navbar__input
-                        x-cloak
-                        x-ref="searchInput"
-                        x-show="isOpen"
-                        x-model="searchInput"
-                        x-on:keydown-enter="$el.blur()"
-                        placeholder="CLICK TO SEARCH"
-                        hx-get=[props.input_options.url]
-                        hx-trigger=[props.input_options.trigger]
-                        hx-swap=[props.input_options.swap]
-                        type="text"
-                        {}
-                    .navbar__icon
-                        x-cloak
-                        x-on:click-stop="$dispatch('closeglobalsearch')"
-                        x-show="isOpen"
-                    {
-                        (close_icon_svg())
+                    a href=(props.base_url) {
+                        img.navbar__logo.pixel-art
+                            src=(format!("{}/logo.png", props.assets_url))
+                            alt="Pastureen" {}
                     }
-                    .navbar__helptext
-                        x-cloak
-                        x-on:click-stop="$dispatch('closeglobalsearch')"
-                        x-show="isOpen"
+                    .navbar__body.navbar-body
+                            x-on:click="if (!isOpen) { $dispatch('openglobalsearch') }"
                     {
-                       ("ESC")
+                        input.navbar-body__input
+                            x-ref="searchInput"
+                            x-model="searchInput"
+                            x-on:keydown-enter="$el.blur()"
+                            placeholder="CLICK TO SEARCH"
+                            hx-post=[derived_htmx_urls.post]
+                            hx-get=[derived_htmx_urls.get]
+                            hx-put=[derived_htmx_urls.put]
+                            hx-delete=[derived_htmx_urls.delete]
+                            hx-trigger=[props.input_options.trigger]
+                            hx-swap=[props.input_options.swap]
+                            type="text"
+                            {}
+                        .navbar-body__icon
+                            x-cloak
+                            x-on:click-stop="$dispatch('closeglobalsearch')"
+                            x-show="isOpen"
+                        {
+                            (close_icon_svg())
+                        }
+                        .navbar-body__helptext
+                            x-cloak
+                            x-on:click-stop="$dispatch('closeglobalsearch')"
+                            x-show="isOpen"
+                        {
+                           ("ESC")
+                        }
+                        .navbar-body__icon
+                            x-show="!isOpen"
+                        {
+                            (search_icon_svg())
+                        }
+                        .navbar-body__helptext
+                            x-show="!isOpen"
+                        {
+                           ("CTRL+K")
+                        }    
                     }
-                    .navbar__input
-                        x-show="!isOpen" {}
-                    .navbar__icon
-                        x-show="!isOpen"
-                    {
-                        (search_icon_svg())
-                    }
-                    .navbar__helptext
-                        x-show="!isOpen"
-                    {
-                       ("CTRL+K")
-                    }
+                    
                 }
             }
             .global-search__body
