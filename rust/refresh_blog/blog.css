@@ -2,6 +2,14 @@
   margin-top: 1rem;
 }
 
+.global-search-results__suggestions {
+  margin-bottom: 2rem;
+}
+
+.global-search-result-items__heading {
+  margin-top: 2rem;
+}
+
 .index-page {
   overflow-x: hidden;
   margin-bottom: 10rem;
@@ -81,3 +89,4 @@
 .index-page__pastureen {
   margin-top: 10rem;
 }
+

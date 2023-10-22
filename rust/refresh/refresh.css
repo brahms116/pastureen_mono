@@ -217,6 +217,36 @@ select {
   border: 1px solid var(--button-hover-color);
 }
 
+.heading {
+  text-transform: uppercase;
+  color: var(--text-color);
+  padding: 0 2rem;
+}
+
+.heading::after {
+  content: '';
+  display: inline-flex;
+  margin-left: 0.5rem;
+  height: 0.5rem;
+  width: 0.5rem;
+  background: var(--accent-color);
+}
+
+.heading--lg {
+  font-size: 3rem;
+}
+
+.heading--md {
+  font-size: 2rem;
+}
+
+.heading--sm {
+  font-size: 1.5rem;
+}
+
+.prose {
+  padding: 0 2rem;
+}
 
 .prose h1 {
   text-transform: uppercase;
@@ -261,3 +291,61 @@ select {
 .prose .button {
   display: inline-flex;
 }
+
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.list-item {
+  width: 100%;
+  padding: 3rem 2rem;
+}
+
+.list-item__title {
+  color: var(--text-color);
+  font-size: 1.125rem;
+  margin-bottom: 0.875rem;
+  text-transform: uppercase;
+}
+
+.list-item__subtitle {
+  color: var(--text-subdued-color);
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+}
+
+.list-item__tertiary {
+  color: var(--text-subdued-color);
+  font-size: 0.875rem;
+}
+
+.list-item:hover {
+  background: var(--bg-highlight-color);
+}
+
+
+.loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 2rem;
+  width: 100%;
+  color: var(--text-subdued-color);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}
+

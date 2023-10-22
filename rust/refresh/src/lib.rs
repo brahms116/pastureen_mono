@@ -60,6 +60,32 @@ fn alpinejs() -> Markup {
     }
 }
 
+pub struct LoaderProps {
+    pub text: String,
+    pub htmx_options: HtmxOptions,
+}
+
+pub fn loader(props: LoaderProps) -> Markup {
+    let derived_urls = props
+        .htmx_options
+        .url
+        .map(|url| DerivedHtmxUrls::from(url))
+        .unwrap_or_default();
+    html! {
+        .loader
+            hx-get=[derived_urls.get]
+            hx-post=[derived_urls.post]
+            hx-put=[derived_urls.put]
+            hx-delete=[derived_urls.delete]
+            hx-trigger=[props.htmx_options.trigger]
+            hx-swap=[props.htmx_options.swap]
+            hx-target=[props.htmx_options.target]
+        {
+            (props.text)
+        }
+    }
+}
+
 pub enum HtmxUrl {
     Get(String),
     Post(String),
@@ -219,6 +245,103 @@ pub struct MenuItemProps {
 pub struct MenuSectionProps {
     pub label: String,
     pub items: Vec<MenuItemProps>,
+}
+
+pub struct ListItemProps {
+    pub title: String,
+    pub subtitle: String,
+    pub tertiary: String,
+    pub actionable: Option<Actionable>,
+}
+
+pub struct ListProps {
+    pub items: Vec<ListItemProps>,
+}
+
+fn htmx_list_item(options: HtmxOptions, title: &str, subtitle: &str, tertiary: &str) -> Markup {
+    let derived_urls = options
+        .url
+        .map(|url| DerivedHtmxUrls::from(url))
+        .unwrap_or_default();
+
+    html! {
+        .list-item
+            hx-get=[derived_urls.get]
+            hx-post=[derived_urls.post]
+            hx-put=[derived_urls.put]
+            hx-delete=[derived_urls.delete]
+            hx-trigger=[options.trigger]
+            hx-swap=[options.swap]
+            hx-target=[options.target]
+        {
+            .list-item__title {
+                (title)
+            }
+            .list-item__subtitle {
+                (subtitle)
+            }
+            .list-item__tertiary {
+                (tertiary)
+            }
+        }
+    }
+}
+
+pub fn list_item(props: ListItemProps) -> Markup {
+    html! {
+        @match props.actionable {
+            Some(Actionable::Link(url)) =>
+            a.list-item href=(url) {
+                .list-item__title {
+                    (props.title)
+                }
+                .list-item__subtitle {
+                    (props.subtitle)
+                }
+                .list-item__tertiary {
+                    (props.tertiary)
+                }
+            },
+            Some(Actionable::Alpine(options)) =>
+            .list-item
+                x-on:click=(options)
+            {
+                .list-item__title {
+                    (props.title)
+                }
+                .list-item__subtitle {
+                    (props.subtitle)
+                }
+                .list-item__tertiary {
+                    (props.tertiary)
+                }
+            },
+            Some(Actionable::Htmx(options)) =>
+            (htmx_list_item(options, &props.title, &props.subtitle, &props.tertiary)),
+            None =>
+            .list-item {
+                .list-item__title {
+                    (props.title)
+                }
+                .list-item__subtitle {
+                    (props.subtitle)
+                }
+                .list-item__tertiary {
+                    (props.tertiary)
+                }
+            },
+        }
+    }
+}
+
+pub fn list(props: ListProps) -> Markup {
+    html! {
+        .list {
+            @for item in props.items {
+                (list_item(item))
+            }
+        }
+    }
 }
 
 fn htmx_menu_item(options: HtmxOptions, label: &str) -> Markup {
@@ -396,12 +519,12 @@ pub fn global_search(props: GlobalSearchProps) -> Markup {
                             x-show="!isOpen"
                         {
                            ("CTRL+K")
-                        }    
+                        }
                     }
-                    
+
                 }
             }
-            .global-search__body
+            .global-search__body #global-search-body
                 x-cloak
                 x-show="isOpen"
                 x-transition

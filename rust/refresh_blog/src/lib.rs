@@ -59,6 +59,25 @@ pub struct Post {
 }
 
 pub fn render_global_search_results(_query: &str) -> Markup {
+    let dummy_list = ListProps {
+        items: vec![
+            ListItemProps {
+                title: "Github Profile".to_string(),
+                subtitle: "github.com/brahms116".to_string(),
+                tertiary: "#GITHUB #LINK".to_string(),
+                actionable: Some(Actionable::Link("https://github.com/brahms116".to_string())),
+            },
+            ListItemProps {
+                title: "Linkedin Profile".to_string(),
+                subtitle: "linkedin.com/in/david-kwong-a4323b206/".to_string(),
+                tertiary: "#LINKEDIN #LINK".to_string(),
+                actionable: Some(Actionable::Link(
+                    "https://www.linkedin.com/in/david-kwong-a4323b206/".to_string(),
+                )),
+            },
+        ],
+    };
+
     let default_menu = MenuProps {
         sections: vec![MenuSectionProps {
             label: "Common search tags".to_string(),
@@ -101,7 +120,24 @@ pub fn render_global_search_results(_query: &str) -> Markup {
         .layout-container {
             .layout {
                 .global-search-results {
-                    (menu(default_menu))
+                    .global-search-results__suggestions {
+                        (menu(default_menu))
+                    }
+                    .global-search-results__items
+                    .global-search-result-items {
+                        .global-search-result-items__heading {
+                            .heading
+                            .heading--md {
+                                "Links"
+                            }
+                        }
+                        .global-search-result-items__list {
+                            (list(dummy_list))
+                            .loader {
+                                "loading..."
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -154,7 +190,7 @@ struct IndexBodyProps {
 
 fn index_body(props: IndexBodyProps) -> Markup {
     html! {
-        .index-page 
+        .index-page
             x-data
         {
             .index-page__landing.index-page-landing {
@@ -205,7 +241,7 @@ fn index_body(props: IndexBodyProps) -> Markup {
                         {
                             "Search me"
                         }
-                        
+
                     }
                 }
             }
@@ -220,7 +256,7 @@ pub fn render_index_page(config: BlogConfig) -> String {
             assets_url: config.assets_url.clone(),
             state: NavbarState::Closed,
             input_options: HtmxOptions {
-                trigger: Some("keyup changed delay:100ms".to_string()),
+                trigger: Some("focus, keyup changed delay:100ms".to_string()),
                 target: Some("global-search__body".to_string()),
                 url: Some(HtmxUrl::Post("/search".to_string())),
                 swap: Some("innerHTML".to_string()),
