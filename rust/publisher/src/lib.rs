@@ -1,4 +1,4 @@
-use blog::*;
+use refresh_blog::*;
 use markdown::{mdast::Node, to_html_with_options, to_mdast, Constructs, Options, ParseOptions};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;

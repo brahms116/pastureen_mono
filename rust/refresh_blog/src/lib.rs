@@ -274,3 +274,79 @@ pub fn render_index_page(config: BlogConfig) -> String {
 
     layout(layout_props).into_string()
 }
+
+struct PostBodyProps<'a> {
+    pub content_html: &'a str,
+    pub title: &'a str,
+    pub date: &'a str,
+    pub tags: &'a [&'a str],
+}
+
+fn render_post_body(props: PostBodyProps) -> Markup {
+    let mut tags_str = String::new();
+    for (i, tag) in props.tags.iter().enumerate() {
+        tags_str.push_str("#");
+        tags_str.push_str(tag);
+        if i != props.tags.len() - 1 {
+            tags_str.push_str(" ");
+        }
+    }
+
+    html! {
+        .layout-container{
+            .layout{
+                .post.prose{
+                    h1.post__title { (props.title) }
+                    h3.post__date { (props.date) }
+                    .post__tags {
+                        (tags_str)
+                    }
+                    .post__content {
+                        (PreEscaped(props.content_html))
+                    }
+                }
+            }
+        }
+    }
+}
+
+pub fn render_post_page(config: BlogConfig, props: PostProps) -> String {
+    let body_props = PostBodyProps {
+        content_html: &props.post_content_html,
+        title: &props.meta.title,
+        date: &props.meta.date,
+        tags: &props
+            .meta
+            .tags
+            .iter()
+            .map(|s| s.as_str())
+            .collect::<Vec<&str>>(),
+    };
+
+    let layout_props = LayoutProps {
+        global_search_props: GlobalSearchProps {
+            base_url: config.base_url.clone(),
+            assets_url: config.assets_url.clone(),
+            state: NavbarState::Closed,
+            input_options: HtmxOptions {
+                trigger: Some("focus, keyup changed delay:100ms".to_string()),
+                target: Some("global-search__body".to_string()),
+                url: Some(HtmxUrl::Post("/search".to_string())),
+                swap: Some("innerHTML".to_string()),
+            },
+            search_body: render_global_search_results(""),
+        },
+        body: render_post_body(body_props),
+        css_src: "".to_string(),
+        custom_css: PreEscaped(CSS.to_string()),
+        title: props.meta.title,
+    };
+
+    layout(layout_props).into_string()
+}
+
+pub fn render_post(page_config: BlogConfig, props: PostProps) -> Post {
+    let meta = props.meta.clone();
+    let post_html = render_post_page(page_config, props);
+    Post { meta, post_html }
+}
