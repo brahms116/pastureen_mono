@@ -149,6 +149,7 @@ pub fn email_svg() -> Markup {
 
 struct IndexBodyProps {
     assets_url: String,
+    base_url: String,
 }
 
 fn index_body(props: IndexBodyProps) -> Markup {
@@ -169,10 +170,10 @@ fn index_body(props: IndexBodyProps) -> Markup {
                     h4.index-splash__subtitle {
                         "David's Blog"
                     }
-                    .button.button--small
-                        x-on:click="$dispatch('openglobalsearch')"
+                    a.button.button--small
+                        href=(format!("{}#pastureen", props.base_url))
                     {
-                        "See Posts"
+                        "What is this?"
                     }
                 }
                 .index-page-landing__footer.index-socials {
@@ -184,6 +185,27 @@ fn index_body(props: IndexBodyProps) -> Markup {
                     }
                     a href="https://www.linkedin.com/in/david-kwong-a4323b206/" {
                         (linkedin_svg())
+                    }
+                }
+            }
+            .index-page__pastureen.prose {
+                .layout-container {
+                    .layout {
+                        h2 #pastureen {
+                            "Pastureen"
+                        }
+                        p {
+                            "Pastureen is a mix-mash of the words \"pasture\" and \"green\".
+                            It comes from Psalm 23 in the Bible.
+                            As I live my life out, build my projects and technologies, I hope to do so resting peacefully amongst green pastures God, my Shepherd, has provided for me.
+                            Pastureen is a creative outlet for me to share my journey and ideas about technologies, faith and other various facets of my life."
+                        }
+                        .button
+                            x-on:click="$dispatch('openglobalsearch')"
+                        {
+                            "Search me"
+                        }
+                        
                     }
                 }
             }
@@ -206,6 +228,7 @@ pub fn render_index_page(config: BlogConfig) -> String {
             search_body: render_global_search_results(""),
         },
         body: index_body(IndexBodyProps {
+            base_url: config.base_url,
             assets_url: config.assets_url,
         }),
         css_src: "".to_string(),

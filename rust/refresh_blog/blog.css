@@ -4,6 +4,7 @@
 
 .index-page {
   overflow-x: hidden;
+  margin-bottom: 10rem;
 }
 
 .index-page__landing {
@@ -75,4 +76,8 @@
   width: 1.5rem;
   height: 1.5rem;
   fill: var(--text-subdued-color);
+}
+
+.index-page__pastureen {
+  margin-top: 10rem;
 }
