@@ -1,5 +1,9 @@
 package models
 
+import (
+  blogModels "pastureen/blog-models"
+)
+
 type Link struct {
 	Id          string   `json:"id"`
 	Title       string   `json:"title"`
@@ -7,8 +11,8 @@ type Link struct {
 	Url         string   `json:"url"`
 	Subtitle    string   `json:"subtitle"`
 	Description string   `json:"description"`
-	ImageUrl    string   `json:"imageUrl"`
-	ImageAlt    string   `json:"imageAlt"`
+	ImageUrl    string   `json:"imageUrl,omitempty"`
+	ImageAlt    string   `json:"imageAlt,omitempty"`
 	Tags        []string `json:"tags"`
 }
 
@@ -30,4 +34,5 @@ type QueryLinksResponse struct {
 }
 
 type CreateNewPostRequest struct {
+  Post blogModels.Post `json:"post"`
 }

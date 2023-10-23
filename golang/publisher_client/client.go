@@ -6,9 +6,10 @@ import (
 	"pastureen/http-utils"
   "encoding/json"
   "io"
+  blogModels "pastureen/blog-models"
 )
 
-func Generate(endpoint string, accessToken string, generatePostReq models.GeneratePostRequest) (models.Post, error) {
+func Generate(endpoint string, accessToken string, generatePostReq models.GeneratePostRequest) (blogModels.Post, error) {
 
   read, write := io.Pipe()
 
@@ -21,14 +22,14 @@ func Generate(endpoint string, accessToken string, generatePostReq models.Genera
 
 	request, err := http.NewRequest("POST", endpoint, read)
 	if err != nil {
-		return models.Post{}, err
+		return blogModels.Post{}, err
 	}
 	request.Header.Set("Authorization", "Bearer "+accessToken)
   request.Header.Set("Content-Type", "application/json")
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
-		return models.Post{}, err
+		return blogModels.Post{}, err
 	}
 
 	var postResponse models.GeneratePostResponse
