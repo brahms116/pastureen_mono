@@ -449,6 +449,9 @@ pub fn global_search(props: GlobalSearchProps) -> Markup {
             x-on:openglobalsearch-window="
                 isOpen = true
                 document.body.style.overflowY='hidden'
+                if ($event.detail.searchInput) {
+                    searchInput = $event.detail.searchInput
+                }
                 if (!$event.detail.isFromQuery) {
                     $dispatch('focusglobalsearch')
                 }
