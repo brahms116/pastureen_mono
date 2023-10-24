@@ -10,11 +10,15 @@ import (
 
 type LibrarianConfig struct {
 	DbConnectionStr string
+  BlogBucketName string
+  BlogUrl string
 }
 
 func ConfigFromEnv() LibrarianConfig {
 	return LibrarianConfig{
 		DbConnectionStr: os.Getenv("LIBRARIAN_DB_CONN_STR"),
+		BlogBucketName: os.Getenv("LIBRARIAN_BLOG_BUCKET_NAME"),
+    BlogUrl: os.Getenv("LIBRARIAN_BLOG_URL"),
 	}
 }
 

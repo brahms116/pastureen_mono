@@ -16,6 +16,17 @@ type Link struct {
 	Tags        []string `json:"tags"`
 }
 
+type CreateLinkParams struct {
+	Title       string   `json:"title"`
+	Date        string   `json:"date"`
+	Url         string   `json:"url"`
+	Subtitle    string   `json:"subtitle"`
+	Description string   `json:"description"`
+	ImageUrl    string   `json:"imageUrl,omitempty"`
+	ImageAlt    string   `json:"imageAlt,omitempty"`
+	Tags        []string `json:"tags"`
+}
+
 type PaginationRequest struct {
 	Page  int `json:"page"`
 	Limit int `json:"limit"`

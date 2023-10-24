@@ -110,7 +110,7 @@ func DeleteLink(id uuid.UUID, client *ent.Client, ctx context.Context) error {
 	return err
 }
 
-func PepareDbLink(link models.Link, client *ent.Client, ctx context.Context) (*ent.DbLinkCreate, error) {
+func PrepareDbLink(createLinkParams models.CreateLinkParams, client *ent.Client, ctx context.Context) (*ent.DbLinkCreate, error) {
 
 	// Find all the existingDbTags
 	existingDbTags, err := client.DbTag.Query().All(ctx)
@@ -118,10 +118,10 @@ func PepareDbLink(link models.Link, client *ent.Client, ctx context.Context) (*e
 		return &ent.DbLinkCreate{}, err
 	}
 
-	dbTagsToAssociate := make([]*ent.DbTag, len(link.Tags))
+	dbTagsToAssociate := make([]*ent.DbTag, len(createLinkParams.Tags))
 
 	// Find all the tags
-	for _, tag := range link.Tags {
+	for _, tag := range createLinkParams.Tags {
 		if !containsTag(existingDbTags, tag) {
 			tag, err := client.DbTag.Create().SetID(tag).Save(ctx)
 			if err != nil {
@@ -139,8 +139,8 @@ func PepareDbLink(link models.Link, client *ent.Client, ctx context.Context) (*e
 
 	linkDate := time.Now()
 
-	if link.Date != "" {
-		linkDate, err = time.Parse("2006-01-02", link.Date)
+	if createLinkParams.Date != "" {
+		linkDate, err = time.Parse("2006-01-02", createLinkParams.Date)
 		if err != nil {
 			linkDate = time.Now()
 		}
@@ -149,23 +149,23 @@ func PepareDbLink(link models.Link, client *ent.Client, ctx context.Context) (*e
 	var nillableImageAlt *string = nil
 	var nillableImageUrl *string = nil
 
-	if link.ImageAlt != "" {
-		nillableImageAlt = &link.ImageAlt
+	if createLinkParams.ImageAlt != "" {
+		nillableImageAlt = &createLinkParams.ImageAlt
 	}
 
-	if link.ImageUrl != "" {
-		nillableImageUrl = &link.ImageUrl
+	if createLinkParams.ImageUrl != "" {
+		nillableImageUrl = &createLinkParams.ImageUrl
 	}
 
 	newDbLink := client.DbLink.Create().
 		SetDate(linkDate).
-		SetDescription(link.Description).
-		SetURL(link.Url).
-		SetSubtitle(link.Subtitle).
-		SetTitle(link.Title).
+		SetDescription(createLinkParams.Description).
+		SetURL(createLinkParams.Url).
+		SetSubtitle(createLinkParams.Subtitle).
+		SetTitle(createLinkParams.Title).
 		SetNillableImageAlt(nillableImageAlt).
 		SetNillableImageURL(nillableImageUrl).
 		AddTags(dbTagsToAssociate...)
 
-  return newDbLink, nil
+	return newDbLink, nil
 }
