@@ -34,5 +34,8 @@ func Generate(endpoint string, accessToken string, generatePostReq models.Genera
 
 	var postResponse models.GeneratePostResponse
   err = utils.HandleResponse(response, &postResponse)
+  if err != nil {
+    return blogModels.Post{}, err
+  }
 	return postResponse.GeneratedPost, err
 }
