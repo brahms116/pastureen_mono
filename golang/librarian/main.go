@@ -2,14 +2,15 @@ package main
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
-	_ "github.com/lib/pq"
 	"log"
 	"os"
 	authClient "pastureen/auth-client"
 	models "pastureen/librarian-models"
 	"pastureen/librarian/ent"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
 )
 
 type LibrarianConfig struct {
@@ -48,7 +49,7 @@ func Authenticate(authUrl string, adminEmail string) gin.HandlerFunc {
 			c.AbortWithStatusJSON(403, gin.H{"errorType": "Unauthorized", "message": "User does not have permission to perform this action"})
 		}
 
-    c.Next()
+		c.Next()
 	}
 }
 
@@ -81,7 +82,6 @@ func main() {
 		}
 
 		resultUrl, err := HandlePost(client, &config, &createPostRequest.Post, ctx)
-
 		if err != nil {
 			c.Error(err)
 		} else {
@@ -100,7 +100,6 @@ func main() {
 		}
 
 		result, err := QueryLinks(&queryLinksRequest, client, ctx)
-
 		if err != nil {
 			c.Error(err)
 		} else {

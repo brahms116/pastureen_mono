@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"entgo.io/ent/dialect/sql"
 	"pastureen/librarian-models"
 	"pastureen/librarian/ent"
 	"pastureen/librarian/ent/dblink"
 	"pastureen/librarian/ent/dbtag"
 	"time"
+
+	"entgo.io/ent/dialect/sql"
 )
 
 func DbLinkToModelLink(item *ent.DbLink) models.Link {
@@ -116,7 +117,7 @@ func PrepareDbLink(link models.Link, client *ent.Client, ctx context.Context) (*
 		return &ent.DbLinkCreate{}, err
 	}
 
-	dbTagsToAssociate := make([]*ent.DbTag, len(link.Tags))
+	var dbTagsToAssociate []*ent.DbTag
 
 	// Find all the tags
 	for _, tag := range link.Tags {

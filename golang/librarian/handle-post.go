@@ -11,7 +11,7 @@ func PostToCreateLinkParams(post *blogModels.Post) models.Link {
 	return models.Link{
 		Title: post.PostMeta.Title,
 		Date:  post.PostMeta.Date,
-		Url:   "/post/" + post.PostMeta.Slug,
+		Url:   "/posts/" + post.PostMeta.Slug + ".html",
 		Tags:  post.PostMeta.Tags,
 	}
 }
@@ -34,9 +34,13 @@ func HandlePost(
 	preparedLink, err := PrepareDbLink(linkParams, client, ctx)
 	s3Err := <-errorChan
 
-	if err != nil || s3Err != nil {
+	if err != nil {
 		return "", err
 	}
+
+  if s3Err != nil {
+    return "", s3Err
+  }
 
 	createdDbLink, err := preparedLink.Save(ctx)
 

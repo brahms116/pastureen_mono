@@ -77,8 +77,8 @@ func TestFlow(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if url != "/post/"+randomSlug {
-		t.Fatalf("Expected url to be /post/%s, got %s", randomSlug, url)
+	if url != "/posts/"+randomSlug+".html" {
+		t.Fatalf("Expected url to be /posts/%s.html, got %s", randomSlug, url)
 	}
 	expectedLocation := config.BlogUrl + url
 	confirmReq, err := http.NewRequest("GET", expectedLocation, nil)
