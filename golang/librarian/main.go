@@ -103,7 +103,7 @@ func main() {
 		if err != nil {
 			c.Error(err)
 		} else {
-			c.JSON(200, result)
+			c.JSON(200, models.QueryLinksResponse{Links: result})
 		}
 	})
 

@@ -6,7 +6,22 @@ import (
 	"net/http"
 	librarianModels "pastureen/librarian-models"
   "pastureen/http-utils"
+  "bytes"
 )
+
+func SearchLinks(endpoint string, query librarianModels.QueryLinksRequest) ([]librarianModels.Link, error) {
+  body, err := json.Marshal(query)
+  if err != nil {
+    return nil, err
+  }
+  resp, err := http.Post(endpoint+"/search", "application/json", bytes.NewReader(body))
+  var searchResponse librarianModels.QueryLinksResponse
+  err = utils.HandleResponse(resp, &searchResponse)
+  if err != nil {
+    return nil, err
+  }
+  return searchResponse.Links, err
+}
 
 func UploadPost(
 	endpoint string,
