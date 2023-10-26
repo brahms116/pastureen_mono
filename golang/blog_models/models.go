@@ -11,3 +11,4 @@ type Post struct {
 	PostMeta PostMeta `json:"meta"`
 	PostHtml string   `json:"postHtml"`
 }
+

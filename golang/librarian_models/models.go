@@ -35,3 +35,7 @@ type QueryLinksResponse struct {
 type CreateNewPostRequest struct {
   Post blogModels.Post `json:"post"`
 }
+
+type CreateNewPostResponse struct {
+  Url string `json:"url"`
+}
