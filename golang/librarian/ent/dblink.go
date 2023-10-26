@@ -10,20 +10,17 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/google/uuid"
 )
 
 // DbLink is the model entity for the DbLink schema.
 type DbLink struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID uuid.UUID `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
 	// Title holds the value of the "title" field.
 	Title string `json:"title,omitempty"`
 	// Date holds the value of the "date" field.
 	Date time.Time `json:"date,omitempty"`
-	// URL holds the value of the "url" field.
-	URL string `json:"url,omitempty"`
 	// Subtitle holds the value of the "subtitle" field.
 	Subtitle string `json:"subtitle,omitempty"`
 	// Description holds the value of the "description" field.
@@ -61,12 +58,10 @@ func (*DbLink) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case dblink.FieldTitle, dblink.FieldURL, dblink.FieldSubtitle, dblink.FieldDescription, dblink.FieldImageURL, dblink.FieldImageAlt:
+		case dblink.FieldID, dblink.FieldTitle, dblink.FieldSubtitle, dblink.FieldDescription, dblink.FieldImageURL, dblink.FieldImageAlt:
 			values[i] = new(sql.NullString)
 		case dblink.FieldDate:
 			values[i] = new(sql.NullTime)
-		case dblink.FieldID:
-			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -83,10 +78,10 @@ func (dl *DbLink) assignValues(columns []string, values []any) error {
 	for i := range columns {
 		switch columns[i] {
 		case dblink.FieldID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
+			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
-			} else if value != nil {
-				dl.ID = *value
+			} else if value.Valid {
+				dl.ID = value.String
 			}
 		case dblink.FieldTitle:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -99,12 +94,6 @@ func (dl *DbLink) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field date", values[i])
 			} else if value.Valid {
 				dl.Date = value.Time
-			}
-		case dblink.FieldURL:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field url", values[i])
-			} else if value.Valid {
-				dl.URL = value.String
 			}
 		case dblink.FieldSubtitle:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -176,9 +165,6 @@ func (dl *DbLink) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("date=")
 	builder.WriteString(dl.Date.Format(time.ANSIC))
-	builder.WriteString(", ")
-	builder.WriteString("url=")
-	builder.WriteString(dl.URL)
 	builder.WriteString(", ")
 	builder.WriteString("subtitle=")
 	builder.WriteString(dl.Subtitle)

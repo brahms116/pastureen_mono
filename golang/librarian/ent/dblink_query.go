@@ -14,7 +14,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 )
 
 // DbLinkQuery is the builder for querying DbLink entities.
@@ -107,8 +106,8 @@ func (dlq *DbLinkQuery) FirstX(ctx context.Context) *DbLink {
 
 // FirstID returns the first DbLink ID from the query.
 // Returns a *NotFoundError when no DbLink ID was found.
-func (dlq *DbLinkQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (dlq *DbLinkQuery) FirstID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = dlq.Limit(1).IDs(setContextOp(ctx, dlq.ctx, "FirstID")); err != nil {
 		return
 	}
@@ -120,7 +119,7 @@ func (dlq *DbLinkQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (dlq *DbLinkQuery) FirstIDX(ctx context.Context) uuid.UUID {
+func (dlq *DbLinkQuery) FirstIDX(ctx context.Context) string {
 	id, err := dlq.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -158,8 +157,8 @@ func (dlq *DbLinkQuery) OnlyX(ctx context.Context) *DbLink {
 // OnlyID is like Only, but returns the only DbLink ID in the query.
 // Returns a *NotSingularError when more than one DbLink ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (dlq *DbLinkQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
-	var ids []uuid.UUID
+func (dlq *DbLinkQuery) OnlyID(ctx context.Context) (id string, err error) {
+	var ids []string
 	if ids, err = dlq.Limit(2).IDs(setContextOp(ctx, dlq.ctx, "OnlyID")); err != nil {
 		return
 	}
@@ -175,7 +174,7 @@ func (dlq *DbLinkQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (dlq *DbLinkQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+func (dlq *DbLinkQuery) OnlyIDX(ctx context.Context) string {
 	id, err := dlq.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -203,7 +202,7 @@ func (dlq *DbLinkQuery) AllX(ctx context.Context) []*DbLink {
 }
 
 // IDs executes the query and returns a list of DbLink IDs.
-func (dlq *DbLinkQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+func (dlq *DbLinkQuery) IDs(ctx context.Context) (ids []string, err error) {
 	if dlq.ctx.Unique == nil && dlq.path != nil {
 		dlq.Unique(true)
 	}
@@ -215,7 +214,7 @@ func (dlq *DbLinkQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (dlq *DbLinkQuery) IDsX(ctx context.Context) []uuid.UUID {
+func (dlq *DbLinkQuery) IDsX(ctx context.Context) []string {
 	ids, err := dlq.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -405,7 +404,7 @@ func (dlq *DbLinkQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*DbLi
 
 func (dlq *DbLinkQuery) loadTags(ctx context.Context, query *DbTagQuery, nodes []*DbLink, init func(*DbLink), assign func(*DbLink, *DbTag)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[uuid.UUID]*DbLink)
+	byID := make(map[string]*DbLink)
 	nids := make(map[string]map[*DbLink]struct{})
 	for i, node := range nodes {
 		edgeIDs[i] = node.ID
@@ -435,10 +434,10 @@ func (dlq *DbLinkQuery) loadTags(ctx context.Context, query *DbTagQuery, nodes [
 				if err != nil {
 					return nil, err
 				}
-				return append([]any{new(uuid.UUID)}, values...), nil
+				return append([]any{new(sql.NullString)}, values...), nil
 			}
 			spec.Assign = func(columns []string, values []any) error {
-				outValue := *values[0].(*uuid.UUID)
+				outValue := values[0].(*sql.NullString).String
 				inValue := values[1].(*sql.NullString).String
 				if nids[inValue] == nil {
 					nids[inValue] = map[*DbLink]struct{}{byID[outValue]: {}}
@@ -475,7 +474,7 @@ func (dlq *DbLinkQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (dlq *DbLinkQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(dblink.Table, dblink.Columns, sqlgraph.NewFieldSpec(dblink.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewQuerySpec(dblink.Table, dblink.Columns, sqlgraph.NewFieldSpec(dblink.FieldID, field.TypeString))
 	_spec.From = dlq.sql
 	if unique := dlq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique

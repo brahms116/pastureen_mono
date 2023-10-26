@@ -12,7 +12,6 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 )
 
 // DbLinkCreate is the builder for creating a DbLink entity.
@@ -31,12 +30,6 @@ func (dlc *DbLinkCreate) SetTitle(s string) *DbLinkCreate {
 // SetDate sets the "date" field.
 func (dlc *DbLinkCreate) SetDate(t time.Time) *DbLinkCreate {
 	dlc.mutation.SetDate(t)
-	return dlc
-}
-
-// SetURL sets the "url" field.
-func (dlc *DbLinkCreate) SetURL(s string) *DbLinkCreate {
-	dlc.mutation.SetURL(s)
 	return dlc
 }
 
@@ -81,16 +74,8 @@ func (dlc *DbLinkCreate) SetNillableImageAlt(s *string) *DbLinkCreate {
 }
 
 // SetID sets the "id" field.
-func (dlc *DbLinkCreate) SetID(u uuid.UUID) *DbLinkCreate {
-	dlc.mutation.SetID(u)
-	return dlc
-}
-
-// SetNillableID sets the "id" field if the given value is not nil.
-func (dlc *DbLinkCreate) SetNillableID(u *uuid.UUID) *DbLinkCreate {
-	if u != nil {
-		dlc.SetID(*u)
-	}
+func (dlc *DbLinkCreate) SetID(s string) *DbLinkCreate {
+	dlc.mutation.SetID(s)
 	return dlc
 }
 
@@ -116,7 +101,6 @@ func (dlc *DbLinkCreate) Mutation() *DbLinkMutation {
 
 // Save creates the DbLink in the database.
 func (dlc *DbLinkCreate) Save(ctx context.Context) (*DbLink, error) {
-	dlc.defaults()
 	return withHooks(ctx, dlc.sqlSave, dlc.mutation, dlc.hooks)
 }
 
@@ -142,14 +126,6 @@ func (dlc *DbLinkCreate) ExecX(ctx context.Context) {
 	}
 }
 
-// defaults sets the default values of the builder before save.
-func (dlc *DbLinkCreate) defaults() {
-	if _, ok := dlc.mutation.ID(); !ok {
-		v := dblink.DefaultID()
-		dlc.mutation.SetID(v)
-	}
-}
-
 // check runs all checks and user-defined validators on the builder.
 func (dlc *DbLinkCreate) check() error {
 	if _, ok := dlc.mutation.Title(); !ok {
@@ -157,9 +133,6 @@ func (dlc *DbLinkCreate) check() error {
 	}
 	if _, ok := dlc.mutation.Date(); !ok {
 		return &ValidationError{Name: "date", err: errors.New(`ent: missing required field "DbLink.date"`)}
-	}
-	if _, ok := dlc.mutation.URL(); !ok {
-		return &ValidationError{Name: "url", err: errors.New(`ent: missing required field "DbLink.url"`)}
 	}
 	if _, ok := dlc.mutation.Subtitle(); !ok {
 		return &ValidationError{Name: "subtitle", err: errors.New(`ent: missing required field "DbLink.subtitle"`)}
@@ -182,10 +155,10 @@ func (dlc *DbLinkCreate) sqlSave(ctx context.Context) (*DbLink, error) {
 		return nil, err
 	}
 	if _spec.ID.Value != nil {
-		if id, ok := _spec.ID.Value.(*uuid.UUID); ok {
-			_node.ID = *id
-		} else if err := _node.ID.Scan(_spec.ID.Value); err != nil {
-			return nil, err
+		if id, ok := _spec.ID.Value.(string); ok {
+			_node.ID = id
+		} else {
+			return nil, fmt.Errorf("unexpected DbLink.ID type: %T", _spec.ID.Value)
 		}
 	}
 	dlc.mutation.id = &_node.ID
@@ -196,11 +169,11 @@ func (dlc *DbLinkCreate) sqlSave(ctx context.Context) (*DbLink, error) {
 func (dlc *DbLinkCreate) createSpec() (*DbLink, *sqlgraph.CreateSpec) {
 	var (
 		_node = &DbLink{config: dlc.config}
-		_spec = sqlgraph.NewCreateSpec(dblink.Table, sqlgraph.NewFieldSpec(dblink.FieldID, field.TypeUUID))
+		_spec = sqlgraph.NewCreateSpec(dblink.Table, sqlgraph.NewFieldSpec(dblink.FieldID, field.TypeString))
 	)
 	if id, ok := dlc.mutation.ID(); ok {
 		_node.ID = id
-		_spec.ID.Value = &id
+		_spec.ID.Value = id
 	}
 	if value, ok := dlc.mutation.Title(); ok {
 		_spec.SetField(dblink.FieldTitle, field.TypeString, value)
@@ -209,10 +182,6 @@ func (dlc *DbLinkCreate) createSpec() (*DbLink, *sqlgraph.CreateSpec) {
 	if value, ok := dlc.mutation.Date(); ok {
 		_spec.SetField(dblink.FieldDate, field.TypeTime, value)
 		_node.Date = value
-	}
-	if value, ok := dlc.mutation.URL(); ok {
-		_spec.SetField(dblink.FieldURL, field.TypeString, value)
-		_node.URL = value
 	}
 	if value, ok := dlc.mutation.Subtitle(); ok {
 		_spec.SetField(dblink.FieldSubtitle, field.TypeString, value)
@@ -267,7 +236,6 @@ func (dlcb *DbLinkCreateBulk) Save(ctx context.Context) ([]*DbLink, error) {
 	for i := range dlcb.builders {
 		func(i int, root context.Context) {
 			builder := dlcb.builders[i]
-			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*DbLinkMutation)
 				if !ok {

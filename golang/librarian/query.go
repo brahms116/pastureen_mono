@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"entgo.io/ent/dialect/sql"
-	"github.com/google/uuid"
 	"pastureen/librarian-models"
 	"pastureen/librarian/ent"
 	"pastureen/librarian/ent/dblink"
@@ -20,8 +19,7 @@ func DbLinkToModelLink(item *ent.DbLink) models.Link {
 	date := item.Date.Format("2006-01-02")
 
 	return models.Link{
-		Id:          item.ID.String(),
-		Url:         item.URL,
+		Url:         item.ID,
 		Title:       item.Title,
 		Description: item.Description,
 		Tags:        tags,
@@ -105,12 +103,12 @@ func QueryTagNames(client *ent.Client, ctx context.Context) ([]string, error) {
 	return result, nil
 }
 
-func DeleteLink(id uuid.UUID, client *ent.Client, ctx context.Context) error {
+func DeleteLink(id string, client *ent.Client, ctx context.Context) error {
 	_, err := client.DbLink.Delete().Where(dblink.ID(id)).Exec(ctx)
 	return err
 }
 
-func PrepareDbLink(createLinkParams models.CreateLinkParams, client *ent.Client, ctx context.Context) (*ent.DbLinkCreate, error) {
+func PrepareDbLink(link models.Link, client *ent.Client, ctx context.Context) (*ent.DbLinkCreate, error) {
 
 	// Find all the existingDbTags
 	existingDbTags, err := client.DbTag.Query().All(ctx)
@@ -118,10 +116,10 @@ func PrepareDbLink(createLinkParams models.CreateLinkParams, client *ent.Client,
 		return &ent.DbLinkCreate{}, err
 	}
 
-	dbTagsToAssociate := make([]*ent.DbTag, len(createLinkParams.Tags))
+	dbTagsToAssociate := make([]*ent.DbTag, len(link.Tags))
 
 	// Find all the tags
-	for _, tag := range createLinkParams.Tags {
+	for _, tag := range link.Tags {
 		if !containsTag(existingDbTags, tag) {
 			tag, err := client.DbTag.Create().SetID(tag).Save(ctx)
 			if err != nil {
@@ -139,8 +137,8 @@ func PrepareDbLink(createLinkParams models.CreateLinkParams, client *ent.Client,
 
 	linkDate := time.Now()
 
-	if createLinkParams.Date != "" {
-		linkDate, err = time.Parse("2006-01-02", createLinkParams.Date)
+	if link.Date != "" {
+		linkDate, err = time.Parse("2006-01-02", link.Date)
 		if err != nil {
 			linkDate = time.Now()
 		}
@@ -149,20 +147,20 @@ func PrepareDbLink(createLinkParams models.CreateLinkParams, client *ent.Client,
 	var nillableImageAlt *string = nil
 	var nillableImageUrl *string = nil
 
-	if createLinkParams.ImageAlt != "" {
-		nillableImageAlt = &createLinkParams.ImageAlt
+	if link.ImageAlt != "" {
+		nillableImageAlt = &link.ImageAlt
 	}
 
-	if createLinkParams.ImageUrl != "" {
-		nillableImageUrl = &createLinkParams.ImageUrl
+	if link.ImageUrl != "" {
+		nillableImageUrl = &link.ImageUrl
 	}
 
 	newDbLink := client.DbLink.Create().
 		SetDate(linkDate).
-		SetDescription(createLinkParams.Description).
-		SetURL(createLinkParams.Url).
-		SetSubtitle(createLinkParams.Subtitle).
-		SetTitle(createLinkParams.Title).
+		SetDescription(link.Description).
+		SetID(link.Url).
+		SetSubtitle(link.Subtitle).
+		SetTitle(link.Title).
 		SetNillableImageAlt(nillableImageAlt).
 		SetNillableImageURL(nillableImageUrl).
 		AddTags(dbTagsToAssociate...)

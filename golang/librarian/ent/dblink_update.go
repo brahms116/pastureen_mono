@@ -41,12 +41,6 @@ func (dlu *DbLinkUpdate) SetDate(t time.Time) *DbLinkUpdate {
 	return dlu
 }
 
-// SetURL sets the "url" field.
-func (dlu *DbLinkUpdate) SetURL(s string) *DbLinkUpdate {
-	dlu.mutation.SetURL(s)
-	return dlu
-}
-
 // SetSubtitle sets the "subtitle" field.
 func (dlu *DbLinkUpdate) SetSubtitle(s string) *DbLinkUpdate {
 	dlu.mutation.SetSubtitle(s)
@@ -168,7 +162,7 @@ func (dlu *DbLinkUpdate) ExecX(ctx context.Context) {
 }
 
 func (dlu *DbLinkUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	_spec := sqlgraph.NewUpdateSpec(dblink.Table, dblink.Columns, sqlgraph.NewFieldSpec(dblink.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(dblink.Table, dblink.Columns, sqlgraph.NewFieldSpec(dblink.FieldID, field.TypeString))
 	if ps := dlu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -181,9 +175,6 @@ func (dlu *DbLinkUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := dlu.mutation.Date(); ok {
 		_spec.SetField(dblink.FieldDate, field.TypeTime, value)
-	}
-	if value, ok := dlu.mutation.URL(); ok {
-		_spec.SetField(dblink.FieldURL, field.TypeString, value)
 	}
 	if value, ok := dlu.mutation.Subtitle(); ok {
 		_spec.SetField(dblink.FieldSubtitle, field.TypeString, value)
@@ -277,12 +268,6 @@ func (dluo *DbLinkUpdateOne) SetTitle(s string) *DbLinkUpdateOne {
 // SetDate sets the "date" field.
 func (dluo *DbLinkUpdateOne) SetDate(t time.Time) *DbLinkUpdateOne {
 	dluo.mutation.SetDate(t)
-	return dluo
-}
-
-// SetURL sets the "url" field.
-func (dluo *DbLinkUpdateOne) SetURL(s string) *DbLinkUpdateOne {
-	dluo.mutation.SetURL(s)
 	return dluo
 }
 
@@ -420,7 +405,7 @@ func (dluo *DbLinkUpdateOne) ExecX(ctx context.Context) {
 }
 
 func (dluo *DbLinkUpdateOne) sqlSave(ctx context.Context) (_node *DbLink, err error) {
-	_spec := sqlgraph.NewUpdateSpec(dblink.Table, dblink.Columns, sqlgraph.NewFieldSpec(dblink.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(dblink.Table, dblink.Columns, sqlgraph.NewFieldSpec(dblink.FieldID, field.TypeString))
 	id, ok := dluo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "DbLink.id" for update`)}
@@ -450,9 +435,6 @@ func (dluo *DbLinkUpdateOne) sqlSave(ctx context.Context) (_node *DbLink, err er
 	}
 	if value, ok := dluo.mutation.Date(); ok {
 		_spec.SetField(dblink.FieldDate, field.TypeTime, value)
-	}
-	if value, ok := dluo.mutation.URL(); ok {
-		_spec.SetField(dblink.FieldURL, field.TypeString, value)
 	}
 	if value, ok := dluo.mutation.Subtitle(); ok {
 		_spec.SetField(dblink.FieldSubtitle, field.TypeString, value)

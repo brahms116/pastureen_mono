@@ -2,21 +2,8 @@
 
 package ent
 
-import (
-	"pastureen/librarian/ent/dblink"
-	"pastureen/librarian/ent/schema"
-
-	"github.com/google/uuid"
-)
-
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
-	dblinkFields := schema.DbLink{}.Fields()
-	_ = dblinkFields
-	// dblinkDescID is the schema descriptor for id field.
-	dblinkDescID := dblinkFields[0].Descriptor()
-	// dblink.DefaultID holds the default value on creation for the id field.
-	dblink.DefaultID = dblinkDescID.Default.(func() uuid.UUID)
 }

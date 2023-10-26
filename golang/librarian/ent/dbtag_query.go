@@ -14,7 +14,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 )
 
 // DbTagQuery is the builder for querying DbTag entities.
@@ -384,7 +383,7 @@ func (dtq *DbTagQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*DbTag
 func (dtq *DbTagQuery) loadLinks(ctx context.Context, query *DbLinkQuery, nodes []*DbTag, init func(*DbTag), assign func(*DbTag, *DbLink)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
 	byID := make(map[string]*DbTag)
-	nids := make(map[uuid.UUID]map[*DbTag]struct{})
+	nids := make(map[string]map[*DbTag]struct{})
 	for i, node := range nodes {
 		edgeIDs[i] = node.ID
 		byID[node.ID] = node
@@ -417,7 +416,7 @@ func (dtq *DbTagQuery) loadLinks(ctx context.Context, query *DbLinkQuery, nodes 
 			}
 			spec.Assign = func(columns []string, values []any) error {
 				outValue := values[0].(*sql.NullString).String
-				inValue := *values[1].(*uuid.UUID)
+				inValue := values[1].(*sql.NullString).String
 				if nids[inValue] == nil {
 					nids[inValue] = map[*DbTag]struct{}{byID[outValue]: {}}
 					return assign(columns[1:], values[1:])

@@ -8,52 +8,61 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/google/uuid"
 )
 
 // ID filters vertices based on their ID field.
-func ID(id uuid.UUID) predicate.DbLink {
+func ID(id string) predicate.DbLink {
 	return predicate.DbLink(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id uuid.UUID) predicate.DbLink {
+func IDEQ(id string) predicate.DbLink {
 	return predicate.DbLink(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id uuid.UUID) predicate.DbLink {
+func IDNEQ(id string) predicate.DbLink {
 	return predicate.DbLink(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...uuid.UUID) predicate.DbLink {
+func IDIn(ids ...string) predicate.DbLink {
 	return predicate.DbLink(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...uuid.UUID) predicate.DbLink {
+func IDNotIn(ids ...string) predicate.DbLink {
 	return predicate.DbLink(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id uuid.UUID) predicate.DbLink {
+func IDGT(id string) predicate.DbLink {
 	return predicate.DbLink(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id uuid.UUID) predicate.DbLink {
+func IDGTE(id string) predicate.DbLink {
 	return predicate.DbLink(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id uuid.UUID) predicate.DbLink {
+func IDLT(id string) predicate.DbLink {
 	return predicate.DbLink(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id uuid.UUID) predicate.DbLink {
+func IDLTE(id string) predicate.DbLink {
 	return predicate.DbLink(sql.FieldLTE(FieldID, id))
+}
+
+// IDEqualFold applies the EqualFold predicate on the ID field.
+func IDEqualFold(id string) predicate.DbLink {
+	return predicate.DbLink(sql.FieldEqualFold(FieldID, id))
+}
+
+// IDContainsFold applies the ContainsFold predicate on the ID field.
+func IDContainsFold(id string) predicate.DbLink {
+	return predicate.DbLink(sql.FieldContainsFold(FieldID, id))
 }
 
 // Title applies equality check predicate on the "title" field. It's identical to TitleEQ.
@@ -64,11 +73,6 @@ func Title(v string) predicate.DbLink {
 // Date applies equality check predicate on the "date" field. It's identical to DateEQ.
 func Date(v time.Time) predicate.DbLink {
 	return predicate.DbLink(sql.FieldEQ(FieldDate, v))
-}
-
-// URL applies equality check predicate on the "url" field. It's identical to URLEQ.
-func URL(v string) predicate.DbLink {
-	return predicate.DbLink(sql.FieldEQ(FieldURL, v))
 }
 
 // Subtitle applies equality check predicate on the "subtitle" field. It's identical to SubtitleEQ.
@@ -194,71 +198,6 @@ func DateLT(v time.Time) predicate.DbLink {
 // DateLTE applies the LTE predicate on the "date" field.
 func DateLTE(v time.Time) predicate.DbLink {
 	return predicate.DbLink(sql.FieldLTE(FieldDate, v))
-}
-
-// URLEQ applies the EQ predicate on the "url" field.
-func URLEQ(v string) predicate.DbLink {
-	return predicate.DbLink(sql.FieldEQ(FieldURL, v))
-}
-
-// URLNEQ applies the NEQ predicate on the "url" field.
-func URLNEQ(v string) predicate.DbLink {
-	return predicate.DbLink(sql.FieldNEQ(FieldURL, v))
-}
-
-// URLIn applies the In predicate on the "url" field.
-func URLIn(vs ...string) predicate.DbLink {
-	return predicate.DbLink(sql.FieldIn(FieldURL, vs...))
-}
-
-// URLNotIn applies the NotIn predicate on the "url" field.
-func URLNotIn(vs ...string) predicate.DbLink {
-	return predicate.DbLink(sql.FieldNotIn(FieldURL, vs...))
-}
-
-// URLGT applies the GT predicate on the "url" field.
-func URLGT(v string) predicate.DbLink {
-	return predicate.DbLink(sql.FieldGT(FieldURL, v))
-}
-
-// URLGTE applies the GTE predicate on the "url" field.
-func URLGTE(v string) predicate.DbLink {
-	return predicate.DbLink(sql.FieldGTE(FieldURL, v))
-}
-
-// URLLT applies the LT predicate on the "url" field.
-func URLLT(v string) predicate.DbLink {
-	return predicate.DbLink(sql.FieldLT(FieldURL, v))
-}
-
-// URLLTE applies the LTE predicate on the "url" field.
-func URLLTE(v string) predicate.DbLink {
-	return predicate.DbLink(sql.FieldLTE(FieldURL, v))
-}
-
-// URLContains applies the Contains predicate on the "url" field.
-func URLContains(v string) predicate.DbLink {
-	return predicate.DbLink(sql.FieldContains(FieldURL, v))
-}
-
-// URLHasPrefix applies the HasPrefix predicate on the "url" field.
-func URLHasPrefix(v string) predicate.DbLink {
-	return predicate.DbLink(sql.FieldHasPrefix(FieldURL, v))
-}
-
-// URLHasSuffix applies the HasSuffix predicate on the "url" field.
-func URLHasSuffix(v string) predicate.DbLink {
-	return predicate.DbLink(sql.FieldHasSuffix(FieldURL, v))
-}
-
-// URLEqualFold applies the EqualFold predicate on the "url" field.
-func URLEqualFold(v string) predicate.DbLink {
-	return predicate.DbLink(sql.FieldEqualFold(FieldURL, v))
-}
-
-// URLContainsFold applies the ContainsFold predicate on the "url" field.
-func URLContainsFold(v string) predicate.DbLink {
-	return predicate.DbLink(sql.FieldContainsFold(FieldURL, v))
 }
 
 // SubtitleEQ applies the EQ predicate on the "subtitle" field.

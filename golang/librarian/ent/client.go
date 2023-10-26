@@ -18,7 +18,6 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/google/uuid"
 )
 
 // Client is the client that holds all ent builders.
@@ -265,7 +264,7 @@ func (c *DbLinkClient) UpdateOne(dl *DbLink) *DbLinkUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *DbLinkClient) UpdateOneID(id uuid.UUID) *DbLinkUpdateOne {
+func (c *DbLinkClient) UpdateOneID(id string) *DbLinkUpdateOne {
 	mutation := newDbLinkMutation(c.config, OpUpdateOne, withDbLinkID(id))
 	return &DbLinkUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -282,7 +281,7 @@ func (c *DbLinkClient) DeleteOne(dl *DbLink) *DbLinkDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *DbLinkClient) DeleteOneID(id uuid.UUID) *DbLinkDeleteOne {
+func (c *DbLinkClient) DeleteOneID(id string) *DbLinkDeleteOne {
 	builder := c.Delete().Where(dblink.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -299,12 +298,12 @@ func (c *DbLinkClient) Query() *DbLinkQuery {
 }
 
 // Get returns a DbLink entity by its id.
-func (c *DbLinkClient) Get(ctx context.Context, id uuid.UUID) (*DbLink, error) {
+func (c *DbLinkClient) Get(ctx context.Context, id string) (*DbLink, error) {
 	return c.Query().Where(dblink.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *DbLinkClient) GetX(ctx context.Context, id uuid.UUID) *DbLink {
+func (c *DbLinkClient) GetX(ctx context.Context, id string) *DbLink {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)

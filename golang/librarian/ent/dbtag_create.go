@@ -10,7 +10,6 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/google/uuid"
 )
 
 // DbTagCreate is the builder for creating a DbTag entity.
@@ -27,14 +26,14 @@ func (dtc *DbTagCreate) SetID(s string) *DbTagCreate {
 }
 
 // AddLinkIDs adds the "links" edge to the DbLink entity by IDs.
-func (dtc *DbTagCreate) AddLinkIDs(ids ...uuid.UUID) *DbTagCreate {
+func (dtc *DbTagCreate) AddLinkIDs(ids ...string) *DbTagCreate {
 	dtc.mutation.AddLinkIDs(ids...)
 	return dtc
 }
 
 // AddLinks adds the "links" edges to the DbLink entity.
 func (dtc *DbTagCreate) AddLinks(d ...*DbLink) *DbTagCreate {
-	ids := make([]uuid.UUID, len(d))
+	ids := make([]string, len(d))
 	for i := range d {
 		ids[i] = d[i].ID
 	}
@@ -118,7 +117,7 @@ func (dtc *DbTagCreate) createSpec() (*DbTag, *sqlgraph.CreateSpec) {
 			Columns: dbtag.LinksPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(dblink.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(dblink.FieldID, field.TypeString),
 			},
 		}
 		for _, k := range nodes {

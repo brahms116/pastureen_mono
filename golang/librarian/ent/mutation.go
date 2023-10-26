@@ -14,7 +14,6 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
-	"github.com/google/uuid"
 )
 
 const (
@@ -35,10 +34,9 @@ type DbLinkMutation struct {
 	config
 	op            Op
 	typ           string
-	id            *uuid.UUID
+	id            *string
 	title         *string
 	date          *time.Time
-	url           *string
 	subtitle      *string
 	description   *string
 	image_url     *string
@@ -72,7 +70,7 @@ func newDbLinkMutation(c config, op Op, opts ...dblinkOption) *DbLinkMutation {
 }
 
 // withDbLinkID sets the ID field of the mutation.
-func withDbLinkID(id uuid.UUID) dblinkOption {
+func withDbLinkID(id string) dblinkOption {
 	return func(m *DbLinkMutation) {
 		var (
 			err   error
@@ -124,13 +122,13 @@ func (m DbLinkMutation) Tx() (*Tx, error) {
 
 // SetID sets the value of the id field. Note that this
 // operation is only accepted on creation of DbLink entities.
-func (m *DbLinkMutation) SetID(id uuid.UUID) {
+func (m *DbLinkMutation) SetID(id string) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *DbLinkMutation) ID() (id uuid.UUID, exists bool) {
+func (m *DbLinkMutation) ID() (id string, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -141,12 +139,12 @@ func (m *DbLinkMutation) ID() (id uuid.UUID, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *DbLinkMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+func (m *DbLinkMutation) IDs(ctx context.Context) ([]string, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []uuid.UUID{id}, nil
+			return []string{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
@@ -226,42 +224,6 @@ func (m *DbLinkMutation) OldDate(ctx context.Context) (v time.Time, err error) {
 // ResetDate resets all changes to the "date" field.
 func (m *DbLinkMutation) ResetDate() {
 	m.date = nil
-}
-
-// SetURL sets the "url" field.
-func (m *DbLinkMutation) SetURL(s string) {
-	m.url = &s
-}
-
-// URL returns the value of the "url" field in the mutation.
-func (m *DbLinkMutation) URL() (r string, exists bool) {
-	v := m.url
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldURL returns the old "url" field's value of the DbLink entity.
-// If the DbLink object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *DbLinkMutation) OldURL(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldURL is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldURL requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldURL: %w", err)
-	}
-	return oldValue.URL, nil
-}
-
-// ResetURL resets all changes to the "url" field.
-func (m *DbLinkMutation) ResetURL() {
-	m.url = nil
 }
 
 // SetSubtitle sets the "subtitle" field.
@@ -522,15 +484,12 @@ func (m *DbLinkMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *DbLinkMutation) Fields() []string {
-	fields := make([]string, 0, 7)
+	fields := make([]string, 0, 6)
 	if m.title != nil {
 		fields = append(fields, dblink.FieldTitle)
 	}
 	if m.date != nil {
 		fields = append(fields, dblink.FieldDate)
-	}
-	if m.url != nil {
-		fields = append(fields, dblink.FieldURL)
 	}
 	if m.subtitle != nil {
 		fields = append(fields, dblink.FieldSubtitle)
@@ -556,8 +515,6 @@ func (m *DbLinkMutation) Field(name string) (ent.Value, bool) {
 		return m.Title()
 	case dblink.FieldDate:
 		return m.Date()
-	case dblink.FieldURL:
-		return m.URL()
 	case dblink.FieldSubtitle:
 		return m.Subtitle()
 	case dblink.FieldDescription:
@@ -579,8 +536,6 @@ func (m *DbLinkMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldTitle(ctx)
 	case dblink.FieldDate:
 		return m.OldDate(ctx)
-	case dblink.FieldURL:
-		return m.OldURL(ctx)
 	case dblink.FieldSubtitle:
 		return m.OldSubtitle(ctx)
 	case dblink.FieldDescription:
@@ -611,13 +566,6 @@ func (m *DbLinkMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDate(v)
-		return nil
-	case dblink.FieldURL:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetURL(v)
 		return nil
 	case dblink.FieldSubtitle:
 		v, ok := value.(string)
@@ -716,9 +664,6 @@ func (m *DbLinkMutation) ResetField(name string) error {
 		return nil
 	case dblink.FieldDate:
 		m.ResetDate()
-		return nil
-	case dblink.FieldURL:
-		m.ResetURL()
 		return nil
 	case dblink.FieldSubtitle:
 		m.ResetSubtitle()
@@ -827,8 +772,8 @@ type DbTagMutation struct {
 	typ           string
 	id            *string
 	clearedFields map[string]struct{}
-	links         map[uuid.UUID]struct{}
-	removedlinks  map[uuid.UUID]struct{}
+	links         map[string]struct{}
+	removedlinks  map[string]struct{}
 	clearedlinks  bool
 	done          bool
 	oldValue      func(context.Context) (*DbTag, error)
@@ -940,9 +885,9 @@ func (m *DbTagMutation) IDs(ctx context.Context) ([]string, error) {
 }
 
 // AddLinkIDs adds the "links" edge to the DbLink entity by ids.
-func (m *DbTagMutation) AddLinkIDs(ids ...uuid.UUID) {
+func (m *DbTagMutation) AddLinkIDs(ids ...string) {
 	if m.links == nil {
-		m.links = make(map[uuid.UUID]struct{})
+		m.links = make(map[string]struct{})
 	}
 	for i := range ids {
 		m.links[ids[i]] = struct{}{}
@@ -960,9 +905,9 @@ func (m *DbTagMutation) LinksCleared() bool {
 }
 
 // RemoveLinkIDs removes the "links" edge to the DbLink entity by IDs.
-func (m *DbTagMutation) RemoveLinkIDs(ids ...uuid.UUID) {
+func (m *DbTagMutation) RemoveLinkIDs(ids ...string) {
 	if m.removedlinks == nil {
-		m.removedlinks = make(map[uuid.UUID]struct{})
+		m.removedlinks = make(map[string]struct{})
 	}
 	for i := range ids {
 		delete(m.links, ids[i])
@@ -971,7 +916,7 @@ func (m *DbTagMutation) RemoveLinkIDs(ids ...uuid.UUID) {
 }
 
 // RemovedLinks returns the removed IDs of the "links" edge to the DbLink entity.
-func (m *DbTagMutation) RemovedLinksIDs() (ids []uuid.UUID) {
+func (m *DbTagMutation) RemovedLinksIDs() (ids []string) {
 	for id := range m.removedlinks {
 		ids = append(ids, id)
 	}
@@ -979,7 +924,7 @@ func (m *DbTagMutation) RemovedLinksIDs() (ids []uuid.UUID) {
 }
 
 // LinksIDs returns the "links" edge IDs in the mutation.
-func (m *DbTagMutation) LinksIDs() (ids []uuid.UUID) {
+func (m *DbTagMutation) LinksIDs() (ids []string) {
 	for id := range m.links {
 		ids = append(ids, id)
 	}

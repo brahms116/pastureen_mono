@@ -10,10 +10,9 @@ import (
 var (
 	// DbLinksColumns holds the columns for the "db_links" table.
 	DbLinksColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "id", Type: field.TypeString, Unique: true},
 		{Name: "title", Type: field.TypeString},
 		{Name: "date", Type: field.TypeTime},
-		{Name: "url", Type: field.TypeString},
 		{Name: "subtitle", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString},
 		{Name: "image_url", Type: field.TypeString, Nullable: true},
@@ -44,7 +43,7 @@ var (
 	}
 	// DbLinkTagsColumns holds the columns for the "db_link_tags" table.
 	DbLinkTagsColumns = []*schema.Column{
-		{Name: "db_link_id", Type: field.TypeUUID},
+		{Name: "db_link_id", Type: field.TypeString},
 		{Name: "db_tag_id", Type: field.TypeString},
 	}
 	// DbLinkTagsTable holds the schema information for the "db_link_tags" table.

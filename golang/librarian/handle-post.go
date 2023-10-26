@@ -7,11 +7,11 @@ import (
 	"pastureen/librarian/ent"
 )
 
-func PostToCreateLinkParams(post *blogModels.Post, postsUrl string) models.CreateLinkParams {
-	return models.CreateLinkParams{
+func PostToCreateLinkParams(post *blogModels.Post) models.Link {
+	return models.Link{
 		Title: post.PostMeta.Title,
 		Date:  post.PostMeta.Date,
-		Url:   postsUrl + "/" + post.PostMeta.Slug,
+		Url:   "/post/" + post.PostMeta.Slug,
 		Tags:  post.PostMeta.Tags,
 	}
 }
@@ -30,7 +30,7 @@ func HandlePost(
 		errorChan <- err
 	}()
 
-	linkParams := PostToCreateLinkParams(post, config.BlogUrl+"/posts")
+	linkParams := PostToCreateLinkParams(post)
 	preparedLink, err := PrepareDbLink(linkParams, client, ctx)
 	s3Err := <-errorChan
 
@@ -44,5 +44,5 @@ func HandlePost(
 		return "", err
 	}
 
-	return createdDbLink.URL, nil
+	return createdDbLink.ID, nil
 }

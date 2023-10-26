@@ -5,7 +5,6 @@ package dblink
 import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
-	"github.com/google/uuid"
 )
 
 const (
@@ -17,8 +16,6 @@ const (
 	FieldTitle = "title"
 	// FieldDate holds the string denoting the date field in the database.
 	FieldDate = "date"
-	// FieldURL holds the string denoting the url field in the database.
-	FieldURL = "url"
 	// FieldSubtitle holds the string denoting the subtitle field in the database.
 	FieldSubtitle = "subtitle"
 	// FieldDescription holds the string denoting the description field in the database.
@@ -43,7 +40,6 @@ var Columns = []string{
 	FieldID,
 	FieldTitle,
 	FieldDate,
-	FieldURL,
 	FieldSubtitle,
 	FieldDescription,
 	FieldImageURL,
@@ -66,11 +62,6 @@ func ValidColumn(column string) bool {
 	return false
 }
 
-var (
-	// DefaultID holds the default value on creation for the "id" field.
-	DefaultID func() uuid.UUID
-)
-
 // OrderOption defines the ordering options for the DbLink queries.
 type OrderOption func(*sql.Selector)
 
@@ -87,11 +78,6 @@ func ByTitle(opts ...sql.OrderTermOption) OrderOption {
 // ByDate orders the results by the date field.
 func ByDate(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDate, opts...).ToFunc()
-}
-
-// ByURL orders the results by the url field.
-func ByURL(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldURL, opts...).ToFunc()
 }
 
 // BySubtitle orders the results by the subtitle field.
