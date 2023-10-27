@@ -17,18 +17,6 @@ func NewBlogBucket(scope constructs.Construct, id string, props BlogBucketProps)
 	sprops.BucketName = jsii.String("pastureen-blog-" + env)
 	sprops.WebsiteIndexDocument = jsii.String("index.html")
 
-  // Delete objects after 1 day in test environment
-  if env == ENV_TEST {
-    sprops.LifecycleRules = &[]*s3.LifecycleRule{
-      {
-        Enabled: jsii.Bool(true),
-        Prefix: jsii.String("posts/"),
-        Expiration: cdk.Duration_Days(jsii.Number(1)),
-      },
-    }
-
-  }
-
 	return s3.NewBucket(scope, &id, &sprops)
 }
 
