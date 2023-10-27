@@ -87,6 +87,22 @@ jobs:
           PUBLISHER_LISTEN_ADDR: ${{ vars.LAMBDA_LISTEN_ADDR }}
         run: cd rust/publisher && ./deploy.sh $ENV
 
+  deploy_librarian:
+    runs-on: ubuntu-latest
+    if: inputs.service == 'librarian' || inputs.service == 'everything'
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Deploy publisher
+        env:
+          LIBRARIAN_DB_CONN_STR: ${{ secrets.LIBRARIAN_DB_CONN_STR }}
+          LIBRARIAN_AUTH_URL: ${{ vars.REVERSE_PROXY_URL }}/auth
+          LIBRARIAN_ADMIN_EMAIL: ${{ vars.ADMIN_EMAIL }}
+          LIBRARIAN_BLOG_BUCKET_NAME: ${{ vars.BLOG_BUCKET_NAME }}
+          LIBRARIAN_LISTEN_ADDR: ${{ vars.LAMBDA_LISTEN_ADDR }}
+        run: cd golang/librarian && ./deploy.sh $ENV
+
   deploy_static_assets:
     runs-on: ubuntu-latest
     if: inputs.service == 'static_assets' || inputs.service == 'everything'
