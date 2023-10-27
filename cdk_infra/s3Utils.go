@@ -7,16 +7,16 @@ import (
 )
 
 func getPublicBucketProps(env string) s3.BucketProps {
-  removalPolicy := cdk.RemovalPolicy_DESTROY
+	removalPolicy := cdk.RemovalPolicy_DESTROY
 
-  if env == "prod" {
-    removalPolicy = cdk.RemovalPolicy_RETAIN
-  }
+	if env == "prod" {
+		removalPolicy = cdk.RemovalPolicy_RETAIN
+	}
 
-  return s3.BucketProps{
-    BlockPublicAccess: s3.BlockPublicAccess_BLOCK_ACLS(),
-    ObjectOwnership:   s3.ObjectOwnership_BUCKET_OWNER_ENFORCED,
-    PublicReadAccess:  jsii.Bool(true),
-    RemovalPolicy:     removalPolicy,
-  }
+	return s3.BucketProps{
+		BlockPublicAccess: s3.BlockPublicAccess_BLOCK_ACLS(),
+		ObjectOwnership:   s3.ObjectOwnership_BUCKET_OWNER_ENFORCED,
+		PublicReadAccess:  jsii.Bool(true),
+		RemovalPolicy:     removalPolicy,
+	}
 }
