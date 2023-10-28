@@ -5,9 +5,8 @@ module "function" {
   lambda_execution_role_policy = aws_iam_policy.librarian_policy.arn
 }
 
-resource "aws_iam_role_policy" "librarian_policy" {
-  name = "librarian_policy"
-  role = "librarian_execution_role_${var.environment}"
+resource "aws_iam_policy" "librarian_policy" {
+  name = "librarian_execution_policy_${var.environment}"
 
   policy = jsonencode({
     Version = "2012-10-17"
