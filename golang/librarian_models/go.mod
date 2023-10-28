@@ -1,6 +1,6 @@
 module pastureen/librarian-models
 
-go 1.21.1
+go 1.21
 
 replace pastureen/blog-models => ../blog_models
 

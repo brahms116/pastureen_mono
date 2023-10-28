@@ -1,3 +1,3 @@
 module pastureen/auth-models
 
-go 1.21.1
+go 1.21

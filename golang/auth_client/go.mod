@@ -1,6 +1,6 @@
 module pastureen/auth-client
 
-go 1.21.1
+go 1.21
 
 replace pastureen/auth-models => ../auth_models
 
