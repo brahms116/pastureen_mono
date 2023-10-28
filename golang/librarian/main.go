@@ -67,7 +67,7 @@ func main() {
 
 	r := gin.Default()
 
-	r.GET("/healthcheck", Authenticate(config.AuthUrl, config.AdminEmail), func(c *gin.Context) {
+	r.GET("/healthcheck", func(c *gin.Context) {
 		c.String(200, "OK")
 	})
 
@@ -87,7 +87,7 @@ func main() {
 		}
 	})
 
-	r.POST("/post", func(c *gin.Context) {
+	r.POST("/post", Authenticate(config.AuthUrl, config.AdminEmail), func(c *gin.Context) {
 		var createPostRequest models.CreateNewPostRequest
 
 		ctx := c.Copy()
