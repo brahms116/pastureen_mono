@@ -96,7 +96,7 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
-      - name: Deploy publisher
+      - name: Deploy Librarian
         env:
           LIBRARIAN_DB_CONN_STR: ${{ secrets.LIBRARIAN_DB_CONN_STR }}
           LIBRARIAN_AUTH_URL: ${{ vars.REVERSE_PROXY_URL }}/auth
