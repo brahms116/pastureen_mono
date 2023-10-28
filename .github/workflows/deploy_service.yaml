@@ -17,6 +17,7 @@ on:
           - reverse_proxy
           - static_assets
           - publisher
+          - librarian
 
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
