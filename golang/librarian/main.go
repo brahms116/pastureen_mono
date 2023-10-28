@@ -34,7 +34,7 @@ func ConfigFromEnv() LibrarianConfig {
 func Authenticate(authUrl string, adminEmail string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token := c.Request.Header.Get("Authorization")
-		token = strings.Split(token, " ")[1]
+		token = strings.TrimPrefix(token, "Bearer ")
 		if token == "" {
 			c.AbortWithStatusJSON(401, gin.H{"errorType": "Unauthenticated", "message": "No token present"})
 			return
