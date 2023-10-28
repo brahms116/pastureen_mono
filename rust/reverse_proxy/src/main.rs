@@ -30,6 +30,7 @@ pub struct ReverseProxyConfig {
     pub base_url: String,
     pub auth_url: String,
     pub publisher_url: String,
+    pub librarian_url: String,
 }
 
 fn get_url_from_env(key: &str) -> Result<String, ReverseProxyError> {
@@ -45,6 +46,7 @@ impl ReverseProxyConfig {
         let base_url = get_url_from_env("REVERSE_PROXY_BASE_URL")?;
         let auth_url = get_url_from_env("REVERSE_PROXY_AUTH_URL")?;
         let publisher_url = get_url_from_env("REVERSE_PROXY_PUBLISHER_URL")?;
+        let librarian_url = get_url_from_env("REVERSE_PROXY_LIBRARIAN_URL")?;
         Ok(Self {
             listen_addr,
             design_system_url,
@@ -53,6 +55,7 @@ impl ReverseProxyConfig {
             auth_url,
             base_url,
             publisher_url,
+            librarian_url,
         })
     }
 }
@@ -66,6 +69,7 @@ pub enum Route {
     Blog(String),
     Auth(String),
     Publisher(String),
+    Librarian(String),
     NotFound,
     HealthCheck,
     Root,
@@ -79,6 +83,7 @@ impl From<&str> for Route {
         let blog_slug = "/blog";
         let auth_slug = "/auth";
         let publisher_slug = "/publisher";
+        let librarian_slug = "/librarian";
 
         if path == "/" || path.is_empty() {
             return Route::Root;
@@ -106,6 +111,10 @@ impl From<&str> for Route {
 
         if matches_path(path, healthcheck_slug) {
             return Route::HealthCheck;
+        }
+
+        if matches_path(path, librarian_slug) {
+            return Route::Librarian(strip_prefix(path, librarian_slug));
         }
 
         Route::NotFound
@@ -162,6 +171,7 @@ pub enum ProxyRoute {
     Blog(String),
     Auth(String),
     Publisher(String),
+    Librarian(String),
 }
 
 impl ProxyRoute {
@@ -188,6 +198,9 @@ fn get_proxied_uri(route: &ProxyRoute, config: &ReverseProxyConfig) -> String {
         }
         ProxyRoute::Publisher(slug) => {
             format!("{}{}", config.publisher_url, slug)
+        }
+        ProxyRoute::Librarian(slug) => {
+            format!("{}{}", config.librarian_url, slug)
         }
     }
 }
@@ -217,6 +230,7 @@ impl From<Route> for ClassifiedRoute {
             Route::DesignSystem(path) => ClassifiedRoute::Proxy(ProxyRoute::DesignSystem(path)),
             Route::Auth(path) => ClassifiedRoute::Proxy(ProxyRoute::Auth(path)),
             Route::StaticAssets(path) => ClassifiedRoute::Proxy(ProxyRoute::StaticAssets(path)),
+            Route::Librarian(path) => ClassifiedRoute::Proxy(ProxyRoute::Librarian(path)),
             Route::NotFound => ClassifiedRoute::NonProxy(NonProxyRoute::NotFound),
             Route::HealthCheck => ClassifiedRoute::NonProxy(NonProxyRoute::HealthCheck),
             Route::Root => ClassifiedRoute::NonProxy(NonProxyRoute::Root),
