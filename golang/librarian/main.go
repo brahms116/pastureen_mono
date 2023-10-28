@@ -71,6 +71,22 @@ func main() {
 		c.String(200, "OK")
 	})
 
+	r.GET("/link", func(c *gin.Context) {
+		var getLinkRequest models.GetLinkRequest
+		ctx := c.Copy()
+		if err := c.ShouldBindQuery(&getLinkRequest); err != nil {
+			c.Error(err)
+			return
+		}
+
+		result, err := GetLink(getLinkRequest.Url, client, ctx)
+		if err != nil {
+			c.Error(err)
+		} else {
+			c.JSON(200, models.GetLinkResponse{Link: result})
+		}
+	})
+
 	r.POST("/post", func(c *gin.Context) {
 		var createPostRequest models.CreateNewPostRequest
 

@@ -82,7 +82,7 @@ func TestFlow(t *testing.T) {
 	}
 	expectedLocation := config.BlogUrl + url
 
-  // Retireve the page via a GET request
+	// Retireve the page via a GET request
 	confirmReq, err := http.NewRequest("GET", expectedLocation, nil)
 	if err != nil {
 		t.Fatal(err)
@@ -99,51 +99,70 @@ func TestFlow(t *testing.T) {
 		t.Fatalf("Expected content to be %s, got %s", html, string(content))
 	}
 
-  // Try searching for the post via title
-  searchReq := libModels.QueryLinksRequest{
-    TitleQuery: randomSlug,
-  }
+	// Try getting link via url
+	getResp, err := GetLink(config.LibrarianUrl, url)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-  searchResp, err := SearchLinks(config.LibrarianUrl, searchReq)
+	if getResp.Url != url {
+		t.Fatalf("Expected url to be %s (GetLink), got %s", url, getResp.Url)
+	}
+
+  // Try getting a wrong link
+  value, err := GetLink(config.LibrarianUrl, tag1)
   if err != nil {
     t.Fatal(err)
   }
-  if len(searchResp) != 1 {
-    t.Fatalf("Expected 1 result (search by title), got %d", len(searchResp))
-  }
-  if searchResp[0].Url != url {
-    t.Fatalf("Expected url to be %s (search by title), got %s", url, searchResp[0].Url)
+  if value != nil {
+    t.Fatalf("Expected value to be nil (GetLink), got %s", value)
   }
 
-  // Try searching by tag1
-  searchReq = libModels.QueryLinksRequest{
-    Tags: []string{tag1},
-  }
+	// Try searching for the post via title
+	searchReq := libModels.QueryLinksRequest{
+		TitleQuery: randomSlug,
+	}
 
-  searchResp, err = SearchLinks(config.LibrarianUrl, searchReq)
-  if err != nil {
-    t.Fatal(err)
-  }
-  if len(searchResp) != 1 {
-    t.Fatalf("Expected 1 result (search by tag1), got %d", len(searchResp))
-  }
-  if searchResp[0].Url != url {
-    t.Fatalf("Expected url to be %s (search by tag1), got %s", url, searchResp[0].Url)
-  }
+	searchResp, err := SearchLinks(config.LibrarianUrl, searchReq)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(searchResp) != 1 {
+		t.Fatalf("Expected 1 result (search by title), got %d", len(searchResp))
+	}
+	if searchResp[0].Url != url {
+		t.Fatalf("Expected url to be %s (search by title), got %s", url, searchResp[0].Url)
+	}
 
-  // Try searching by tag2
-  searchReq = libModels.QueryLinksRequest{
-    Tags: []string{tag2},
-  }
+	// Try searching by tag1
+	searchReq = libModels.QueryLinksRequest{
+		Tags: []string{tag1},
+	}
 
-  searchResp, err = SearchLinks(config.LibrarianUrl, searchReq)
-  if err != nil {
-    t.Fatal(err)
-  }
-  if len(searchResp) != 1 {
-    t.Fatalf("Expected 1 result (search by tag2), got %d", len(searchResp))
-  }
-  if searchResp[0].Url != url {
-    t.Fatalf("Expected url to be %s (search by tag2), got %s", url, searchResp[0].Url)
-  }
+	searchResp, err = SearchLinks(config.LibrarianUrl, searchReq)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(searchResp) != 1 {
+		t.Fatalf("Expected 1 result (search by tag1), got %d", len(searchResp))
+	}
+	if searchResp[0].Url != url {
+		t.Fatalf("Expected url to be %s (search by tag1), got %s", url, searchResp[0].Url)
+	}
+
+	// Try searching by tag2
+	searchReq = libModels.QueryLinksRequest{
+		Tags: []string{tag2},
+	}
+
+	searchResp, err = SearchLinks(config.LibrarianUrl, searchReq)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(searchResp) != 1 {
+		t.Fatalf("Expected 1 result (search by tag2), got %d", len(searchResp))
+	}
+	if searchResp[0].Url != url {
+		t.Fatalf("Expected url to be %s (search by tag2), got %s", url, searchResp[0].Url)
+	}
 }

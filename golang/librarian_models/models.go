@@ -32,6 +32,15 @@ type QueryLinksResponse struct {
 	Links []Link `json:"links"`
 }
 
+type GetLinkRequest struct {
+  Url string `form:"url"`
+}
+
+type GetLinkResponse struct {
+  // Has to be a pointer to allow for null values
+  Link *Link `json:"link"`
+}
+
 type CreateNewPostRequest struct {
   Post blogModels.Post `json:"post"`
 }

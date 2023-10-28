@@ -7,7 +7,6 @@ import (
 	"pastureen/librarian/ent/dblink"
 	"pastureen/librarian/ent/dbtag"
 	"time"
-
 	"entgo.io/ent/dialect/sql"
 )
 
@@ -26,6 +25,18 @@ func DbLinkToModelLink(item *ent.DbLink) models.Link {
 		Tags:        tags,
 		Date:        date,
 	}
+}
+
+func GetLink(url string, client *ent.Client, ctx context.Context) (*models.Link, error) {
+	dbLink, err := client.DbLink.Query().Where(dblink.ID(url)).Only(ctx)
+	if err != nil {
+    if ent.IsNotFound(err) {
+      return nil, nil
+    }
+		return nil, err
+	}
+	link := DbLinkToModelLink(dbLink)
+	return &link, nil
 }
 
 func QueryLinks(query *models.QueryLinksRequest, client *ent.Client, ctx context.Context) ([]models.Link, error) {
