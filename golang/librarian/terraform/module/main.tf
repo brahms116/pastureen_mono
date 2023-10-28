@@ -7,7 +7,7 @@ module "function" {
 
 resource "aws_iam_role_policy" "librarian_policy" {
   name = "librarian_policy"
-  role = module.function.lambda_role_name
+  role = "librarian_execution_role_${var.environment}"
 
   policy = jsonencode({
     Version = "2012-10-17"
