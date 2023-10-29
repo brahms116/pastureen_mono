@@ -10,6 +10,8 @@ import (
 	"pastureen/librarian/ent/dbtag"
 	"time"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 )
@@ -19,6 +21,7 @@ type DbLinkCreate struct {
 	config
 	mutation *DbLinkMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetTitle sets the "title" field.
@@ -171,6 +174,7 @@ func (dlc *DbLinkCreate) createSpec() (*DbLink, *sqlgraph.CreateSpec) {
 		_node = &DbLink{config: dlc.config}
 		_spec = sqlgraph.NewCreateSpec(dblink.Table, sqlgraph.NewFieldSpec(dblink.FieldID, field.TypeString))
 	)
+	_spec.OnConflict = dlc.conflict
 	if id, ok := dlc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
@@ -218,11 +222,329 @@ func (dlc *DbLinkCreate) createSpec() (*DbLink, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.DbLink.Create().
+//		SetTitle(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.DbLinkUpsert) {
+//			SetTitle(v+v).
+//		}).
+//		Exec(ctx)
+func (dlc *DbLinkCreate) OnConflict(opts ...sql.ConflictOption) *DbLinkUpsertOne {
+	dlc.conflict = opts
+	return &DbLinkUpsertOne{
+		create: dlc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.DbLink.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (dlc *DbLinkCreate) OnConflictColumns(columns ...string) *DbLinkUpsertOne {
+	dlc.conflict = append(dlc.conflict, sql.ConflictColumns(columns...))
+	return &DbLinkUpsertOne{
+		create: dlc,
+	}
+}
+
+type (
+	// DbLinkUpsertOne is the builder for "upsert"-ing
+	//  one DbLink node.
+	DbLinkUpsertOne struct {
+		create *DbLinkCreate
+	}
+
+	// DbLinkUpsert is the "OnConflict" setter.
+	DbLinkUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetTitle sets the "title" field.
+func (u *DbLinkUpsert) SetTitle(v string) *DbLinkUpsert {
+	u.Set(dblink.FieldTitle, v)
+	return u
+}
+
+// UpdateTitle sets the "title" field to the value that was provided on create.
+func (u *DbLinkUpsert) UpdateTitle() *DbLinkUpsert {
+	u.SetExcluded(dblink.FieldTitle)
+	return u
+}
+
+// SetDate sets the "date" field.
+func (u *DbLinkUpsert) SetDate(v time.Time) *DbLinkUpsert {
+	u.Set(dblink.FieldDate, v)
+	return u
+}
+
+// UpdateDate sets the "date" field to the value that was provided on create.
+func (u *DbLinkUpsert) UpdateDate() *DbLinkUpsert {
+	u.SetExcluded(dblink.FieldDate)
+	return u
+}
+
+// SetSubtitle sets the "subtitle" field.
+func (u *DbLinkUpsert) SetSubtitle(v string) *DbLinkUpsert {
+	u.Set(dblink.FieldSubtitle, v)
+	return u
+}
+
+// UpdateSubtitle sets the "subtitle" field to the value that was provided on create.
+func (u *DbLinkUpsert) UpdateSubtitle() *DbLinkUpsert {
+	u.SetExcluded(dblink.FieldSubtitle)
+	return u
+}
+
+// SetDescription sets the "description" field.
+func (u *DbLinkUpsert) SetDescription(v string) *DbLinkUpsert {
+	u.Set(dblink.FieldDescription, v)
+	return u
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *DbLinkUpsert) UpdateDescription() *DbLinkUpsert {
+	u.SetExcluded(dblink.FieldDescription)
+	return u
+}
+
+// SetImageURL sets the "image_url" field.
+func (u *DbLinkUpsert) SetImageURL(v string) *DbLinkUpsert {
+	u.Set(dblink.FieldImageURL, v)
+	return u
+}
+
+// UpdateImageURL sets the "image_url" field to the value that was provided on create.
+func (u *DbLinkUpsert) UpdateImageURL() *DbLinkUpsert {
+	u.SetExcluded(dblink.FieldImageURL)
+	return u
+}
+
+// ClearImageURL clears the value of the "image_url" field.
+func (u *DbLinkUpsert) ClearImageURL() *DbLinkUpsert {
+	u.SetNull(dblink.FieldImageURL)
+	return u
+}
+
+// SetImageAlt sets the "image_alt" field.
+func (u *DbLinkUpsert) SetImageAlt(v string) *DbLinkUpsert {
+	u.Set(dblink.FieldImageAlt, v)
+	return u
+}
+
+// UpdateImageAlt sets the "image_alt" field to the value that was provided on create.
+func (u *DbLinkUpsert) UpdateImageAlt() *DbLinkUpsert {
+	u.SetExcluded(dblink.FieldImageAlt)
+	return u
+}
+
+// ClearImageAlt clears the value of the "image_alt" field.
+func (u *DbLinkUpsert) ClearImageAlt() *DbLinkUpsert {
+	u.SetNull(dblink.FieldImageAlt)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.DbLink.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(dblink.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *DbLinkUpsertOne) UpdateNewValues() *DbLinkUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(dblink.FieldID)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.DbLink.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *DbLinkUpsertOne) Ignore() *DbLinkUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *DbLinkUpsertOne) DoNothing() *DbLinkUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the DbLinkCreate.OnConflict
+// documentation for more info.
+func (u *DbLinkUpsertOne) Update(set func(*DbLinkUpsert)) *DbLinkUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&DbLinkUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetTitle sets the "title" field.
+func (u *DbLinkUpsertOne) SetTitle(v string) *DbLinkUpsertOne {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.SetTitle(v)
+	})
+}
+
+// UpdateTitle sets the "title" field to the value that was provided on create.
+func (u *DbLinkUpsertOne) UpdateTitle() *DbLinkUpsertOne {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.UpdateTitle()
+	})
+}
+
+// SetDate sets the "date" field.
+func (u *DbLinkUpsertOne) SetDate(v time.Time) *DbLinkUpsertOne {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.SetDate(v)
+	})
+}
+
+// UpdateDate sets the "date" field to the value that was provided on create.
+func (u *DbLinkUpsertOne) UpdateDate() *DbLinkUpsertOne {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.UpdateDate()
+	})
+}
+
+// SetSubtitle sets the "subtitle" field.
+func (u *DbLinkUpsertOne) SetSubtitle(v string) *DbLinkUpsertOne {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.SetSubtitle(v)
+	})
+}
+
+// UpdateSubtitle sets the "subtitle" field to the value that was provided on create.
+func (u *DbLinkUpsertOne) UpdateSubtitle() *DbLinkUpsertOne {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.UpdateSubtitle()
+	})
+}
+
+// SetDescription sets the "description" field.
+func (u *DbLinkUpsertOne) SetDescription(v string) *DbLinkUpsertOne {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.SetDescription(v)
+	})
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *DbLinkUpsertOne) UpdateDescription() *DbLinkUpsertOne {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.UpdateDescription()
+	})
+}
+
+// SetImageURL sets the "image_url" field.
+func (u *DbLinkUpsertOne) SetImageURL(v string) *DbLinkUpsertOne {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.SetImageURL(v)
+	})
+}
+
+// UpdateImageURL sets the "image_url" field to the value that was provided on create.
+func (u *DbLinkUpsertOne) UpdateImageURL() *DbLinkUpsertOne {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.UpdateImageURL()
+	})
+}
+
+// ClearImageURL clears the value of the "image_url" field.
+func (u *DbLinkUpsertOne) ClearImageURL() *DbLinkUpsertOne {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.ClearImageURL()
+	})
+}
+
+// SetImageAlt sets the "image_alt" field.
+func (u *DbLinkUpsertOne) SetImageAlt(v string) *DbLinkUpsertOne {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.SetImageAlt(v)
+	})
+}
+
+// UpdateImageAlt sets the "image_alt" field to the value that was provided on create.
+func (u *DbLinkUpsertOne) UpdateImageAlt() *DbLinkUpsertOne {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.UpdateImageAlt()
+	})
+}
+
+// ClearImageAlt clears the value of the "image_alt" field.
+func (u *DbLinkUpsertOne) ClearImageAlt() *DbLinkUpsertOne {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.ClearImageAlt()
+	})
+}
+
+// Exec executes the query.
+func (u *DbLinkUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for DbLinkCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *DbLinkUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *DbLinkUpsertOne) ID(ctx context.Context) (id string, err error) {
+	if u.create.driver.Dialect() == dialect.MySQL {
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
+		// fields from the database since MySQL does not support the RETURNING clause.
+		return id, errors.New("ent: DbLinkUpsertOne.ID is not supported by MySQL driver. Use DbLinkUpsertOne.Exec instead")
+	}
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *DbLinkUpsertOne) IDX(ctx context.Context) string {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // DbLinkCreateBulk is the builder for creating many DbLink entities in bulk.
 type DbLinkCreateBulk struct {
 	config
 	err      error
 	builders []*DbLinkCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the DbLink entities in the database.
@@ -251,6 +573,7 @@ func (dlcb *DbLinkCreateBulk) Save(ctx context.Context) ([]*DbLink, error) {
 					_, err = mutators[i+1].Mutate(root, dlcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = dlcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, dlcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -297,6 +620,218 @@ func (dlcb *DbLinkCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (dlcb *DbLinkCreateBulk) ExecX(ctx context.Context) {
 	if err := dlcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.DbLink.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.DbLinkUpsert) {
+//			SetTitle(v+v).
+//		}).
+//		Exec(ctx)
+func (dlcb *DbLinkCreateBulk) OnConflict(opts ...sql.ConflictOption) *DbLinkUpsertBulk {
+	dlcb.conflict = opts
+	return &DbLinkUpsertBulk{
+		create: dlcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.DbLink.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (dlcb *DbLinkCreateBulk) OnConflictColumns(columns ...string) *DbLinkUpsertBulk {
+	dlcb.conflict = append(dlcb.conflict, sql.ConflictColumns(columns...))
+	return &DbLinkUpsertBulk{
+		create: dlcb,
+	}
+}
+
+// DbLinkUpsertBulk is the builder for "upsert"-ing
+// a bulk of DbLink nodes.
+type DbLinkUpsertBulk struct {
+	create *DbLinkCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.DbLink.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(dblink.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *DbLinkUpsertBulk) UpdateNewValues() *DbLinkUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(dblink.FieldID)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.DbLink.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *DbLinkUpsertBulk) Ignore() *DbLinkUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *DbLinkUpsertBulk) DoNothing() *DbLinkUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the DbLinkCreateBulk.OnConflict
+// documentation for more info.
+func (u *DbLinkUpsertBulk) Update(set func(*DbLinkUpsert)) *DbLinkUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&DbLinkUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetTitle sets the "title" field.
+func (u *DbLinkUpsertBulk) SetTitle(v string) *DbLinkUpsertBulk {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.SetTitle(v)
+	})
+}
+
+// UpdateTitle sets the "title" field to the value that was provided on create.
+func (u *DbLinkUpsertBulk) UpdateTitle() *DbLinkUpsertBulk {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.UpdateTitle()
+	})
+}
+
+// SetDate sets the "date" field.
+func (u *DbLinkUpsertBulk) SetDate(v time.Time) *DbLinkUpsertBulk {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.SetDate(v)
+	})
+}
+
+// UpdateDate sets the "date" field to the value that was provided on create.
+func (u *DbLinkUpsertBulk) UpdateDate() *DbLinkUpsertBulk {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.UpdateDate()
+	})
+}
+
+// SetSubtitle sets the "subtitle" field.
+func (u *DbLinkUpsertBulk) SetSubtitle(v string) *DbLinkUpsertBulk {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.SetSubtitle(v)
+	})
+}
+
+// UpdateSubtitle sets the "subtitle" field to the value that was provided on create.
+func (u *DbLinkUpsertBulk) UpdateSubtitle() *DbLinkUpsertBulk {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.UpdateSubtitle()
+	})
+}
+
+// SetDescription sets the "description" field.
+func (u *DbLinkUpsertBulk) SetDescription(v string) *DbLinkUpsertBulk {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.SetDescription(v)
+	})
+}
+
+// UpdateDescription sets the "description" field to the value that was provided on create.
+func (u *DbLinkUpsertBulk) UpdateDescription() *DbLinkUpsertBulk {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.UpdateDescription()
+	})
+}
+
+// SetImageURL sets the "image_url" field.
+func (u *DbLinkUpsertBulk) SetImageURL(v string) *DbLinkUpsertBulk {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.SetImageURL(v)
+	})
+}
+
+// UpdateImageURL sets the "image_url" field to the value that was provided on create.
+func (u *DbLinkUpsertBulk) UpdateImageURL() *DbLinkUpsertBulk {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.UpdateImageURL()
+	})
+}
+
+// ClearImageURL clears the value of the "image_url" field.
+func (u *DbLinkUpsertBulk) ClearImageURL() *DbLinkUpsertBulk {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.ClearImageURL()
+	})
+}
+
+// SetImageAlt sets the "image_alt" field.
+func (u *DbLinkUpsertBulk) SetImageAlt(v string) *DbLinkUpsertBulk {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.SetImageAlt(v)
+	})
+}
+
+// UpdateImageAlt sets the "image_alt" field to the value that was provided on create.
+func (u *DbLinkUpsertBulk) UpdateImageAlt() *DbLinkUpsertBulk {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.UpdateImageAlt()
+	})
+}
+
+// ClearImageAlt clears the value of the "image_alt" field.
+func (u *DbLinkUpsertBulk) ClearImageAlt() *DbLinkUpsertBulk {
+	return u.Update(func(s *DbLinkUpsert) {
+		s.ClearImageAlt()
+	})
+}
+
+// Exec executes the query.
+func (u *DbLinkUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the DbLinkCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for DbLinkCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *DbLinkUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

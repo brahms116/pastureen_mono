@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
+	"entgo.io/ent/dialect/sql"
+	"fmt"
 	"pastureen/librarian-models"
 	"pastureen/librarian/ent"
 	"pastureen/librarian/ent/dblink"
 	"pastureen/librarian/ent/dbtag"
 	"time"
-	"entgo.io/ent/dialect/sql"
 )
 
 func DbLinkToModelLink(item *ent.DbLink) models.Link {
@@ -30,9 +31,9 @@ func DbLinkToModelLink(item *ent.DbLink) models.Link {
 func GetLink(url string, client *ent.Client, ctx context.Context) (*models.Link, error) {
 	dbLink, err := client.DbLink.Query().Where(dblink.ID(url)).Only(ctx)
 	if err != nil {
-    if ent.IsNotFound(err) {
-      return nil, nil
-    }
+		if ent.IsNotFound(err) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	link := DbLinkToModelLink(dbLink)
@@ -120,22 +121,25 @@ func DeleteLink(id string, client *ent.Client, ctx context.Context) error {
 	return err
 }
 
-func PrepareDbLink(link models.Link, client *ent.Client, ctx context.Context) (*ent.DbLinkCreate, error) {
+func PrepareDbLink(link models.Link, client *ent.Client, ctx context.Context) (*ent.DbLinkUpsertOne, error) {
 
 	// Find all the existingDbTags
 	existingDbTags, err := client.DbTag.Query().All(ctx)
 	if err != nil {
-		return &ent.DbLinkCreate{}, err
+		return &ent.DbLinkUpsertOne{}, err
 	}
+
+	fmt.Println("existingDbTags", existingDbTags)
 
 	var dbTagsToAssociate []*ent.DbTag
 
 	// Find all the tags
 	for _, tag := range link.Tags {
 		if !containsTag(existingDbTags, tag) {
+			fmt.Println("tag", tag)
 			tag, err := client.DbTag.Create().SetID(tag).Save(ctx)
 			if err != nil {
-				return &ent.DbLinkCreate{}, err
+				return &ent.DbLinkUpsertOne{}, err
 			}
 			dbTagsToAssociate = append(dbTagsToAssociate, tag)
 		} else {
@@ -171,11 +175,13 @@ func PrepareDbLink(link models.Link, client *ent.Client, ctx context.Context) (*
 		SetDate(linkDate).
 		SetDescription(link.Description).
 		SetID(link.Url).
-		SetSubtitle(link.Subtitle).
-		SetTitle(link.Title).
 		SetNillableImageAlt(nillableImageAlt).
 		SetNillableImageURL(nillableImageUrl).
-		AddTags(dbTagsToAssociate...)
+		AddTags(dbTagsToAssociate...).
+		SetSubtitle(link.Subtitle).
+		SetTitle(link.Title).
+    OnConflictColumns(dblink.FieldID).
+    UpdateNewValues()
 
 	return newDbLink, nil
 }

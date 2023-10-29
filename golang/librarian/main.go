@@ -75,13 +75,13 @@ func main() {
 		var getLinkRequest models.GetLinkRequest
 		ctx := c.Copy()
 		if err := c.ShouldBindQuery(&getLinkRequest); err != nil {
-			c.Error(err)
+      c.JSON(400, gin.H{"errorType": "MissingQuery", "message": err.Error()})
 			return
 		}
 
 		result, err := GetLink(getLinkRequest.Url, client, ctx)
 		if err != nil {
-			c.Error(err)
+      c.JSON(500, gin.H{"errorType": "InternalError", "message": err.Error()})
 		} else {
 			c.JSON(200, models.GetLinkResponse{Link: result})
 		}
@@ -99,7 +99,7 @@ func main() {
 
 		resultUrl, err := HandlePost(client, &config, &createPostRequest.Post, ctx)
 		if err != nil {
-			c.Error(err)
+      c.JSON(500, gin.H{"errorType": "InternalError", "message": err.Error()})
 		} else {
 			c.JSON(200, models.CreateNewPostResponse{Url: resultUrl})
 		}
@@ -117,7 +117,8 @@ func main() {
 
 		result, err := QueryLinks(&queryLinksRequest, client, ctx)
 		if err != nil {
-			c.Error(err)
+      c.JSON(500, gin.H{"errorType": "InternalError", "message": err.Error()})
+      return
 		} else {
 			c.JSON(200, models.QueryLinksResponse{Links: result})
 		}

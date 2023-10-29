@@ -4,10 +4,13 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"pastureen/librarian/ent/dblink"
 	"pastureen/librarian/ent/dbtag"
 
+	"entgo.io/ent/dialect"
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 )
@@ -17,6 +20,7 @@ type DbTagCreate struct {
 	config
 	mutation *DbTagMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
 }
 
 // SetID sets the "id" field.
@@ -105,6 +109,7 @@ func (dtc *DbTagCreate) createSpec() (*DbTag, *sqlgraph.CreateSpec) {
 		_node = &DbTag{config: dtc.config}
 		_spec = sqlgraph.NewCreateSpec(dbtag.Table, sqlgraph.NewFieldSpec(dbtag.FieldID, field.TypeString))
 	)
+	_spec.OnConflict = dtc.conflict
 	if id, ok := dtc.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
@@ -128,11 +133,141 @@ func (dtc *DbTagCreate) createSpec() (*DbTag, *sqlgraph.CreateSpec) {
 	return _node, _spec
 }
 
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.DbTag.Create().
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (dtc *DbTagCreate) OnConflict(opts ...sql.ConflictOption) *DbTagUpsertOne {
+	dtc.conflict = opts
+	return &DbTagUpsertOne{
+		create: dtc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.DbTag.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (dtc *DbTagCreate) OnConflictColumns(columns ...string) *DbTagUpsertOne {
+	dtc.conflict = append(dtc.conflict, sql.ConflictColumns(columns...))
+	return &DbTagUpsertOne{
+		create: dtc,
+	}
+}
+
+type (
+	// DbTagUpsertOne is the builder for "upsert"-ing
+	//  one DbTag node.
+	DbTagUpsertOne struct {
+		create *DbTagCreate
+	}
+
+	// DbTagUpsert is the "OnConflict" setter.
+	DbTagUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
+// Using this option is equivalent to using:
+//
+//	client.DbTag.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(dbtag.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *DbTagUpsertOne) UpdateNewValues() *DbTagUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.ID(); exists {
+			s.SetIgnore(dbtag.FieldID)
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.DbTag.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *DbTagUpsertOne) Ignore() *DbTagUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *DbTagUpsertOne) DoNothing() *DbTagUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the DbTagCreate.OnConflict
+// documentation for more info.
+func (u *DbTagUpsertOne) Update(set func(*DbTagUpsert)) *DbTagUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&DbTagUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// Exec executes the query.
+func (u *DbTagUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for DbTagCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *DbTagUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *DbTagUpsertOne) ID(ctx context.Context) (id string, err error) {
+	if u.create.driver.Dialect() == dialect.MySQL {
+		// In case of "ON CONFLICT", there is no way to get back non-numeric ID
+		// fields from the database since MySQL does not support the RETURNING clause.
+		return id, errors.New("ent: DbTagUpsertOne.ID is not supported by MySQL driver. Use DbTagUpsertOne.Exec instead")
+	}
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *DbTagUpsertOne) IDX(ctx context.Context) string {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
+}
+
 // DbTagCreateBulk is the builder for creating many DbTag entities in bulk.
 type DbTagCreateBulk struct {
 	config
 	err      error
 	builders []*DbTagCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the DbTag entities in the database.
@@ -161,6 +296,7 @@ func (dtcb *DbTagCreateBulk) Save(ctx context.Context) ([]*DbTag, error) {
 					_, err = mutators[i+1].Mutate(root, dtcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = dtcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, dtcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -207,6 +343,115 @@ func (dtcb *DbTagCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (dtcb *DbTagCreateBulk) ExecX(ctx context.Context) {
 	if err := dtcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.DbTag.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (dtcb *DbTagCreateBulk) OnConflict(opts ...sql.ConflictOption) *DbTagUpsertBulk {
+	dtcb.conflict = opts
+	return &DbTagUpsertBulk{
+		create: dtcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.DbTag.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (dtcb *DbTagCreateBulk) OnConflictColumns(columns ...string) *DbTagUpsertBulk {
+	dtcb.conflict = append(dtcb.conflict, sql.ConflictColumns(columns...))
+	return &DbTagUpsertBulk{
+		create: dtcb,
+	}
+}
+
+// DbTagUpsertBulk is the builder for "upsert"-ing
+// a bulk of DbTag nodes.
+type DbTagUpsertBulk struct {
+	create *DbTagCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.DbTag.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//			sql.ResolveWith(func(u *sql.UpdateSet) {
+//				u.SetIgnore(dbtag.FieldID)
+//			}),
+//		).
+//		Exec(ctx)
+func (u *DbTagUpsertBulk) UpdateNewValues() *DbTagUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.ID(); exists {
+				s.SetIgnore(dbtag.FieldID)
+			}
+		}
+	}))
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.DbTag.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *DbTagUpsertBulk) Ignore() *DbTagUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *DbTagUpsertBulk) DoNothing() *DbTagUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the DbTagCreateBulk.OnConflict
+// documentation for more info.
+func (u *DbTagUpsertBulk) Update(set func(*DbTagUpsert)) *DbTagUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&DbTagUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// Exec executes the query.
+func (u *DbTagUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the DbTagCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for DbTagCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *DbTagUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

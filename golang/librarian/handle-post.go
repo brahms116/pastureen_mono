@@ -38,15 +38,15 @@ func HandlePost(
 		return "", err
 	}
 
-  if s3Err != nil {
-    return "", s3Err
-  }
+	if s3Err != nil {
+		return "", s3Err
+	}
 
-	createdDbLink, err := preparedLink.Save(ctx)
+	url, err := preparedLink.ID(ctx)
 
 	if err != nil {
 		return "", err
 	}
 
-	return createdDbLink.ID, nil
+	return url, nil
 }
