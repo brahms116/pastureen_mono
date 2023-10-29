@@ -10,6 +10,7 @@
   --paragraph-color: #BEBEBE;
   --button-color: #EBF0F5;
   --button-hover-color: #DFF3CD;
+  --code-bg-color: #16181B;
 }
 
 html {
@@ -159,6 +160,7 @@ select {
 .layout-container {
   display: flex;
   justify-content: center;
+  margin-bottom: 5rem;
 }
 
 .layout {
@@ -241,7 +243,7 @@ select {
 }
 
 .heading--sm {
-  font-size: 1.5rem;
+  font-size: 1rem;
 }
 
 .prose {
@@ -276,7 +278,7 @@ select {
 
 .prose h3 {
   text-transform: uppercase;
-  font-size: 1.5rem;
+  font-size: 1rem;
   color: var(--text-color);
   margin-bottom: 2rem;
 }
@@ -285,11 +287,35 @@ select {
   color: var(--paragraph-color);
   font-size: 1rem;
   line-height: 2.5rem;
-  margin-bottom: 5rem;
+  margin-bottom: 3rem;
 }
 
 .prose .button {
   display: inline-flex;
+}
+
+.prose pre {
+  background: var(--code-bg-color);
+  color: var(--text-color);
+  padding: 3rem 3.5rem;
+  border-radius: 1.25rem;
+  overflow-x: auto;
+}
+
+.prose a {
+  text-decoration: underline;
+}
+
+.prose blockquote {
+  background: var(--code-bg-color);
+  padding: 3rem 3.5rem;
+  border-radius: 1.25rem;
+  margin-bottom: 3rem;
+}
+
+.prose blockquote p {
+  margin-bottom: 0;
+  color: var(--text-color);
 }
 
 .list {

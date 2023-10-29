@@ -90,3 +90,28 @@
   margin-top: 10rem;
 }
 
+.post {
+  margin-top: 10rem;
+}
+
+.post__title {
+  margin-bottom: 1.25rem;
+}
+
+.post__date {
+  font-size: 1rem;
+  color: var(--text-subdued-color);
+  margin-bottom: 1rem;
+  padding: 0 2rem;
+}
+
+.post__tags {
+  font-size: 1rem;
+  color: var(--text-subdued-color);
+  margin-bottom: 1rem;
+  padding: 0 2rem;
+}
+
+.post__content {
+  margin-top: 4rem;
+}

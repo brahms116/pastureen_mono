@@ -295,13 +295,13 @@ fn render_post_body(props: PostBodyProps) -> Markup {
     html! {
         .layout-container{
             .layout{
-                .post.prose{
-                    h1.post__title { (props.title) }
+                .post{
+                    h1.post__title.heading.heading--lg { (props.title) }
                     h3.post__date { (props.date) }
                     .post__tags {
                         (tags_str)
                     }
-                    .post__content {
+                    .post__content.prose {
                         (PreEscaped(props.content_html))
                     }
                 }
