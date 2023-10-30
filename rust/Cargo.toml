@@ -18,7 +18,8 @@ members = [
   "blog_htmx",
   "publisher",
   "auth_client",
-  "reqwest_utils"
+  "reqwest_utils",
+  "librarian_client"
 ]
 
 resolver = "2"

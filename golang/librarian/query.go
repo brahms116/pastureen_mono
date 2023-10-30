@@ -2,13 +2,15 @@ package main
 
 import (
 	"context"
-	"entgo.io/ent/dialect/sql"
 	"fmt"
 	"pastureen/librarian-models"
 	"pastureen/librarian/ent"
 	"pastureen/librarian/ent/dblink"
 	"pastureen/librarian/ent/dbtag"
+	"strings"
 	"time"
+
+	"entgo.io/ent/dialect/sql"
 )
 
 func DbLinkToModelLink(item *ent.DbLink) models.Link {
@@ -67,16 +69,17 @@ func QueryLinks(query *models.QueryLinksRequest, client *ent.Client, ctx context
 	}
 
 	if query.TitleQuery != "" {
-		q = q.Where(dblink.TitleContainsFold(query.TitleQuery))
+    trimmed := strings.TrimSpace(query.TitleQuery)
+		q = q.Where(dblink.TitleContainsFold(trimmed))
 	}
 
-	if query.Limit != 0 {
-		limit = query.Limit
+	if query.Pagination.Limit != 0 {
+		limit = query.Pagination.Limit
 	}
 	q = q.Limit(limit)
 
-	if query.Page != 0 {
-		q = q.Offset((query.Page - 1) * limit)
+	if query.Pagination.Page != 0 {
+		q = q.Offset((query.Pagination.Page - 1) * limit)
 	}
 
 	links, err := q.Order(dblink.ByDate(sql.OrderDesc())).All(ctx)

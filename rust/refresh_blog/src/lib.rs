@@ -59,6 +59,8 @@ pub struct Post {
 }
 
 pub fn render_global_search_results() -> Markup {
+    // TODO: Remove this altogether
+
     let dummy_list = ListProps {
         items: vec![
             ListItemProps {

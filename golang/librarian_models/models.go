@@ -21,7 +21,7 @@ type PaginationRequest struct {
 }
 
 type QueryLinksRequest struct {
-	PaginationRequest
+	Pagination PaginationRequest `json:"pagination"`
 	Tags       []string `json:"tags"`
 	TitleQuery string   `json:"titleQuery"`
 	StartDate  string   `json:"startDate"`
@@ -47,4 +47,8 @@ type CreateNewPostRequest struct {
 
 type CreateNewPostResponse struct {
   Url string `json:"url"`
+}
+
+type GetTagsResponse struct {
+  Tags []string `json:"tags"`
 }
