@@ -291,7 +291,8 @@ pub fn list_item(props: ListItemProps) -> Markup {
     html! {
         @match props.actionable {
             Some(Actionable::Link(url)) =>
-            a.list-item href=(url) {
+            a href=(url) {
+                .list-item {
                 .list-item__title {
                     (props.title)
                 }
@@ -300,6 +301,7 @@ pub fn list_item(props: ListItemProps) -> Markup {
                 }
                 .list-item__tertiary {
                     (props.tertiary)
+                }
                 }
             },
             Some(Actionable::Alpine(options)) =>
@@ -336,10 +338,8 @@ pub fn list_item(props: ListItemProps) -> Markup {
 
 pub fn list(props: ListProps) -> Markup {
     html! {
-        .list {
-            @for item in props.items {
-                (list_item(item))
-            }
+        @for item in props.items {
+            (list_item(item))
         }
     }
 }
