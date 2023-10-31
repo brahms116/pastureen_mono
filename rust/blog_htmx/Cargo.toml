@@ -9,4 +9,5 @@ edition = "2021"
 thiserror = "1.0.50"
 librarian_client = { path = "../librarian_client" }
 shared_models = { path = "../shared_models" }
+refresh = { path = "../refresh" }
 maud = "0.25.0"

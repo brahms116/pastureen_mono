@@ -461,6 +461,7 @@ version = "0.1.0"
 dependencies = [
  "librarian_client",
  "maud",
+ "refresh",
  "shared_models",
  "thiserror",
 ]

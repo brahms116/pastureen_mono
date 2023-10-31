@@ -1,5 +1,6 @@
 use librarian_client::*;
 use maud::{html, Markup};
+use refresh::*;
 use shared_models::*;
 use thiserror::Error;
 
@@ -84,33 +85,81 @@ pub async fn search_links(
     offset: Option<u32>,
     librarian_url: &str,
 ) -> Result<QueryLinksResponse, BlogHtmxError> {
-    let available_tags = get_tags(librarian_url).await?;
-    let query = parse_search_query(
-        query,
-        offset,
-        &available_tags
-            .iter()
-            .map(|t| t.as_str())
-            .collect::<Vec<&str>>(),
-    );
-
-    let response = query_links(librarian_url, query).await?;
-
+    // Skip getting tags if the query is empty
+    let query_request = if query.is_empty() {
+        parse_search_query(query, offset, &[])
+    } else {
+        let available_tags = get_tags(librarian_url).await?;
+        parse_search_query(
+            query,
+            offset,
+            &available_tags
+                .iter()
+                .map(|t| t.as_str())
+                .collect::<Vec<&str>>(),
+        )
+    };
+    let response = query_links(librarian_url, query_request).await?;
     Ok(QueryLinksResponse { links: response })
 }
 
-pub fn render_links(links: &[Link], next_offset: Option<u32>) -> Markup {
-    todo!()
+fn link_to_item_props(link: &Link) -> ListItemProps {
+    let mut tag_str = String::new();
+    for tag in &link.tags {
+        tag_str.push_str(format!("#{}", tag).as_str());
+        tag_str.push_str(" ");
+    }
+    ListItemProps {
+        actionable: Some(Actionable::Link(link.url.clone())),
+        title: link.title.clone(),
+        subtitle: link.date.clone(),
+        tertiary: tag_str,
+    }
+}
+
+pub fn render_links(
+    links: &[Link],
+    query: &str,
+    htmx_url: &str,
+    next_offset: Option<u32>,
+) -> Markup {
+    let item_props = links
+        .iter()
+        .map(link_to_item_props)
+        .collect::<Vec<ListItemProps>>();
+    let list_props = ListProps { items: item_props };
+    html! {
+        (list(list_props))
+        @if let Some(offset) = next_offset {
+            .loader
+                hx-trigger="revealed"
+                hx-get=(format!("{}/links?search={}&offset={}", htmx_url, query, offset))
+            {
+                "Loading..."
+            }
+        }
+    }
 }
 
 pub async fn render_default_results(config: &BlogHtmxConfig) -> Result<Markup, BlogHtmxError> {
-    todo!()
+    render_search_results("", None, config).await
 }
 
 pub async fn render_search_results(
     query: &str,
+    offset: Option<u32>,
     config: &BlogHtmxConfig,
 ) -> Result<Markup, BlogHtmxError> {
-    todo!()
+    let links = search_links(query, offset, &config.librarian_url).await?;
+    let next_offset = if links.links.len() < SEARCH_LIMIT as usize {
+        None
+    } else {
+        Some(offset.unwrap_or(0) + SEARCH_LIMIT)
+    };
+    Ok(render_links(
+        &links.links,
+        query,
+        &config.htmx_url,
+        next_offset,
+    ))
 }
-
