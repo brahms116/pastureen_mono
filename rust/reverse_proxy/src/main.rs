@@ -31,6 +31,7 @@ pub struct ReverseProxyConfig {
     pub auth_url: String,
     pub publisher_url: String,
     pub librarian_url: String,
+    pub blog_htmx_url: String,
 }
 
 fn get_url_from_env(key: &str) -> Result<String, ReverseProxyError> {
@@ -47,6 +48,7 @@ impl ReverseProxyConfig {
         let auth_url = get_url_from_env("REVERSE_PROXY_AUTH_URL")?;
         let publisher_url = get_url_from_env("REVERSE_PROXY_PUBLISHER_URL")?;
         let librarian_url = get_url_from_env("REVERSE_PROXY_LIBRARIAN_URL")?;
+        let blog_htmx_url = get_url_from_env("REVERSE_PROXY_BLOG_HTMX_URL")?;
         Ok(Self {
             listen_addr,
             design_system_url,
@@ -56,6 +58,7 @@ impl ReverseProxyConfig {
             base_url,
             publisher_url,
             librarian_url,
+            blog_htmx_url,
         })
     }
 }
@@ -70,6 +73,7 @@ pub enum Route {
     Auth(String),
     Publisher(String),
     Librarian(String),
+    BlogHtmx(String),
     NotFound,
     HealthCheck,
     Root,
@@ -84,6 +88,7 @@ impl From<&str> for Route {
         let auth_slug = "/auth";
         let publisher_slug = "/publisher";
         let librarian_slug = "/librarian";
+        let blog_htmx_slug = "/blog-htmx";
 
         if path == "/" || path.is_empty() {
             return Route::Root;
@@ -115,6 +120,10 @@ impl From<&str> for Route {
 
         if matches_path(path, librarian_slug) {
             return Route::Librarian(strip_prefix(path, librarian_slug));
+        }
+
+        if matches_path(path, blog_htmx_slug) {
+            return Route::BlogHtmx(strip_prefix(path, blog_htmx_slug));
         }
 
         Route::NotFound
@@ -172,6 +181,7 @@ pub enum ProxyRoute {
     Auth(String),
     Publisher(String),
     Librarian(String),
+    BlogHtmx(String),
 }
 
 impl ProxyRoute {
@@ -202,6 +212,9 @@ fn get_proxied_uri(route: &ProxyRoute, config: &ReverseProxyConfig) -> String {
         ProxyRoute::Librarian(slug) => {
             format!("{}{}", config.librarian_url, slug)
         }
+        ProxyRoute::BlogHtmx(slug) => {
+            format!("{}{}", config.blog_htmx_url, slug)
+        }
     }
 }
 
@@ -231,6 +244,7 @@ impl From<Route> for ClassifiedRoute {
             Route::Auth(path) => ClassifiedRoute::Proxy(ProxyRoute::Auth(path)),
             Route::StaticAssets(path) => ClassifiedRoute::Proxy(ProxyRoute::StaticAssets(path)),
             Route::Librarian(path) => ClassifiedRoute::Proxy(ProxyRoute::Librarian(path)),
+            Route::BlogHtmx(path) => ClassifiedRoute::Proxy(ProxyRoute::BlogHtmx(path)),
             Route::NotFound => ClassifiedRoute::NonProxy(NonProxyRoute::NotFound),
             Route::HealthCheck => ClassifiedRoute::NonProxy(NonProxyRoute::HealthCheck),
             Route::Root => ClassifiedRoute::NonProxy(NonProxyRoute::Root),
