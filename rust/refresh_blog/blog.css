@@ -10,19 +10,19 @@
   margin-top: 2rem;
 }
 
-.global-search-results-resource .global-search-result__items {
+.global-search-results-resource .global-search-results-resource__items {
   display: block;
 }
 
-.global-search-results-resource .global-search-result__loader {
+.global-search-results-resource .global-search-results-resource__loader {
   display: none;
 }
 
-.global-search-results-resource.htmx-indicator .global-search-result__items {
+.global-search-results-resource.htmx-indicator .global-search-results-resource__items {
   display: none;
 }
 
-.global-search-results-resource.htmx-indicator .global-search-result__loader {
+.global-search-results-resource.htmx-indicator .global-search-results-resource__loader {
   display: block;
 }
 

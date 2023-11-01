@@ -234,7 +234,7 @@ pub fn render_index_page(config: BlogConfig) -> String {
                 indicator: Some(".global-search-results-resource".to_string())
             },
             search_body: render_global_search_results_page(GlobalSearchResultsPageProps{
-                loader: Some(html!{.loader{}}),
+                loader: Some(html!{.loader{"fetching recent posts..."}}),
                 ..Default::default()
             }),
         },
@@ -311,7 +311,7 @@ pub fn render_post_page(config: BlogConfig, props: PostProps) -> String {
                 indicator: Some(".global-search-results-resource".to_string())
             },
             search_body: render_global_search_results_page(GlobalSearchResultsPageProps{
-                loader: Some(html!{.loader{}}),
+                loader: Some(html!{.loader{"fetching recent posts..."}}),
                 ..Default::default()
             }),
         },

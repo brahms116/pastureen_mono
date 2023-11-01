@@ -211,6 +211,7 @@ pub async fn render_search_results(
         GlobalSearchResultsPageProps {
             results_heading: Some(results_heading.to_string()),
             results: Some(links_html),
+            loader: Some(html!{.loader{"loading..."}}),
             ..Default::default()
         },
     ))
