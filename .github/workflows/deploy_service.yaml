@@ -18,6 +18,7 @@ on:
           - static_assets
           - publisher
           - librarian
+          - blog_htmx
 
 env:
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -86,6 +87,22 @@ jobs:
           PUBLISHER_HTMX_URL: ${{ vars.REVERSE_PROXY_URL }}/blog-htmx
           PUBLISHER_AUTH_URL: ${{ vars.REVERSE_PROXY_URL }}/auth
           PUBLISHER_ADMIN_EMAIL: ${{ vars.ADMIN_EMAIL }}
+          PUBLISHER_LISTEN_ADDR: ${{ vars.LAMBDA_LISTEN_ADDR }}
+        run: cd rust/publisher && ./deploy.sh $ENV
+
+  deploy_blog_Htmx:
+    runs-on: ubuntu-latest
+    if: inputs.service == 'blog_htmx' || inputs.service == 'everything'
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Deploy blog_htmx
+        env:
+          BLOG_HTMX_ASSETS_URL: ${{ vars.REVERSE_PROXY_URL }}/static
+          BLOG_HTMX_BASE_URL: ${{ vars.REVERSE_PROXY_URL }}/blog
+          BLOG_HTMX_HTMX_URL: ${{ vars.REVERSE_PROXY_URL }}/blog-htmx
+          BLOG_HTMX_AUTH_URL: ${{ vars.REVERSE_PROXY_URL }}/auth
           PUBLISHER_LISTEN_ADDR: ${{ vars.LAMBDA_LISTEN_ADDR }}
         run: cd rust/publisher && ./deploy.sh $ENV
 
