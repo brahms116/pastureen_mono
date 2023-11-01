@@ -10,4 +10,9 @@ thiserror = "1.0.50"
 librarian_client = { path = "../librarian_client" }
 shared_models = { path = "../shared_models" }
 refresh = { path = "../refresh" }
+refresh_blog = { path = "../refresh_blog" }
 maud = "0.25.0"
+tokio = { version = "1.32.0", features = ["full"] }
+axum =  { version = "0.6.20", features = ["headers"] }
+serde = { version = "1.0.188", features = ["derive"] }
+tower-http = { version = "0.4.4", features = ["cors"] }

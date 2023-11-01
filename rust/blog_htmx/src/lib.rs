@@ -1,6 +1,7 @@
 use librarian_client::*;
 use maud::{html, Markup};
 use refresh::*;
+use refresh_blog::*;
 use shared_models::*;
 use thiserror::Error;
 
@@ -16,6 +17,15 @@ pub enum BlogHtmxError {
     LibrarianError(#[from] ClientHttpResponseError),
 }
 
+impl TypedErr for BlogHtmxError {
+    fn error_type(&self) -> String {
+        match self {
+            BlogHtmxError::ConfigurationMissing(_) => "ConfigurationMissing".to_string(),
+            BlogHtmxError::LibrarianError(_) => "LibrarianError".to_string(),
+        }
+    }
+}
+
 fn get_env_var(name: &str) -> Result<String, BlogHtmxError> {
     match std::env::var(format!("{}{}", ENV_PREFIX, name)) {
         Ok(value) => Ok(value),
@@ -23,6 +33,7 @@ fn get_env_var(name: &str) -> Result<String, BlogHtmxError> {
     }
 }
 
+#[derive(Clone)]
 pub struct BlogHtmxConfig {
     pub librarian_url: String,
     pub assets_url: String,
@@ -38,14 +49,14 @@ impl BlogHtmxConfig {
             assets_url: get_env_var("ASSETS_URL")?,
             base_url: get_env_var("BASE_URL")?,
             htmx_url: get_env_var("HTMX_URL")?,
-            listen_address: get_env_var("LISTEN_ADDRESS")?,
+            listen_address: get_env_var("LISTEN_ADDR")?,
         })
     }
 }
 
 /// Parses the search query and returns the query to send to the librarian
 pub fn parse_search_query(
-    query: &str,
+    query_str: &str,
     offset: Option<u32>,
     available_tags: &[&str],
 ) -> QueryLinksRequest {
@@ -54,20 +65,24 @@ pub fn parse_search_query(
         limit: SEARCH_LIMIT,
     };
 
-    let query_parts = query.split(" ").collect::<Vec<&str>>();
+    let query_parts = query_str.trim().split(" ").collect::<Vec<&str>>();
     let mut title_query = String::new();
     let mut tags = Vec::new();
+
+    let len = query_parts.len();
 
     for part in query_parts {
         // see if it matches "tag:tagname"
         if part.starts_with("tag:") {
             tags.push(part[4..].to_string());
         } else {
-            if available_tags.contains(&part) {
+            if available_tags.contains(&part) && len == 1 {
                 tags.push(part.to_string());
             }
-            title_query.push_str(part);
-            title_query.push_str(" ");
+            else {
+                title_query.push_str(part);
+                title_query.push_str(" ");
+            }
         }
     }
 
@@ -81,17 +96,17 @@ pub fn parse_search_query(
 }
 
 pub async fn search_links(
-    query: &str,
+    query_str: &str,
     offset: Option<u32>,
     librarian_url: &str,
 ) -> Result<QueryLinksResponse, BlogHtmxError> {
     // Skip getting tags if the query is empty
-    let query_request = if query.is_empty() {
-        parse_search_query(query, offset, &[])
+    let query_links_request_body = if query_str.is_empty() {
+        parse_search_query(query_str, offset, &[])
     } else {
         let available_tags = get_tags(librarian_url).await?;
         parse_search_query(
-            query,
+            query_str,
             offset,
             &available_tags
                 .iter()
@@ -99,7 +114,7 @@ pub async fn search_links(
                 .collect::<Vec<&str>>(),
         )
     };
-    let response = query_links(librarian_url, query_request).await?;
+    let response = query_links(librarian_url, query_links_request_body).await?;
     Ok(QueryLinksResponse { links: response })
 }
 
@@ -141,16 +156,12 @@ pub fn render_links(
     }
 }
 
-pub async fn render_default_results(config: &BlogHtmxConfig) -> Result<Markup, BlogHtmxError> {
-    render_search_results("", None, config).await
-}
-
-pub async fn render_search_results(
-    query: &str,
+pub async fn search_and_render_links(
+    query_str: &str,
     offset: Option<u32>,
     config: &BlogHtmxConfig,
 ) -> Result<Markup, BlogHtmxError> {
-    let links = search_links(query, offset, &config.librarian_url).await?;
+    let links = search_links(query_str, offset, &config.librarian_url).await?;
     let next_offset = if links.links.len() < SEARCH_LIMIT as usize {
         None
     } else {
@@ -158,8 +169,41 @@ pub async fn render_search_results(
     };
     Ok(render_links(
         &links.links,
-        query,
+        query_str,
         &config.htmx_url,
         next_offset,
+    ))
+}
+
+pub async fn render_next_page_of_links(
+    query_str: &str,
+    offset: Option<u32>,
+    config: &BlogHtmxConfig,
+) -> Result<Markup, BlogHtmxError> {
+    let links_html = search_and_render_links(query_str, offset, config).await?;
+    Ok(html! {
+        (links_html)
+    })
+}
+
+pub async fn render_search_results(
+    query_str: &str,
+    offset: Option<u32>,
+    config: &BlogHtmxConfig,
+) -> Result<Markup, BlogHtmxError> {
+    let links_html = search_and_render_links(query_str, offset, config).await?;
+
+    let results_heading = if query_str.is_empty() {
+        "Recent posts"
+    } else {
+        "Results"
+    };
+
+    Ok(render_global_search_results_page(
+        GlobalSearchResultsPageProps {
+            results_heading: Some(results_heading.to_string()),
+            results: Some(links_html),
+            ..Default::default()
+        },
     ))
 }

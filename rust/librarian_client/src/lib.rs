@@ -69,7 +69,7 @@ pub async fn query_links(
     let client = Client::new();
 
     let res = client
-        .post(&format!("{}/links", endpoint))
+        .post(&format!("{}/search", endpoint))
         .json(&query)
         .send()
         .await;

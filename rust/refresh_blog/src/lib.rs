@@ -58,85 +58,36 @@ pub struct Post {
     pub post_html: String,
 }
 
-pub fn render_global_search_results() -> Markup {
-    // TODO: Remove this altogether
+#[derive(Debug, Clone, Default)]
+pub struct GlobalSearchResultsPageProps {
+    pub suggestions: Option<Markup>,
+    pub results_heading: Option<String>,
+    pub results: Option<Markup>,
+}
 
-    let dummy_list = ListProps {
-        items: vec![
-            ListItemProps {
-                title: "Github Profile".to_string(),
-                subtitle: "github.com/brahms116".to_string(),
-                tertiary: "#GITHUB #LINK".to_string(),
-                actionable: Some(Actionable::Link("https://github.com/brahms116".to_string())),
-            },
-            ListItemProps {
-                title: "Linkedin Profile".to_string(),
-                subtitle: "linkedin.com/in/david-kwong-a4323b206/".to_string(),
-                tertiary: "#LINKEDIN #LINK".to_string(),
-                actionable: Some(Actionable::Link(
-                    "https://www.linkedin.com/in/david-kwong-a4323b206/".to_string(),
-                )),
-            },
-        ],
-    };
-
-    let default_menu = MenuProps {
-        sections: vec![MenuSectionProps {
-            label: "Common search tags".to_string(),
-            items: vec![
-                MenuItemProps {
-                    label: "Faith".to_string(),
-                    actionable: Some(Actionable::Alpine(
-                        "
-                            searchInput+=' tag:faith'
-                            $dispatch('focusglobalsearch')
-                        "
-                        .to_string(),
-                    )),
-                },
-                MenuItemProps {
-                    label: "Tech".to_string(),
-                    actionable: Some(Actionable::Alpine(
-                        "
-                            searchInput+=' tag:tech'
-                            $dispatch('focusglobalsearch')
-                        "
-                        .to_string(),
-                    )),
-                },
-                MenuItemProps {
-                    label: "Music".to_string(),
-                    actionable: Some(Actionable::Alpine(
-                        "
-                            searchInput+=' tag:music'
-                            $dispatch('focusglobalsearch')
-                        "
-                        .to_string(),
-                    )),
-                },
-            ],
-        }],
-    };
-
+pub fn render_global_search_results_page(props: GlobalSearchResultsPageProps) -> Markup {
     html! {
         .layout-container {
             .layout {
                 .global-search-results {
-                    .global-search-results__suggestions {
-                        (menu(default_menu))
+                    @if let Some(suggestions) = props.suggestions {
+                        .global-search-results__suggestions {
+                            (suggestions)
+                        }
                     }
                     .global-search-results__items
                     .global-search-result-items {
-                        .global-search-result-items__heading {
-                            .heading
-                            .heading--md {
-                                "Links"
+                        @if let Some(heading) = props.results_heading {
+                            .global-search-result-items__heading {
+                                .heading
+                                .heading--md {
+                                    (heading)
+                                }
                             }
                         }
-                        .global-search-result-items__list {
-                            (list(dummy_list))
-                            .loader {
-                                "loading..."
+                        @if let Some(results) = props.results {
+                            .global-search-result-items__list {
+                                (results)
                             }
                         }
                     }
@@ -259,11 +210,11 @@ pub fn render_index_page(config: BlogConfig) -> String {
             state: NavbarState::Closed,
             input_options: HtmxOptions {
                 trigger: Some("focus, keyup changed delay:100ms".to_string()),
-                target: Some("global-search__body".to_string()),
-                url: Some(HtmxUrl::Post("/search".to_string())),
+                target: Some(".global-search__body".to_string()),
+                url: Some(HtmxUrl::Post(format!("{}/search", config.htmx_url))),
                 swap: Some("innerHTML".to_string()),
             },
-            search_body: render_global_search_results(),
+            search_body: render_global_search_results_page(GlobalSearchResultsPageProps::default()),
         },
         body: index_body(IndexBodyProps {
             base_url: config.base_url,
@@ -332,11 +283,11 @@ pub fn render_post_page(config: BlogConfig, props: PostProps) -> String {
             state: NavbarState::Closed,
             input_options: HtmxOptions {
                 trigger: Some("focus, keyup changed delay:100ms".to_string()),
-                target: Some("global-search__body".to_string()),
-                url: Some(HtmxUrl::Post("/search".to_string())),
+                target: Some(".global-search__body".to_string()),
+                url: Some(HtmxUrl::Post(format!("{}/search", config.htmx_url))),
                 swap: Some("innerHTML".to_string()),
             },
-            search_body: render_global_search_results(),
+            search_body: render_global_search_results_page(GlobalSearchResultsPageProps::default()),
         },
         body: render_post_body(body_props),
         css_src: "".to_string(),

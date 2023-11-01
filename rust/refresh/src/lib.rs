@@ -497,6 +497,8 @@ pub fn global_search(props: GlobalSearchProps) -> Markup {
                             hx-delete=[derived_htmx_urls.delete]
                             hx-trigger=[props.input_options.trigger]
                             hx-swap=[props.input_options.swap]
+                            hx-target=[props.input_options.target]
+                            name="search"
                             type="text"
                             {}
                         .navbar-body__icon

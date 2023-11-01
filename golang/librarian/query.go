@@ -46,9 +46,12 @@ func QueryLinks(query *models.QueryLinksRequest, client *ent.Client, ctx context
 
 	limit := 50
 
+  fmt.Println("query", query)
+
 	q := client.DbLink.Query().WithTags()
 
-	if query.Tags != nil {
+	if len(query.Tags) != 0 {
+    fmt.Println("query.Tags", query.Tags)
 		q = q.Where(dblink.HasTagsWith(dbtag.IDIn(query.Tags...)))
 	}
 
@@ -83,6 +86,8 @@ func QueryLinks(query *models.QueryLinksRequest, client *ent.Client, ctx context
 	}
 
 	links, err := q.Order(dblink.ByDate(sql.OrderDesc())).All(ctx)
+
+  fmt.Println("links", links)
 
 	if err != nil {
 		return []models.Link{}, err

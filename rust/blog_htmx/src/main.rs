@@ -1,16 +1,122 @@
-fn main() {
-    println!("Hello, world!");
+use axum::{
+    extract::{Form, Json, Query, State},
+    http::StatusCode,
+    response::{Html, IntoResponse},
+    routing::{get, post},
+    Router, Server,
+};
+
+use shared_models::*;
+
+use blog_htmx::*;
+use std::{net::SocketAddr, sync::Arc};
+
+use tower_http::cors::{Any, CorsLayer};
+
+pub struct JsonErrResponse(pub StatusCode, pub Json<HttpErrResponseBody>);
+impl IntoResponse for JsonErrResponse {
+    fn into_response(self) -> axum::response::Response {
+        (self.0, self.1).into_response()
+    }
 }
 
-// fn parse_search_query -> gives back the queries needed from librarian
-//
-// first iteration should be simple, if its a tag, then just return the tag
+impl From<BlogHtmxError> for JsonErrResponse {
+    fn from(err: BlogHtmxError) -> Self {
+        let status = match err {
+            BlogHtmxError::ConfigurationMissing(_) | BlogHtmxError::LibrarianError(_) => {
+                StatusCode::INTERNAL_SERVER_ERROR
+            }
+        };
 
-// handler POST global-search
-//  - get list of tags
-//  - parse query
-//  - send the query to librarian
-//  - use the results to generate the html (fn generate_global_search_results)
-//  - return
+        JsonErrResponse(status, Json(HttpErrResponseBody::from(err)))
+    }
+}
 
-// handler GET healthcheck
+struct BlogHtmxState {
+    config: BlogHtmxConfig,
+}
+
+#[tokio::main]
+async fn main() {
+    let config = BlogHtmxConfig::from_env().unwrap_or_else(|err| {
+        eprintln!(
+            "Failed to get configuration from environment variables: {}",
+            err
+        );
+        std::process::exit(1);
+    });
+
+    let cors = CorsLayer::new()
+        .allow_origin([config.base_url.parse().unwrap()])
+        .allow_methods(Any)
+        .allow_headers(Any);
+
+    let state = Arc::new(BlogHtmxState {
+        config: config.clone(),
+    });
+
+    let app = Router::new()
+        .route("/healthcheck", get(healthcheck))
+        .route("/search", post(search_links))
+        .route("/search", get(get_next_page_links))
+        .with_state(state)
+        .layer(cors);
+
+    let socket_addr: SocketAddr = config.listen_address.parse().unwrap_or_else(|err| {
+        eprintln!(
+            "Failed to parse listen address `{}`: {}",
+            config.listen_address, err
+        );
+        std::process::exit(1);
+    });
+    println!("Listening on {}", socket_addr);
+
+    Server::bind(&socket_addr)
+        .serve(app.into_make_service())
+        .await
+        .unwrap_or_else(|err| {
+            eprintln!("Failed to start server: {}", err);
+            std::process::exit(1);
+        });
+}
+
+#[derive(serde::Deserialize)]
+struct SearchLinksBody {
+    search: String,
+}
+
+/// Search links endpoint
+async fn search_links(
+    State(state): State<Arc<BlogHtmxState>>,
+    Form(body): Form<SearchLinksBody>,
+) -> Result<Html<String>, JsonErrResponse> {
+    Ok(Html(
+        render_search_results(&body.search, None, &state.config)
+            .await?
+            .into_string(),
+    ))
+}
+
+#[derive(serde::Deserialize)]
+struct GetNextPageLinksBody {
+    search: String,
+    #[serde(default)]
+    offset: Option<u32>,
+}
+
+/// get next page for links endpoint
+async fn get_next_page_links(
+    State(state): State<Arc<BlogHtmxState>>,
+    Query(body): Query<GetNextPageLinksBody>,
+) -> Result<Html<String>, JsonErrResponse> {
+    Ok(Html(
+        render_search_results(&body.search, body.offset, &state.config)
+            .await?
+            .into_string(),
+    ))
+}
+
+/// Health check endpoint
+async fn healthcheck() -> &'static str {
+    "OK"
+}
