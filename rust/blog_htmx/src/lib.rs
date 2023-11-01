@@ -5,7 +5,7 @@ use refresh_blog::*;
 use shared_models::*;
 use thiserror::Error;
 
-const SEARCH_LIMIT: u32 = 10;
+const SEARCH_LIMIT: u32 = 20;
 
 const ENV_PREFIX: &str = "BLOG_HTMX_";
 
@@ -74,12 +74,11 @@ pub fn parse_search_query(
     for part in query_parts {
         // see if it matches "tag:tagname"
         if part.starts_with("tag:") {
-            tags.push(part[4..].to_string());
+            tags.push(part[4..].to_string().to_lowercase());
         } else {
             if available_tags.contains(&part) && len == 1 {
                 tags.push(part.to_string());
-            }
-            else {
+            } else {
                 title_query.push_str(part);
                 title_query.push_str(" ");
             }
@@ -118,14 +117,21 @@ pub async fn search_links(
     Ok(QueryLinksResponse { links: response })
 }
 
-fn link_to_item_props(link: &Link) -> ListItemProps {
+fn link_to_item_props(link: &Link, blog_base_url: &str) -> ListItemProps {
     let mut tag_str = String::new();
     for tag in &link.tags {
         tag_str.push_str(format!("#{}", tag).as_str());
         tag_str.push_str(" ");
     }
+
+    let item_link = if link.url.starts_with("http") {
+        link.url.clone()
+    } else {
+        format!("{}{}", blog_base_url, link.url)
+    };
+
     ListItemProps {
-        actionable: Some(Actionable::Link(link.url.clone())),
+        actionable: Some(Actionable::Link(item_link)),
         title: link.title.clone(),
         subtitle: link.date.clone(),
         tertiary: tag_str,
@@ -136,18 +142,19 @@ pub fn render_links(
     links: &[Link],
     query: &str,
     htmx_url: &str,
+    blog_base_url: &str,
     next_offset: Option<u32>,
 ) -> Markup {
     let item_props = links
         .iter()
-        .map(link_to_item_props)
+        .map(|link| link_to_item_props(link, blog_base_url))
         .collect::<Vec<ListItemProps>>();
     let list_props = ListProps { items: item_props };
     html! {
         (list(list_props))
         @if let Some(offset) = next_offset {
             .loader
-                hx-trigger="revealed"
+                hx-trigger="revealed once"
                 hx-get=(format!("{}/links?search={}&offset={}", htmx_url, query, offset))
             {
                 "Loading..."
@@ -171,6 +178,7 @@ pub async fn search_and_render_links(
         &links.links,
         query_str,
         &config.htmx_url,
+        &config.base_url,
         next_offset,
     ))
 }
