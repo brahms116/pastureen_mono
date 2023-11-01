@@ -76,8 +76,8 @@ pub fn parse_search_query(
         if part.starts_with("tag:") {
             tags.push(part[4..].to_string().to_lowercase());
         } else {
-            if available_tags.contains(&part) && len == 1 {
-                tags.push(part.to_string());
+            if available_tags.contains(&(part.to_lowercase().as_str())) && len == 1 {
+                tags.push(part.to_string().to_lowercase());
             } else {
                 title_query.push_str(part);
                 title_query.push_str(" ");

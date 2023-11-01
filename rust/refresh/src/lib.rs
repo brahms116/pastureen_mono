@@ -137,6 +137,7 @@ pub struct HtmxOptions {
     pub url: Option<HtmxUrl>,
     pub swap: Option<String>,
     pub trigger: Option<String>,
+    pub indicator: Option<String>,
 }
 
 pub enum Actionable {
@@ -273,6 +274,7 @@ fn htmx_list_item(options: HtmxOptions, title: &str, subtitle: &str, tertiary: &
             hx-trigger=[options.trigger]
             hx-swap=[options.swap]
             hx-target=[options.target]
+            hx-indicator=[options.indicator]
         {
             .list-item__title {
                 (title)
@@ -359,6 +361,7 @@ fn htmx_menu_item(options: HtmxOptions, label: &str) -> Markup {
             hx-trigger=[options.trigger]
             hx-swap=[options.swap]
             hx-target=[options.target]
+            hx-indicator=[options.indicator]
         {
             (label)
         }
@@ -498,6 +501,7 @@ pub fn global_search(props: GlobalSearchProps) -> Markup {
                             hx-trigger=[props.input_options.trigger]
                             hx-swap=[props.input_options.swap]
                             hx-target=[props.input_options.target]
+                            hx-indicator=[props.input_options.indicator]
                             name="search"
                             type="text"
                             {}

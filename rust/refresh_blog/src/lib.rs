@@ -63,34 +63,52 @@ pub struct GlobalSearchResultsPageProps {
     pub suggestions: Option<Markup>,
     pub results_heading: Option<String>,
     pub results: Option<Markup>,
+    pub loader: Option<Markup>
 }
 
 pub fn render_global_search_results_page(props: GlobalSearchResultsPageProps) -> Markup {
+
+    let body = html!{
+        .global-search-results {
+            @if let Some(suggestions) = props.suggestions {
+                .global-search-results__suggestions {
+                    (suggestions)
+                }
+            }
+            .global-search-results__items
+            .global-search-result-items {
+                @if let Some(heading) = props.results_heading {
+                    .global-search-result-items__heading {
+                        .heading
+                        .heading--md {
+                            (heading)
+                        }
+                    }
+                }
+                @if let Some(results) = props.results {
+                    .global-search-result-items__list {
+                        (results)
+                    }
+                }
+            }
+        }
+    };
+
     html! {
         .layout-container {
             .layout {
-                .global-search-results {
-                    @if let Some(suggestions) = props.suggestions {
-                        .global-search-results__suggestions {
-                            (suggestions)
+                @if let Some(loader) = props.loader {
+                    .global-search-results-resource {
+                        .global-search-results-resource__items {
+                            (body)
+                        }
+                        .global-search-results-resource__loader {
+                            (loader)
                         }
                     }
-                    .global-search-results__items
-                    .global-search-result-items {
-                        @if let Some(heading) = props.results_heading {
-                            .global-search-result-items__heading {
-                                .heading
-                                .heading--md {
-                                    (heading)
-                                }
-                            }
-                        }
-                        @if let Some(results) = props.results {
-                            .global-search-result-items__list {
-                                (results)
-                            }
-                        }
-                    }
+                }
+                @else {
+                    (body)
                 }
             }
         }
@@ -213,8 +231,12 @@ pub fn render_index_page(config: BlogConfig) -> String {
                 target: Some(".global-search__body".to_string()),
                 url: Some(HtmxUrl::Post(format!("{}/search", config.htmx_url))),
                 swap: Some("innerHTML".to_string()),
+                indicator: Some(".global-search-results-resource".to_string())
             },
-            search_body: render_global_search_results_page(GlobalSearchResultsPageProps::default()),
+            search_body: render_global_search_results_page(GlobalSearchResultsPageProps{
+                loader: Some(html!{.loader{}}),
+                ..Default::default()
+            }),
         },
         body: index_body(IndexBodyProps {
             base_url: config.base_url,
@@ -286,8 +308,12 @@ pub fn render_post_page(config: BlogConfig, props: PostProps) -> String {
                 target: Some(".global-search__body".to_string()),
                 url: Some(HtmxUrl::Post(format!("{}/search", config.htmx_url))),
                 swap: Some("innerHTML".to_string()),
+                indicator: Some(".global-search-results-resource".to_string())
             },
-            search_body: render_global_search_results_page(GlobalSearchResultsPageProps::default()),
+            search_body: render_global_search_results_page(GlobalSearchResultsPageProps{
+                loader: Some(html!{.loader{}}),
+                ..Default::default()
+            }),
         },
         body: render_post_body(body_props),
         css_src: "".to_string(),
