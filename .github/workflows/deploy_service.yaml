@@ -91,7 +91,7 @@ jobs:
           PUBLISHER_LISTEN_ADDR: ${{ vars.LAMBDA_LISTEN_ADDR }}
         run: cd rust/publisher && ./deploy.sh $ENV
 
-  deploy_blog_Htmx:
+  deploy_blog_htmx:
     runs-on: ubuntu-latest
     if: inputs.service == 'blog_htmx' || inputs.service == 'everything'
     environment: ${{ inputs.environment }}
