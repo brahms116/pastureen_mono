@@ -22,6 +22,6 @@ aws lambda update-function-configuration --function-name blog_htmx_$env --enviro
     BLOG_HTMX_BASE_URL=$BLOG_HTMX_BASE_URL,\
     BLOG_HTMX_HTMX_URL=$BLOG_HTMX_HTMX_URL,\
     BLOG_HTMX_LIBRAIRN_URL=$BLOG_HTMX_LIBRAIRN_URL,\
-    BLOG_HTMX_LISTEN_ADDR=$PUBLISHER_LISTEN_ADDR,\
+    BLOG_HTMX_LISTEN_ADDR=$BLOG_HTMX_LISTEN_ADDR,\
     READINESS_CHECK_PATH='/healthcheck'\
   }"
