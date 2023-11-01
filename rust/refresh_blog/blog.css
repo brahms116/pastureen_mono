@@ -10,22 +10,6 @@
   margin-top: 2rem;
 }
 
-.global-search-results-resource .global-search-results-resource__items {
-  display: block;
-}
-
-.global-search-results-resource .global-search-results-resource__loader {
-  display: none;
-}
-
-.global-search-results-resource.htmx-indicator .global-search-results-resource__items {
-  display: none;
-}
-
-.global-search-results-resource.htmx-indicator .global-search-results-resource__loader {
-  display: block;
-}
-
 .index-page {
   overflow-x: hidden;
   margin-bottom: 10rem;

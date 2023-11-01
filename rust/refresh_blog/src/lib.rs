@@ -98,11 +98,11 @@ pub fn render_global_search_results_page(props: GlobalSearchResultsPageProps) ->
         .layout-container {
             .layout {
                 @if let Some(loader) = props.loader {
-                    .global-search-results-resource {
-                        .global-search-results-resource__items {
+                    .resource {
+                        .resource__content {
                             (body)
                         }
-                        .global-search-results-resource__loader {
+                        .resource__loader {
                             (loader)
                         }
                     }

@@ -370,3 +370,18 @@ select {
   }
 }
 
+.resource .resource__content {
+  display: block;
+}
+
+.resource .resource__loader {
+  display: none;
+}
+
+.resource.htmx-request .resource__content {
+  display: none;
+}
+
+.resource.htmx-request .resource__loader {
+  display: block;
+}
