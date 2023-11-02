@@ -308,7 +308,7 @@ pub fn render_post_page(config: BlogConfig, props: PostProps) -> String {
                 target: Some(".global-search__body".to_string()),
                 url: Some(HtmxUrl::Post(format!("{}/search", config.htmx_url))),
                 swap: Some("innerHTML".to_string()),
-                indicator: Some(".global-search-results-resource".to_string())
+                indicator: Some(".resource".to_string())
             },
             search_body: render_global_search_results_page(GlobalSearchResultsPageProps{
                 loader: Some(html!{.loader{"fetching recent posts..."}}),
