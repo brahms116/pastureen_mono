@@ -10,6 +10,7 @@ on:
         required: true
         type: choice
         options:
+          - temp_test
           - everything
           - auth_service
           - blog_skeleton
@@ -25,9 +26,22 @@ env:
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   AWS_REGION: ${{ secrets.AWS_REGION }}
   ENV: ${{ inputs.environment }}
+  ENV_VARS_JSON: ${{ toJSON(secrets) }}
 
 
 jobs:
+  temp_test:
+    if: inputs.service == 'temp_test'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: print envs
+        run: echo "$ENV_VARS_JSON" | jq -r 'keys[] as $k | "\($k)=\(.[$k])"' >> $GITHUB_ENV
+      - name: action
+        run: echo $AUTH_SERVICE_URL
+
   deploy_auth_service:
     if: inputs.service == 'auth_service' || inputs.service == 'everything'
     runs-on: ubuntu-latest
