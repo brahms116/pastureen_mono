@@ -55,18 +55,6 @@ jobs:
       - name: Deploy auth service
         run: cd rust/auth_service && ./deploy.sh $ENV
 
-  deploy_design_system:
-    if: inputs.service == 'design_system' || inputs.service == 'everything'
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-      - name: Deploy design system
-        env:
-          DESIGN_SYSTEM_BASE_URL: ${{ vars.REVERSE_PROXY_URL }}/design
-        run: cd golang/design && ./deploy.sh $ENV
-
   deploy_reverse_proxy:
     runs-on: ubuntu-latest
     if: inputs.service == 'reverse_proxy' || inputs.service == 'everything'

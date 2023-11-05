@@ -5,8 +5,6 @@ use auth_models::*;
 use auth_service_models::*;
 use shared_models::*;
 
-const ENV_PREFIX: &str = "AUTH_CLIENT_TEST";
-
 struct TestConfig {
     pub email: String,
     pub password: String,
@@ -15,9 +13,9 @@ struct TestConfig {
 
 impl TestConfig {
     pub fn from_env() -> Self {
-        let email = env::var(format!("{}_EMAIL", ENV_PREFIX)).unwrap();
-        let password = env::var(format!("{}_PASSWORD", ENV_PREFIX)).unwrap();
-        let url = env::var(format!("{}_URL", ENV_PREFIX)).unwrap();
+        let email = env::var("ADMIN_EMAIL").unwrap();
+        let password = env::var("ADMIN_PASSWORD").unwrap();
+        let url = env::var("AUTH_SERVICE_URL").unwrap();
 
         Self {
             email,
