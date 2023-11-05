@@ -28,7 +28,7 @@ impl BlogConfig {
         Ok(Self {
             assets_url: get_env("STATIC_ASSETS_PROXIED_URL")?,
             base_url: get_env("BLOG_PROXIED_URL")?,
-            htmx_url: get_env("STATIC_ASSETS_PROXIED_URL")?,
+            htmx_url: get_env("BLOG_HTMX_PROXIED_URL")?,
         })
     }
 }
