@@ -7,8 +7,6 @@ use thiserror::Error;
 
 const SEARCH_LIMIT: u32 = 20;
 
-const ENV_PREFIX: &str = "BLOG_HTMX_";
-
 #[derive(Debug, Error)]
 pub enum BlogHtmxError {
     #[error("Configuration variable {0} is missing")]
@@ -27,7 +25,7 @@ impl TypedErr for BlogHtmxError {
 }
 
 fn get_env_var(name: &str) -> Result<String, BlogHtmxError> {
-    match std::env::var(format!("{}{}", ENV_PREFIX, name)) {
+    match std::env::var(name) {
         Ok(value) => Ok(value),
         Err(_) => Err(BlogHtmxError::ConfigurationMissing(name.to_string())),
     }
@@ -46,10 +44,10 @@ impl BlogHtmxConfig {
     pub fn from_env() -> Result<Self, BlogHtmxError> {
         Ok(BlogHtmxConfig {
             librarian_url: get_env_var("LIBRARIAN_URL")?,
-            assets_url: get_env_var("ASSETS_URL")?,
-            base_url: get_env_var("BASE_URL")?,
-            htmx_url: get_env_var("HTMX_URL")?,
-            listen_address: get_env_var("LISTEN_ADDR")?,
+            assets_url: get_env_var("STATIC_ASSETS_PROXIED_URL")?,
+            base_url: get_env_var("BLOG_PROXIED_URL")?,
+            htmx_url: get_env_var("BLOG_HTMX_PROXIED_URL")?,
+            listen_address: get_env_var("SERVER_LISTEN_ADDR")?,
         })
     }
 }
@@ -211,7 +209,7 @@ pub async fn render_search_results(
         GlobalSearchResultsPageProps {
             results_heading: Some(results_heading.to_string()),
             results: Some(links_html),
-            loader: Some(html!{.loader{"loading..."}}),
+            loader: Some(html! {.loader{"loading..."}}),
             ..Default::default()
         },
     ))

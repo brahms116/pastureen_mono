@@ -92,14 +92,9 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
+      - name: setup envs
+        run: echo "$ENV_VARS_JSON" | jq -r 'keys[] as $k | "\($k)=\(.[$k])"' >> $GITHUB_ENV
       - name: Deploy blog_htmx
-        env:
-          BLOG_HTMX_ASSETS_URL: ${{ vars.REVERSE_PROXY_URL }}/static
-          BLOG_HTMX_BASE_URL: ${{ vars.REVERSE_PROXY_URL }}/blog
-          BLOG_HTMX_HTMX_URL: ${{ vars.REVERSE_PROXY_URL }}/blog-htmx
-          BLOG_HTMX_LIBRARIAN_URL: ${{ vars.REVERSE_PROXY_URL }}/librarian
-          BLOG_HTMX_AUTH_URL: ${{ vars.REVERSE_PROXY_URL }}/auth
-          BLOG_HTMX_LISTEN_ADDR: ${{ vars.LAMBDA_LISTEN_ADDR }}
         run: cd rust/blog_htmx && ./deploy.sh $ENV
 
   deploy_librarian:

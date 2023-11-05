@@ -16,12 +16,19 @@ docker run -v "$(pwd)/../":/app -v .:/out -v "$(pwd)/../../proto":/proto --env P
 echo "Deploying to $env"
 
 aws lambda update-function-code --function-name blog_htmx_$env --zip-file fileb://./lambda.zip
+
+# Get the required envs
+env_vars_str=""
+
+while read line; do
+  # Check it doesn't start with a #
+  [[ $line =~ ^#.*$ ]] && continue
+
+  # Check it's not empty
+  [[ -z "$line" ]] && continue
+
+  env_vars_str+="$line=${!line},"
+done < "./required_envs"
+
 aws lambda update-function-configuration --function-name blog_htmx_$env --environment \
-  Variables="{\
-    BLOG_HTMX_ASSETS_URL=$BLOG_HTMX_ASSETS_URL,\
-    BLOG_HTMX_BASE_URL=$BLOG_HTMX_BASE_URL,\
-    BLOG_HTMX_HTMX_URL=$BLOG_HTMX_HTMX_URL,\
-    BLOG_HTMX_LIBRARIAN_URL=$BLOG_HTMX_LIBRARIAN_URL,\
-    BLOG_HTMX_LISTEN_ADDR=$BLOG_HTMX_LISTEN_ADDR,\
-    READINESS_CHECK_PATH='/healthcheck'\
-  }"
+  Variables="{$env_vars_str}"
