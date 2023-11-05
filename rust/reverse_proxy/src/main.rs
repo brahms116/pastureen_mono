@@ -39,14 +39,14 @@ fn get_url_from_env(key: &str) -> Result<String, ReverseProxyError> {
 
 impl ReverseProxyConfig {
     pub fn from_env() -> Result<Self, ReverseProxyError> {
-        let listen_addr = get_url_from_env("REVERSE_PROXY_LISTEN_ADDR")?;
-        let static_assets_url = get_url_from_env("REVERSE_PROXY_STATIC_ASSETS_URL")?;
-        let blog_url = get_url_from_env("REVERSE_PROXY_BLOG_URL")?;
-        let base_url = get_url_from_env("REVERSE_PROXY_BASE_URL")?;
-        let auth_url = get_url_from_env("REVERSE_PROXY_AUTH_URL")?;
-        let publisher_url = get_url_from_env("REVERSE_PROXY_PUBLISHER_URL")?;
-        let librarian_url = get_url_from_env("REVERSE_PROXY_LIBRARIAN_URL")?;
-        let blog_htmx_url = get_url_from_env("REVERSE_PROXY_BLOG_HTMX_URL")?;
+        let listen_addr = get_url_from_env("SERVER_LISTEN_ADDR")?;
+        let static_assets_url = get_url_from_env("STATIC_ASSETS_URL")?;
+        let blog_url = get_url_from_env("BLOG_URL")?;
+        let base_url = get_url_from_env("REVERSE_PROXY_URL")?;
+        let auth_url = get_url_from_env("AUTH_SERVICE_URL")?;
+        let publisher_url = get_url_from_env("PUBLISHER_URL")?;
+        let librarian_url = get_url_from_env("LIBRARIAN_URL")?;
+        let blog_htmx_url = get_url_from_env("BLOG_HTMX_URL")?;
         Ok(Self {
             listen_addr,
             static_assets_url,

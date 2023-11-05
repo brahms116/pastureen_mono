@@ -10,7 +10,6 @@ on:
         required: true
         type: choice
         options:
-          - temp_test
           - everything
           - auth_service
           - blog_skeleton
@@ -29,18 +28,6 @@ env:
   ENV_VARS_JSON: ${{ toJSON(secrets) }}
 
 jobs:
-  temp_test:
-    if: inputs.service == 'temp_test'
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
-    steps:
-      - name: checkout
-        uses: actions/checkout@v3
-      - name: print envs
-        run: echo "$ENV_VARS_JSON" | jq -r 'keys[] as $k | "\($k)=\(.[$k])"' >> $GITHUB_ENV
-      - name: action
-        run: echo $AUTH_SERVICE_URL
-
   deploy_auth_service:
     if: inputs.service == 'auth_service' || inputs.service == 'everything'
     runs-on: ubuntu-latest
@@ -60,17 +47,9 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
+      - name: setup envs
+        run: echo "$ENV_VARS_JSON" | jq -r 'keys[] as $k | "\($k)=\(.[$k])"' >> $GITHUB_ENV
       - name: Deploy reverse proxy
-        env:
-          REVERSE_PROXY_LISTEN_ADDR: ${{ vars.LAMBDA_LISTEN_ADDR }}
-          REVERSE_PROXY_DESIGN_SYSTEM_URL: ${{ vars.DESIGN_SYSTEM_URL }}
-          REVERSE_PROXY_STATIC_ASSETS_URL: ${{ vars.STATIC_ASSETS_URL }}
-          REVERSE_PROXY_BLOG_URL: ${{ vars.BLOG_URL }}
-          REVERSE_PROXY_BASE_URL: ${{ vars.REVERSE_PROXY_URL }}
-          REVERSE_PROXY_AUTH_URL: ${{ vars.AUTH_SERVICE_URL }}
-          REVERSE_PROXY_PUBLISHER_URL: ${{ vars.PUBLISHER_URL }}
-          REVERSE_PROXY_LIBRARIAN_URL: ${{ vars.LIBRARIAN_URL }}
-          REVERSE_PROXY_BLOG_HTMX_URL: ${{ vars.BLOG_HTMX_URL }}
         run: cd rust/reverse_proxy && ./deploy.sh $ENV
 
   deploy_publisher:

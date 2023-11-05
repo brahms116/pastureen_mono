@@ -2,13 +2,7 @@
 
 set -e
 
-env=local
-
-echo "Running with environment: $env"
-
-set -a
-. ./.$env.env
-set +a
+eval "$(cat ../../scripts/local_template.sh)"
 
 cargo run -p reverse_proxy
 

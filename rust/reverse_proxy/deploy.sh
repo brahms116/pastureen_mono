@@ -16,16 +16,20 @@ docker run -v "$(pwd)/../":/app -v .:/out --env PROJECT_NAME=reverse_proxy publi
 echo "Deploying to $env"
 
 aws lambda update-function-code --function-name reverse_proxy_$env --zip-file fileb://./lambda.zip
+
+
+# Get the required envs
+env_vars_str=""
+
+while read line; do
+  # Check it doesn't start with a #
+  [[ $line =~ ^#.*$ ]] && continue
+
+  # Check it's not empty
+  [[ -z "$line" ]] && continue
+
+  env_vars_str+="$line=${!line},"
+done < "./required_envs"
+
 aws lambda update-function-configuration --function-name reverse_proxy_$env --environment \
-  Variables="{\
-    REVERSE_PROXY_LISTEN_ADDR=$REVERSE_PROXY_LISTEN_ADDR,\
-    REVERSE_PROXY_DESIGN_SYSTEM_URL=$REVERSE_PROXY_DESIGN_SYSTEM_URL,\
-    REVERSE_PROXY_STATIC_ASSETS_URL=$REVERSE_PROXY_STATIC_ASSETS_URL,\
-    REVERSE_PROXY_BLOG_URL=$REVERSE_PROXY_BLOG_URL,\
-    REVERSE_PROXY_BASE_URL=$REVERSE_PROXY_BASE_URL,\
-    REVERSE_PROXY_AUTH_URL=$REVERSE_PROXY_AUTH_URL,\
-    REVERSE_PROXY_PUBLISHER_URL=$REVERSE_PROXY_PUBLISHER_URL,\
-    REVERSE_PROXY_LIBRARIAN_URL=$REVERSE_PROXY_LIBRARIAN_URL,\
-    REVERSE_PROXY_BLOG_HTMX_URL=$REVERSE_PROXY_BLOG_HTMX_URL,\
-    READINESS_CHECK_PATH='/healthcheck'\
-  }"
+  Variables="{$env_vars_str}"
