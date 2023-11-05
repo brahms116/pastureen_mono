@@ -1,8 +1,0 @@
-{{ block "lists_page_list_response" . }}
-{{ range .ItemsData }}
-{{ template "list_item" . }}
-{{ end }}
-{{ if .PaginatorPresent }}
-{{ template "lists_page_paginator" .PaginatorData }}
-{{ end }}
-{{ end }}
