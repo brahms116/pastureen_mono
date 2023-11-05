@@ -29,6 +29,7 @@ env:
   ENV_VARS_JSON: ${{ toJSON(secrets) }}
 
 
+
 jobs:
   temp_test:
     if: inputs.service == 'temp_test'
@@ -49,11 +50,9 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
+      - name: setup envs
+        run: echo "$ENV_VARS_JSON" | jq -r 'keys[] as $k | "\($k)=\(.[$k])"' >> $GITHUB_ENV
       - name: Deploy auth service
-        env:
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-          AUTH_DB_CONN_STR: ${{ secrets.AUTH_DB_CONN_STR }}
-          AUTH_SERVICE_LISTEN_ADDR: ${{ vars.LAMBDA_LISTEN_ADDR }}
         run: cd rust/auth_service && ./deploy.sh $ENV
 
   deploy_design_system:
