@@ -13,7 +13,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const ENV_PREFIX = "LIBRARIAN_CLIENT_TEST_"
 
 type TestConfig struct {
 	LibrarianUrl string
@@ -24,18 +23,18 @@ type TestConfig struct {
 }
 
 func ConfigFromEnv() TestConfig {
-	librarianUrl := os.Getenv(ENV_PREFIX + "LIBRARIAN_URL")
-	authServiceUrl := os.Getenv(ENV_PREFIX + "AUTH_URL")
-	username := os.Getenv(ENV_PREFIX + "EMAIL")
-	password := os.Getenv(ENV_PREFIX + "PASSWORD")
+	librarianUrl := os.Getenv("LIBRARIAN_URL")
+	authServiceUrl := os.Getenv("AUTH_SERVICE_URL")
+	username := os.Getenv("ADMIN_EMAIL")
+	password := os.Getenv("ADMIN_PASSWORD")
+  blogUrl := os.Getenv("BLOG_PROXIED_URL")
 	return TestConfig{
 		LibrarianUrl: librarianUrl,
 		AuthUrl:      authServiceUrl,
 		Email:        username,
 		Password:     password,
-		BlogUrl:      os.Getenv(ENV_PREFIX + "BLOG_URL"),
+    BlogUrl:      blogUrl,
 	}
-
 }
 
 func login() (TestConfig, string, error) {
