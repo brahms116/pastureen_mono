@@ -108,21 +108,21 @@ impl PublisherConfig {
     /// Grabs the configuration from the environment variables
     ///
     /// The following environment variables are used:
-    /// - `PUBLISHER_ASSETS_URL`: URL to where the assets are hosted, this is where the CSS and
+    /// - `STATIC_ASSETS_PROXIED_URL`: URL to where the assets are hosted, this is where the CSS and
     ///  other static assets will be fetched from
-    ///  - `PUBLISHER_BASE_URL`: URL to where the base of the site is hosted, this is for
+    ///  - `BLOG_PROXIED_URL`: URL to where the base of the site is hosted, this is for
     ///  navigation between the pages of the site
-    ///  - `PUBLISHER_HTMX_URL`: URL to where htmx requests are sent to for the site, allowing
+    ///  - `BLOG_HTMX_PROXIED_URL`: URL to where htmx requests are sent to for the site, allowing
     ///  for dynamic content
-    ///  - `PUBLISHER_LISTEN_ADDRESS`: Address for the service listen on
-    ///  - `PUBLISHER_AUTH_SERVICE_URL`: URL for the auth service used for authentication
+    ///  - `SERVER_LISTEN_ADDR`: Address for the service listen on
+    ///  - `ADMIN_EMAIL`: URL for the auth service used for authentication
     pub fn from_env() -> Result<Self, PublisherError> {
-        let assets_url = get_env_var("PUBLISHER_ASSETS_URL")?;
-        let base_url = get_env_var("PUBLISHER_BASE_URL")?;
-        let htmx_url = get_env_var("PUBLISHER_HTMX_URL")?;
-        let listen_address = get_env_var("PUBLISHER_LISTEN_ADDR")?;
-        let auth_url = get_env_var("PUBLISHER_AUTH_URL")?;
-        let admin_email = get_env_var("PUBLISHER_ADMIN_EMAIL")?;
+        let assets_url = get_env_var("STATIC_ASSETS_PROXIED_URL")?;
+        let base_url = get_env_var("BLOG_PROXIED_URL")?;
+        let htmx_url = get_env_var("BLOG_HTMX_PROXIED_URL")?;
+        let listen_address = get_env_var("SERVER_LISTEN_ADDR")?;
+        let auth_url = get_env_var("AUTH_SERVICE_URL")?;
+        let admin_email = get_env_var("ADMIN_EMAIL")?;
 
         let config = Self {
             assets_url,

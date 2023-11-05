@@ -16,13 +16,20 @@ docker run -v "$(pwd)/../":/app -v .:/out -v "$(pwd)/../../proto":/proto --env P
 echo "Deploying to $env"
 
 aws lambda update-function-code --function-name publisher_$env --zip-file fileb://./lambda.zip
+
+# Get the required envs
+env_vars_str=""
+
+while read line; do
+  # Check it doesn't start with a #
+  [[ $line =~ ^#.*$ ]] && continue
+
+  # Check it's not empty
+  [[ -z "$line" ]] && continue
+
+  env_vars_str+="$line=${!line},"
+done < "./required_envs"
+
+echo $env_vars_str
 aws lambda update-function-configuration --function-name publisher_$env --environment \
-  Variables="{\
-    PUBLISHER_ASSETS_URL=$PUBLISHER_ASSETS_URL,\
-    PUBLISHER_BASE_URL=$PUBLISHER_BASE_URL,\
-    PUBLISHER_HTMX_URL=$PUBLISHER_HTMX_URL,\
-    PUBLISHER_AUTH_URL=$PUBLISHER_AUTH_URL,\
-    PUBLISHER_LISTEN_ADDR=$PUBLISHER_LISTEN_ADDR,\
-    PUBLISHER_ADMIN_EMAIL=$PUBLISHER_ADMIN_EMAIL,\
-    READINESS_CHECK_PATH='/healthcheck'\
-  }"
+  Variables="{$env_vars_str}"

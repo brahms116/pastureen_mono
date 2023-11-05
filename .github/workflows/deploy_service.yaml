@@ -28,8 +28,6 @@ env:
   ENV: ${{ inputs.environment }}
   ENV_VARS_JSON: ${{ toJSON(secrets) }}
 
-
-
 jobs:
   temp_test:
     if: inputs.service == 'temp_test'
@@ -82,14 +80,9 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
+      - name: setup envs
+        run: echo "$ENV_VARS_JSON" | jq -r 'keys[] as $k | "\($k)=\(.[$k])"' >> $GITHUB_ENV
       - name: Deploy publisher
-        env:
-          PUBLISHER_ASSETS_URL: ${{ vars.REVERSE_PROXY_URL }}/static
-          PUBLISHER_BASE_URL: ${{ vars.REVERSE_PROXY_URL }}/blog
-          PUBLISHER_HTMX_URL: ${{ vars.REVERSE_PROXY_URL }}/blog-htmx
-          PUBLISHER_AUTH_URL: ${{ vars.REVERSE_PROXY_URL }}/auth
-          PUBLISHER_ADMIN_EMAIL: ${{ vars.ADMIN_EMAIL }}
-          PUBLISHER_LISTEN_ADDR: ${{ vars.LAMBDA_LISTEN_ADDR }}
         run: cd rust/publisher && ./deploy.sh $ENV
 
   deploy_blog_htmx:
