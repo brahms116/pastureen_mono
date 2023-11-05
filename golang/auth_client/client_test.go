@@ -6,7 +6,6 @@ import (
 	"testing"
 )
 
-const envPrefix = "AUTH_CLIENT_TEST_"
 
 type testConfig struct {
 	Email    string
@@ -16,9 +15,9 @@ type testConfig struct {
 
 func getTestConfig() testConfig {
 	return testConfig{
-		Email:    os.Getenv(envPrefix + "EMAIL"),
-		Password: os.Getenv(envPrefix + "PASSWORD"),
-		Endpoint: os.Getenv(envPrefix + "URL"),
+		Email:    os.Getenv("ADMIN_EMAIL"),
+		Password: os.Getenv("ADMIN_PASSWORD"),
+		Endpoint: os.Getenv("AUTH_SERVICE_URL"),
 	}
 }
 
