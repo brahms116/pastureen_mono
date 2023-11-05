@@ -24,10 +24,10 @@ type LibrarianConfig struct {
 func ConfigFromEnv() LibrarianConfig {
 	return LibrarianConfig{
 		DbConnectionStr: os.Getenv("LIBRARIAN_DB_CONN_STR"),
-		BlogBucketName:  os.Getenv("LIBRARIAN_BLOG_BUCKET_NAME"),
-		ListenAddr:      os.Getenv("LIBRARIAN_LISTEN_ADDR"),
-		AuthUrl:         os.Getenv("LIBRARIAN_AUTH_URL"),
-		AdminEmail:      os.Getenv("LIBRARIAN_ADMIN_EMAIL"),
+		BlogBucketName:  os.Getenv("BLOG_BUCKET_NAME"),
+		ListenAddr:      os.Getenv("SERVER_LISTEN_ADDR"),
+		AuthUrl:         os.Getenv("AUTH_SERVICE_URL"),
+		AdminEmail:      os.Getenv("ADMIN_EMAIL"),
 	}
 }
 

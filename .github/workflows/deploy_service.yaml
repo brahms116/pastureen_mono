@@ -104,13 +104,9 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
+      - name: setup envs
+        run: echo "$ENV_VARS_JSON" | jq -r 'keys[] as $k | "\($k)=\(.[$k])"' >> $GITHUB_ENV
       - name: Deploy Librarian
-        env:
-          LIBRARIAN_DB_CONN_STR: ${{ secrets.LIBRARIAN_DB_CONN_STR }}
-          LIBRARIAN_AUTH_URL: ${{ vars.REVERSE_PROXY_URL }}/auth
-          LIBRARIAN_ADMIN_EMAIL: ${{ vars.ADMIN_EMAIL }}
-          LIBRARIAN_BLOG_BUCKET_NAME: ${{ vars.BLOG_BUCKET_NAME }}
-          LIBRARIAN_LISTEN_ADDR: ${{ vars.LAMBDA_LISTEN_ADDR }}
         run: cd golang/librarian && ./deploy.sh $ENV
 
   deploy_static_assets:

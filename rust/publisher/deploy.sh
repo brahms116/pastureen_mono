@@ -30,6 +30,5 @@ while read line; do
   env_vars_str+="$line=${!line},"
 done < "./required_envs"
 
-echo $env_vars_str
 aws lambda update-function-configuration --function-name publisher_$env --environment \
   Variables="{$env_vars_str}"

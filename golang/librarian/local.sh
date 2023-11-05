@@ -1,8 +1,4 @@
 set -e
-
-set -a
-. .local.env
-set +a
-
+eval "$(cat ../../scripts/local_template.sh)"
 go run *.go
 
