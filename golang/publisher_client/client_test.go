@@ -9,8 +9,6 @@ import (
 	"testing"
 )
 
-const ENV_PREFIX = "PUBLISHER_CLIENT_TEST_"
-
 //go:embed test_post.md
 var TEST_POST string
 
@@ -22,11 +20,11 @@ type TestConfig struct {
 }
 
 func ConfigFromEnv() TestConfig {
-	publisherUrl := os.Getenv(ENV_PREFIX + "PUBLISHER_URL")
-	authServiceUrl := os.Getenv(ENV_PREFIX + "AUTH_URL")
-	username := os.Getenv(ENV_PREFIX + "EMAIL")
-	password := os.Getenv(ENV_PREFIX + "PASSWORD")
-	return TestConfig{publisherUrl, authServiceUrl, username, password}
+	publisherUrl := os.Getenv("PUBLISHER_URL")
+	authServiceUrl := os.Getenv("AUTH_SERVICE_URL")
+	email := os.Getenv("ADMIN_EMAIL")
+	password := os.Getenv("ADMIN_PASSWORD")
+	return TestConfig{publisherUrl, authServiceUrl, email, password}
 }
 
 func login() (TestConfig, string, error) {
