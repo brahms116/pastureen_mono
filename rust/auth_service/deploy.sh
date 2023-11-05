@@ -15,11 +15,27 @@ docker run -v "$(pwd)/../":/app -v .:/out -v "$(pwd)/../../proto":/proto --env P
 
 echo "Deploying to $env"
 
+
 aws lambda update-function-code --function-name auth_service_$env --zip-file fileb://./lambda.zip
+
+
+
+# Get the required envs
+env_vars_str=""
+
+while read line; do
+  # Check it doesn't start with a #
+  [[ $line =~ ^#.*$ ]] && continue
+
+  # Check it's not empty
+  [[ -z "$line" ]] && continue
+
+  env_vars_str+="$line=${!line},"
+done < "./required_envs"
+
+echo $env_vars_str
+
+
+
 aws lambda update-function-configuration --function-name auth_service_$env --environment \
-  Variables="{\
-    AUTH_SECRET=$AUTH_SECRET,\
-    AUTH_DB_CONN_STR=$AUTH_DB_CONN_STR,\
-    AUTH_SERVICE_LISTEN_ADDR=$AUTH_SERVICE_LISTEN_ADDR,\
-    READINESS_CHECK_PATH='/healthcheck'\
-  }"
+  Variables="{$env_vars_str}"
