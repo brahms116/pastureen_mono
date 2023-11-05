@@ -24,7 +24,6 @@ pub enum ReverseProxyError {
 
 pub struct ReverseProxyConfig {
     pub listen_addr: String,
-    pub design_system_url: String,
     pub static_assets_url: String,
     pub blog_url: String,
     pub base_url: String,
@@ -41,7 +40,6 @@ fn get_url_from_env(key: &str) -> Result<String, ReverseProxyError> {
 impl ReverseProxyConfig {
     pub fn from_env() -> Result<Self, ReverseProxyError> {
         let listen_addr = get_url_from_env("REVERSE_PROXY_LISTEN_ADDR")?;
-        let design_system_url = get_url_from_env("REVERSE_PROXY_DESIGN_SYSTEM_URL")?;
         let static_assets_url = get_url_from_env("REVERSE_PROXY_STATIC_ASSETS_URL")?;
         let blog_url = get_url_from_env("REVERSE_PROXY_BLOG_URL")?;
         let base_url = get_url_from_env("REVERSE_PROXY_BASE_URL")?;
@@ -51,7 +49,6 @@ impl ReverseProxyConfig {
         let blog_htmx_url = get_url_from_env("REVERSE_PROXY_BLOG_HTMX_URL")?;
         Ok(Self {
             listen_addr,
-            design_system_url,
             static_assets_url,
             blog_url,
             auth_url,
@@ -67,7 +64,6 @@ impl ReverseProxyConfig {
 
 #[derive(Debug)]
 pub enum Route {
-    DesignSystem(String),
     StaticAssets(String),
     Blog(String),
     Auth(String),
@@ -81,7 +77,6 @@ pub enum Route {
 
 impl From<&str> for Route {
     fn from(path: &str) -> Self {
-        let design_system_slug = "/design";
         let healthcheck_slug = "/healthcheck";
         let static_assets_slug = "/static";
         let blog_slug = "/blog";
@@ -96,10 +91,6 @@ impl From<&str> for Route {
 
         if matches_path(path, auth_slug) {
             return Route::Auth(strip_prefix(path, auth_slug));
-        }
-
-        if matches_path(path, design_system_slug) {
-            return Route::DesignSystem(strip_prefix(path, design_system_slug));
         }
 
         if matches_path(path, blog_slug) {
@@ -175,7 +166,6 @@ fn strip_prefix(input: &str, prefix: &str) -> String {
 
 #[derive(Debug)]
 pub enum ProxyRoute {
-    DesignSystem(String),
     StaticAssets(String),
     Blog(String),
     Auth(String),
@@ -194,9 +184,6 @@ impl ProxyRoute {
 
 fn get_proxied_uri(route: &ProxyRoute, config: &ReverseProxyConfig) -> String {
     match route {
-        ProxyRoute::DesignSystem(slug) => {
-            format!("{}{}", config.design_system_url, slug)
-        }
         ProxyRoute::StaticAssets(slug) => {
             format!("{}{}", config.static_assets_url, slug)
         }
@@ -240,7 +227,6 @@ impl From<Route> for ClassifiedRoute {
         match route {
             Route::Publisher(path) => ClassifiedRoute::Proxy(ProxyRoute::Publisher(path)),
             Route::Blog(path) => ClassifiedRoute::Proxy(ProxyRoute::Blog(path)),
-            Route::DesignSystem(path) => ClassifiedRoute::Proxy(ProxyRoute::DesignSystem(path)),
             Route::Auth(path) => ClassifiedRoute::Proxy(ProxyRoute::Auth(path)),
             Route::StaticAssets(path) => ClassifiedRoute::Proxy(ProxyRoute::StaticAssets(path)),
             Route::Librarian(path) => ClassifiedRoute::Proxy(ProxyRoute::Librarian(path)),
