@@ -23,14 +23,12 @@ pub struct BlogConfig {
     pub htmx_url: String,
 }
 
-const ENV_PREFIX: &str = "BLOG_";
-
 impl BlogConfig {
     pub fn from_env() -> Result<Self, BlogError> {
         Ok(Self {
-            assets_url: get_env(&format!("{}ASSETS_URL", ENV_PREFIX))?,
-            base_url: get_env(&format!("{}BASE_URL", ENV_PREFIX))?,
-            htmx_url: get_env(&format!("{}HTMX_URL", ENV_PREFIX))?,
+            assets_url: get_env("STATIC_ASSETS_PROXIED_URL")?,
+            base_url: get_env("BLOG_PROXIED_URL")?,
+            htmx_url: get_env("STATIC_ASSETS_PROXIED_URL")?,
         })
     }
 }

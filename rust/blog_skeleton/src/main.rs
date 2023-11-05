@@ -22,11 +22,6 @@ fn build() {
     index_file
         .write_all(render_index_page(blog_config.clone()).as_bytes())
         .expect("Could not write to index file");
-
-    // let mut posts_file = get_file_descriptor("./build/posts.html");
-    // posts_file
-    //     .write_all(render_posts_page(blog_config.clone()).as_bytes())
-    //     .expect("Could not write to posts file");
 }
 
 fn main() {

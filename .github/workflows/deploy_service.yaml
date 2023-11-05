@@ -126,13 +126,7 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v3
-      - name: Install rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+      - name: setup envs
+        run: echo "$ENV_VARS_JSON" | jq -r 'keys[] as $k | "\($k)=\(.[$k])"' >> $GITHUB_ENV
       - name: Deploy blog skeleton
-        env:
-          BLOG_BASE_URL: ${{ vars.REVERSE_PROXY_URL }}/blog
-          BLOG_ASSETS_URL: ${{ vars.REVERSE_PROXY_URL }}/static
-          BLOG_HTMX_URL: ${{ vars.REVERSE_PROXY_URL }}/blog-htmx
         run: cd rust/blog_skeleton && ./deploy.sh $ENV
