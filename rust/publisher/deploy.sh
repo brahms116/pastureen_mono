@@ -11,7 +11,7 @@ fi
 
 echo "Compiling"
 
-docker run -v "$(pwd)/../":/app -v .:/out -v "$(pwd)/../../proto":/proto --env PROJECT_NAME=publisher public.ecr.aws/p1r0g3x6/rust_lambda_build_container:latest
+docker run -v "$(pwd)/../":/app -v .:/out --env PROJECT_NAME=publisher public.ecr.aws/p1r0g3x6/rust_lambda_build_container:latest
 
 echo "Deploying to $env"
 
