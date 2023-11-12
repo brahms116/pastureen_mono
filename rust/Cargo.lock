@@ -446,16 +446,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "blog"
-version = "0.1.0"
-dependencies = [
- "components",
- "maud",
- "serde",
- "thiserror",
-]
-
-[[package]]
 name = "blog_htmx"
 version = "0.1.0"
 dependencies = [
@@ -475,7 +465,6 @@ dependencies = [
 name = "blog_skeleton"
 version = "0.1.0"
 dependencies = [
- "components",
  "maud",
  "refresh_blog",
  "serde",
@@ -549,13 +538,6 @@ name = "cli"
 version = "0.1.0"
 dependencies = [
  "thiserror",
-]
-
-[[package]]
-name = "components"
-version = "0.1.0"
-dependencies = [
- "maud",
 ]
 
 [[package]]

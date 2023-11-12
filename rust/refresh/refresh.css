@@ -299,6 +299,7 @@ select {
   color: var(--text-color);
   padding: 3rem 3.5rem;
   border-radius: 1.25rem;
+  margin-bottom: 3rem;
   overflow-x: auto;
 }
 
@@ -316,6 +317,19 @@ select {
 .prose blockquote p {
   margin-bottom: 0;
   color: var(--text-color);
+}
+
+.prose li {
+  color: var(--paragraph-color);
+  font-size: 1rem;
+  line-height: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.prose li::before {
+  content: '•';
+  margin-right: 1rem;
+  color: var(--accent-color);
 }
 
 .list-item {
