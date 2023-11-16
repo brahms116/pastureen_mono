@@ -1,15 +1,5 @@
 module github.com/brahms116/pastureen_mono/golang/publisher_client
 
-replace pastureen/publisher-models => ../publisher_models
-
-replace pastureen/http-utils => ../http_utils
-
-replace pastureen/auth-client => ../auth_client
-
-replace pastureen/auth-models => ../auth_models
-
-replace pastureen/blog-models => ../blog_models
-
 go 1.21
 
 require (

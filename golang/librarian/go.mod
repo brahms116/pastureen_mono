@@ -52,13 +52,3 @@ require (
 	pastureen/auth-models v0.0.0-00010101000000-000000000000 // indirect
 	pastureen/http-utils v0.0.0-00010101000000-000000000000 // indirect
 )
-
-replace pastureen/librarian-models => ../librarian_models
-
-replace pastureen/blog-models => ../blog_models
-
-replace pastureen/auth-models => ../auth_models
-
-replace pastureen/auth-client => ../auth_client
-
-replace pastureen/http-utils => ../http_utils
