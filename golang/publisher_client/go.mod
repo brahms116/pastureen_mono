@@ -1,4 +1,4 @@
-module pastureen/publisher-client
+module github.com/brahms116/pastureen_mono/golang/publisher_client
 
 replace pastureen/publisher-models => ../publisher_models
 

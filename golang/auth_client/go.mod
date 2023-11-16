@@ -1,4 +1,4 @@
-module pastureen/auth-client
+module github.com/brahms116/pastureen_mono/golang/auth_client
 
 go 1.21
 
