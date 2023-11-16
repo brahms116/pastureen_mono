@@ -7,9 +7,6 @@ require (
 	github.com/aws/aws-sdk-go v1.46.2
 	github.com/gin-gonic/gin v1.9.1
 	github.com/lib/pq v1.10.9
-	github.com/brahms116/pastureen_mono/golang/auth_client v0.0.0-00010101000000-000000000000
-	github.com/brahms116/pastureen_mono/golang/blog_models v0.0.0-00010101000000-000000000000
-	github.com/brahms116/pastureen_mono/golang/librarian_models v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -49,6 +46,4 @@ require (
 	golang.org/x/text v0.13.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	github.com/brahms116/pastureen_mono/golang/auth_models v0.0.0-00010101000000-000000000000 // indirect
-	pastureen/http-utils v0.0.0-00010101000000-000000000000 // indirect
 )
