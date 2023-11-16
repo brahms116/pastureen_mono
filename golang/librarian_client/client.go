@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"pastureen/http-utils"
+	"github.com/brahms116/pastureen_mono/golang/http_utils"
 	librarianModels "github.com/brahms116/pastureen_mono/golang/librarian_models"
 )
 

@@ -3,7 +3,7 @@ package client
 import (
 	"net/http"
 	"github.com/brahms116/pastureen_mono/golang/publisher_models"
-	"pastureen/http-utils"
+	"github.com/brahms116/pastureen_mono/golang/http_utils"
   "encoding/json"
   "io"
   blogModels "github.com/brahms116/pastureen_mono/golang/blog_models"
