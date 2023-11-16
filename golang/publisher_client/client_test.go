@@ -3,9 +3,9 @@ package client
 import (
 	_ "embed"
 	"os"
-	authClient "pastureen/auth-client"
-	authModels "pastureen/auth-models"
-	publisherModels "pastureen/publisher-models"
+	authClient "github.com/brahms116/pastureen_mono/golang/auth_client"
+	authModels "github.com/brahms116/pastureen_mono/golang/auth_models"
+	publisherModels "github.com/brahms116/pastureen_mono/golang/publisher_models"
 	"testing"
 )
 

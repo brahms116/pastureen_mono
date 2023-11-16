@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 	"os"
-	authClient "pastureen/auth-client"
-	models "pastureen/librarian-models"
+	authClient "github.com/brahms116/pastureen_mono/golang/auth_client"
+	models "github.com/brahms116/pastureen_mono/golang/librarian_models"
 	"pastureen/librarian/ent"
 	"strings"
 

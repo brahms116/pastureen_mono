@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"pastureen/http-utils"
-	librarianModels "pastureen/librarian-models"
+	librarianModels "github.com/brahms116/pastureen_mono/golang/librarian_models"
 )
 
 func SearchLinks(endpoint string, query librarianModels.QueryLinksRequest) ([]librarianModels.Link, error) {

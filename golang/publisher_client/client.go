@@ -2,11 +2,11 @@ package client
 
 import (
 	"net/http"
-	"pastureen/publisher-models"
+	"github.com/brahms116/pastureen_mono/golang/publisher_models"
 	"pastureen/http-utils"
   "encoding/json"
   "io"
-  blogModels "pastureen/blog-models"
+  blogModels "github.com/brahms116/pastureen_mono/golang/blog_models"
 )
 
 func Generate(endpoint string, accessToken string, generatePostReq models.GeneratePostRequest) (blogModels.Post, error) {

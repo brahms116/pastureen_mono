@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
-	"pastureen/auth-models"
-  httpUtils "pastureen/http-utils"
+	"github.com/brahms116/pastureen_mono/golang/auth_models"
+  httpUtils "github.com/brahms116/pastureen_mono/golang/http_utils"
 )
 
 func GetUser(endpoint string, accessToken string) (models.User, error) {

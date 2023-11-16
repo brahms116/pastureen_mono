@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	blogModels "pastureen/blog-models"
-	models "pastureen/librarian-models"
+	blogModels "github.com/brahms116/pastureen_mono/golang/blog_models"
+	models "github.com/brahms116/pastureen_mono/golang/librarian_models"
 	"pastureen/librarian/ent"
 )
 

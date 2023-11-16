@@ -3,12 +3,12 @@ package main
 import (
 	"log"
 	"os"
-	authClient "pastureen/auth-client"
-	authModels "pastureen/auth-models"
-	libClient "pastureen/librarian-client"
-	libModels "pastureen/librarian-models"
-	pubClient "pastureen/publisher-client"
-	pubModels "pastureen/publisher-models"
+	authClient "github.com/brahms116/pastureen_mono/golang/auth_client"
+	authModels "github.com/brahms116/pastureen_mono/golang/auth_models"
+	libClient "github.com/brahms116/pastureen_mono/golang/librarian_client"
+	libModels "github.com/brahms116/pastureen_mono/golang/librarian_models"
+	pubClient "github.com/brahms116/pastureen_mono/golang/publisher_client"
+	pubModels "github.com/brahms116/pastureen_mono/golang/publisher_models"
 	"sync"
 )
 

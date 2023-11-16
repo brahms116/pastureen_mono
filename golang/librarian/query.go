@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"pastureen/librarian-models"
+	"github.com/brahms116/pastureen_mono/golang/librarian_models"
 	"pastureen/librarian/ent"
 	"pastureen/librarian/ent/dblink"
 	"pastureen/librarian/ent/dbtag"

@@ -2,7 +2,7 @@ package client
 
 import (
 	"os"
-	"pastureen/auth-models"
+	"github.com/brahms116/pastureen_mono/golang/auth_models"
 	"testing"
 )
 

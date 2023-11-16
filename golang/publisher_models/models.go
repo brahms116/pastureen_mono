@@ -1,7 +1,7 @@
 package models;
 
 import (
-  blogModels "pastureen/blog-models"
+  blogModels "github.com/brahms116/pastureen_mono/golang/blog_models"
 )
 
 type GeneratePostRequest struct {
