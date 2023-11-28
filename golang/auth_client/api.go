@@ -3,13 +3,16 @@ package client
 import (
 	"bytes"
 	"encoding/json"
-	"net/http"
 	"github.com/brahms116/pastureen_mono/golang/auth_models"
-  httpUtils "github.com/brahms116/pastureen_mono/golang/http_utils"
+	httpUtils "github.com/brahms116/pastureen_mono/golang/http_utils"
+	"net/http"
 )
 
+const AUTH_SERVICE_PATH = "/auth"
+
 func getUserApi(endpoint string, accessToken string) (models.User, error) {
-	request, err := http.NewRequest("GET", endpoint+"/user", nil)
+	authEndpoint := endpoint + AUTH_SERVICE_PATH
+	request, err := http.NewRequest("GET", authEndpoint+"/user", nil)
 	if err != nil {
 		return models.User{}, err
 	}
@@ -24,7 +27,8 @@ func getUserApi(endpoint string, accessToken string) (models.User, error) {
 }
 
 func refreshTokenApi(endpoint string, refreshToken string) (models.TokenPair, error) {
-	request, err := http.NewRequest("GET", endpoint+"/token", nil)
+	authEndpoint := endpoint + AUTH_SERVICE_PATH
+	request, err := http.NewRequest("GET", authEndpoint+"/token", nil)
 	if err != nil {
 		return models.TokenPair{}, err
 	}
@@ -39,11 +43,12 @@ func refreshTokenApi(endpoint string, refreshToken string) (models.TokenPair, er
 }
 
 func loginApi(endpoint string, loginRequest models.LoginRequest) (models.TokenPair, error) {
+	authEndpoint := endpoint + AUTH_SERVICE_PATH
 	body, err := json.Marshal(loginRequest)
 	if err != nil {
 		return models.TokenPair{}, err
 	}
-	response, err := http.Post(endpoint+"/token", "application/json", bytes.NewBuffer(body))
+	response, err := http.Post(authEndpoint+"/token", "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		return models.TokenPair{}, err
 	}

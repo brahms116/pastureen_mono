@@ -2,10 +2,10 @@ package client
 
 import (
 	_ "embed"
-	"os"
 	authClient "github.com/brahms116/pastureen_mono/golang/auth_client"
 	authModels "github.com/brahms116/pastureen_mono/golang/auth_models"
 	publisherModels "github.com/brahms116/pastureen_mono/golang/publisher_models"
+	"os"
 	"testing"
 )
 
@@ -13,35 +13,40 @@ import (
 var TEST_POST string
 
 type TestConfig struct {
-	PublisherUrl string
-	AuthUrl      string
-	Email        string
-	Password     string
+	PastureenEndpoint string
+	Email             string
+	Password          string
 }
 
 func ConfigFromEnv() TestConfig {
-	publisherUrl := os.Getenv("PUBLISHER_URL")
-	authServiceUrl := os.Getenv("AUTH_SERVICE_URL")
+
+	pastureenEndpoint := os.Getenv("REVERSE_PROXY_URL")
 	email := os.Getenv("ADMIN_EMAIL")
 	password := os.Getenv("ADMIN_PASSWORD")
-	return TestConfig{publisherUrl, authServiceUrl, email, password}
+	return TestConfig{
+		PastureenEndpoint: pastureenEndpoint,
+		Email:             email,
+		Password:          password,
+	}
 }
 
-func login() (TestConfig, string, error) {
+func login() (authModels.AuthenticatedApiRequestConfig, error) {
 	config := ConfigFromEnv()
-	loginRequest := authModels.LoginRequest{
-		Email:    config.Email,
-		Password: config.Password,
-	}
-	tokens, err := authClient.Login(config.AuthUrl, loginRequest)
+
+	credentials := authModels.NewCredentials(
+		config.PastureenEndpoint,
+		config.Email,
+		config.Password,
+	)
+	tokens, err := authClient.Login(credentials)
 	if err != nil {
-		return config, "", err
+		return authModels.AuthenticatedApiRequestConfig{}, err
 	}
-	return config, tokens.AccessToken, nil
+	return authModels.ApiRequestConfigFromTokenCredentials(tokens), nil
 }
 
 func TestPublish(t *testing.T) {
-	config, token, err := login()
+	apiRequestConfig, err := login()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,7 +55,7 @@ func TestPublish(t *testing.T) {
 		MarkdownString: TEST_POST,
 	}
 
-	post, err := Generate(config.PublisherUrl, token, generateRequest)
+	post, err := Generate(apiRequestConfig, generateRequest)
 	if err != nil {
 		t.Fatal(err)
 	}

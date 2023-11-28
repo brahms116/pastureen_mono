@@ -1,31 +1,36 @@
 package client
 
 import (
-	"net/http"
-	"github.com/brahms116/pastureen_mono/golang/publisher_models"
+	"encoding/json"
+	authModels "github.com/brahms116/pastureen_mono/golang/auth_models"
+	blogModels "github.com/brahms116/pastureen_mono/golang/blog_models"
 	"github.com/brahms116/pastureen_mono/golang/http_utils"
-  "encoding/json"
-  "io"
-  blogModels "github.com/brahms116/pastureen_mono/golang/blog_models"
+	"github.com/brahms116/pastureen_mono/golang/publisher_models"
+	"io"
+	"net/http"
 )
 
-func Generate(endpoint string, accessToken string, generatePostReq models.GeneratePostRequest) (blogModels.Post, error) {
+const PUBLISHER_PATH = "/publisher"
 
-  read, write := io.Pipe()
+func Generate(requestConfig authModels.AuthenticatedApiRequestConfig, generatePostReq models.GeneratePostRequest) (blogModels.Post, error) {
 
-  go func() {
-    defer write.Close()
-    encoder := json.NewEncoder(write)
-    encoder.SetEscapeHTML(false)
-    encoder.Encode(generatePostReq)
-  }()
+  publisherEndpoint := requestConfig.Endpoint + PUBLISHER_PATH
 
-	request, err := http.NewRequest("POST", endpoint, read)
+	read, write := io.Pipe()
+
+	go func() {
+		defer write.Close()
+		encoder := json.NewEncoder(write)
+		encoder.SetEscapeHTML(false)
+		encoder.Encode(generatePostReq)
+	}()
+
+	request, err := http.NewRequest("POST", publisherEndpoint, read)
 	if err != nil {
 		return blogModels.Post{}, err
 	}
-	request.Header.Set("Authorization", "Bearer "+accessToken)
-  request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Authorization", "Bearer "+requestConfig.AccessToken)
+	request.Header.Set("Content-Type", "application/json")
 
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
@@ -33,9 +38,9 @@ func Generate(endpoint string, accessToken string, generatePostReq models.Genera
 	}
 
 	var postResponse models.GeneratePostResponse
-  err = utils.HandleResponse(response, &postResponse)
-  if err != nil {
-    return blogModels.Post{}, err
-  }
+	err = utils.HandleResponse(response, &postResponse)
+	if err != nil {
+		return blogModels.Post{}, err
+	}
 	return postResponse.GeneratedPost, err
 }

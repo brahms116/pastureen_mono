@@ -40,6 +40,14 @@ type Credentials struct {
 	Password string
 }
 
+func NewCredentials(endpoint string, email string, password string) Credentials {
+	return Credentials{
+		Endpoint: endpoint,
+		Email:    email,
+		Password: password,
+	}
+}
+
 type TokenCredentials struct {
 	Endpoint     string
 	AccessToken  string
@@ -49,4 +57,18 @@ type TokenCredentials struct {
 type AuthenticatedApiRequestConfig struct {
 	Endpoint    string
 	AccessToken string
+}
+
+func NewApiRequestConfig(endpoint string, accessToken string) AuthenticatedApiRequestConfig {
+	return AuthenticatedApiRequestConfig{
+		Endpoint:    endpoint,
+		AccessToken: accessToken,
+	}
+}
+
+func ApiRequestConfigFromTokenCredentials(credentials TokenCredentials) AuthenticatedApiRequestConfig {
+	return AuthenticatedApiRequestConfig{
+		Endpoint:    credentials.Endpoint,
+		AccessToken: credentials.AccessToken,
+	}
 }

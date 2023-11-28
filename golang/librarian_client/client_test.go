@@ -1,60 +1,59 @@
 package client
 
 import (
-	"io"
-	"net/http"
-	"os"
 	authClient "github.com/brahms116/pastureen_mono/golang/auth_client"
 	authModels "github.com/brahms116/pastureen_mono/golang/auth_models"
 	blogModels "github.com/brahms116/pastureen_mono/golang/blog_models"
 	libModels "github.com/brahms116/pastureen_mono/golang/librarian_models"
+	"io"
+	"net/http"
+	"os"
 	"testing"
 
 	"github.com/google/uuid"
 )
 
-
 type TestConfig struct {
-	LibrarianUrl string
-	AuthUrl      string
-	Email        string
-	Password     string
-	BlogUrl      string
+	Email             string
+	Password          string
+	PastureenEndpoint string
 }
 
 func ConfigFromEnv() TestConfig {
-	librarianUrl := os.Getenv("LIBRARIAN_URL")
-	authServiceUrl := os.Getenv("AUTH_SERVICE_URL")
 	username := os.Getenv("ADMIN_EMAIL")
 	password := os.Getenv("ADMIN_PASSWORD")
-  blogUrl := os.Getenv("BLOG_PROXIED_URL")
+  pastureenEndpoint := os.Getenv("REVERSE_PROXY_URL")
 	return TestConfig{
-		LibrarianUrl: librarianUrl,
-		AuthUrl:      authServiceUrl,
 		Email:        username,
 		Password:     password,
-    BlogUrl:      blogUrl,
+    PastureenEndpoint: pastureenEndpoint,
 	}
 }
 
-func login() (TestConfig, string, error) {
+func login() (authModels.AuthenticatedApiRequestConfig, error) {
 	config := ConfigFromEnv()
-	loginRequest := authModels.LoginRequest{
-		Email:    config.Email,
-		Password: config.Password,
-	}
-	tokens, err := authClient.Login(config.AuthUrl, loginRequest)
+
+	credentials := authModels.NewCredentials(
+		config.PastureenEndpoint,
+		config.Email,
+		config.Password,
+	)
+	tokens, err := authClient.Login(credentials)
 	if err != nil {
-		return config, "", err
+		return authModels.AuthenticatedApiRequestConfig{}, err
 	}
-	return config, tokens.AccessToken, nil
+	return authModels.ApiRequestConfigFromTokenCredentials(tokens), nil
 }
 
 func TestFlow(t *testing.T) {
-	config, accessToken, err := login()
+
+	requestConfig, err := login()
 	if err != nil {
 		t.Fatal(err)
 	}
+
+  blogEndpoint := requestConfig.Endpoint + "/blog"
+
 	randomSlug := uuid.New().String()
 	tag1 := uuid.New().String()
 	tag2 := uuid.New().String()
@@ -71,7 +70,7 @@ func TestFlow(t *testing.T) {
 			PostHtml: html,
 		},
 	}
-	url, err := UploadPost(config.LibrarianUrl, accessToken, request)
+	url, err := UploadPost(requestConfig, request)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -79,7 +78,7 @@ func TestFlow(t *testing.T) {
 	if url != "/posts/"+randomSlug+".html" {
 		t.Fatalf("Expected url to be /posts/%s.html, got %s", randomSlug, url)
 	}
-	expectedLocation := config.BlogUrl + url
+	expectedLocation := blogEndpoint + url
 
 	// Retireve the page via a GET request
 	confirmReq, err := http.NewRequest("GET", expectedLocation, nil)
@@ -99,7 +98,7 @@ func TestFlow(t *testing.T) {
 	}
 
 	// Try getting link via url
-	getResp, err := GetLink(config.LibrarianUrl, url)
+	getResp, err := GetLink(requestConfig.Endpoint, url)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -108,21 +107,21 @@ func TestFlow(t *testing.T) {
 		t.Fatalf("Expected url to be %s (GetLink), got %s", url, getResp.Url)
 	}
 
-  // Try getting a wrong link
-  value, err := GetLink(config.LibrarianUrl, tag1)
-  if err != nil {
-    t.Fatal(err)
-  }
-  if value != nil {
-    t.Fatalf("Expected value to be nil (GetLink), got %s", value)
-  }
+	// Try getting a wrong link
+	value, err := GetLink(requestConfig.Endpoint, tag1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if value != nil {
+		t.Fatalf("Expected value to be nil (GetLink), got %s", value)
+	}
 
 	// Try searching for the post via title
 	searchReq := libModels.QueryLinksRequest{
 		TitleQuery: randomSlug,
 	}
 
-	searchResp, err := SearchLinks(config.LibrarianUrl, searchReq)
+	searchResp, err := SearchLinks(requestConfig.Endpoint, searchReq)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +137,7 @@ func TestFlow(t *testing.T) {
 		Tags: []string{tag1},
 	}
 
-	searchResp, err = SearchLinks(config.LibrarianUrl, searchReq)
+	searchResp, err = SearchLinks(requestConfig.Endpoint, searchReq)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -154,7 +153,7 @@ func TestFlow(t *testing.T) {
 		Tags: []string{tag2},
 	}
 
-	searchResp, err = SearchLinks(config.LibrarianUrl, searchReq)
+	searchResp, err = SearchLinks(requestConfig.Endpoint, searchReq)
 	if err != nil {
 		t.Fatal(err)
 	}
