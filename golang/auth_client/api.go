@@ -8,7 +8,7 @@ import (
   httpUtils "github.com/brahms116/pastureen_mono/golang/http_utils"
 )
 
-func GetUser(endpoint string, accessToken string) (models.User, error) {
+func getUserApi(endpoint string, accessToken string) (models.User, error) {
 	request, err := http.NewRequest("GET", endpoint+"/user", nil)
 	if err != nil {
 		return models.User{}, err
@@ -23,7 +23,7 @@ func GetUser(endpoint string, accessToken string) (models.User, error) {
 	return user.User, err
 }
 
-func RefreshToken(endpoint string, refreshToken string) (models.TokenPair, error) {
+func refreshTokenApi(endpoint string, refreshToken string) (models.TokenPair, error) {
 	request, err := http.NewRequest("GET", endpoint+"/token", nil)
 	if err != nil {
 		return models.TokenPair{}, err
@@ -38,7 +38,7 @@ func RefreshToken(endpoint string, refreshToken string) (models.TokenPair, error
 	return tokenPair.TokenPair, err
 }
 
-func Login(endpoint string, loginRequest models.LoginRequest) (models.TokenPair, error) {
+func loginApi(endpoint string, loginRequest models.LoginRequest) (models.TokenPair, error) {
 	body, err := json.Marshal(loginRequest)
 	if err != nil {
 		return models.TokenPair{}, err
