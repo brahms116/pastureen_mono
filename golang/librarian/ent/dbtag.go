@@ -4,11 +4,11 @@ package ent
 
 import (
 	"fmt"
-	"pastureen/librarian/ent/dbtag"
 	"strings"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/brahms116/pastureen_mono/golang/librarian/ent/dbtag"
 )
 
 // DbTag is the model entity for the DbTag schema.

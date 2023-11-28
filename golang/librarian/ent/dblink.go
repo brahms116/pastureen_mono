@@ -4,12 +4,12 @@ package ent
 
 import (
 	"fmt"
-	"pastureen/librarian/ent/dblink"
 	"strings"
 	"time"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/brahms116/pastureen_mono/golang/librarian/ent/dblink"
 )
 
 // DbLink is the model entity for the DbLink schema.

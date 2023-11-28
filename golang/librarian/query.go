@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/brahms116/pastureen_mono/golang/librarian_models"
-	"pastureen/librarian/ent"
-	"pastureen/librarian/ent/dblink"
-	"pastureen/librarian/ent/dbtag"
+  "github.com/brahms116/pastureen_mono/golang/librarian/ent"
+  "github.com/brahms116/pastureen_mono/golang/librarian/ent/dbtag"
+  "github.com/brahms116/pastureen_mono/golang/librarian/ent/dblink"
 	"strings"
 	"time"
 

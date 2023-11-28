@@ -7,13 +7,13 @@ import (
 	"database/sql/driver"
 	"fmt"
 	"math"
-	"pastureen/librarian/ent/dblink"
-	"pastureen/librarian/ent/dbtag"
-	"pastureen/librarian/ent/predicate"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/brahms116/pastureen_mono/golang/librarian/ent/dblink"
+	"github.com/brahms116/pastureen_mono/golang/librarian/ent/dbtag"
+	"github.com/brahms116/pastureen_mono/golang/librarian/ent/predicate"
 )
 
 // DbTagQuery is the builder for querying DbTag entities.

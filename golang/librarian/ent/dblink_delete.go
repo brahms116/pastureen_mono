@@ -4,12 +4,12 @@ package ent
 
 import (
 	"context"
-	"pastureen/librarian/ent/dblink"
-	"pastureen/librarian/ent/predicate"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/brahms116/pastureen_mono/golang/librarian/ent/dblink"
+	"github.com/brahms116/pastureen_mono/golang/librarian/ent/predicate"
 )
 
 // DbLinkDelete is the builder for deleting a DbLink entity.

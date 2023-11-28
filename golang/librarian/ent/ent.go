@@ -6,14 +6,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"pastureen/librarian/ent/dblink"
-	"pastureen/librarian/ent/dbtag"
 	"reflect"
 	"sync"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/brahms116/pastureen_mono/golang/librarian/ent/dblink"
+	"github.com/brahms116/pastureen_mono/golang/librarian/ent/dbtag"
 )
 
 // ent aliases to avoid import conflicts in user's code.

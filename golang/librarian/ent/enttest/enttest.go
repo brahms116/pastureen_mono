@@ -4,13 +4,13 @@ package enttest
 
 import (
 	"context"
-	"pastureen/librarian/ent"
-	// required by schema hooks.
-	_ "pastureen/librarian/ent/runtime"
 
-	"pastureen/librarian/ent/migrate"
+	"github.com/brahms116/pastureen_mono/golang/librarian/ent"
+	// required by schema hooks.
+	_ "github.com/brahms116/pastureen_mono/golang/librarian/ent/runtime"
 
 	"entgo.io/ent/dialect/sql/schema"
+	"github.com/brahms116/pastureen_mono/golang/librarian/ent/migrate"
 )
 
 type (

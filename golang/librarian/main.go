@@ -6,7 +6,7 @@ import (
 	"os"
 	authClient "github.com/brahms116/pastureen_mono/golang/auth_client"
 	models "github.com/brahms116/pastureen_mono/golang/librarian_models"
-	"pastureen/librarian/ent"
+  "github.com/brahms116/pastureen_mono/golang/librarian/ent"
 	"strings"
 
 	"github.com/gin-gonic/gin"

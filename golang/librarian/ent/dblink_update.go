@@ -6,14 +6,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"pastureen/librarian/ent/dblink"
-	"pastureen/librarian/ent/dbtag"
-	"pastureen/librarian/ent/predicate"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/brahms116/pastureen_mono/golang/librarian/ent/dblink"
+	"github.com/brahms116/pastureen_mono/golang/librarian/ent/dbtag"
+	"github.com/brahms116/pastureen_mono/golang/librarian/ent/predicate"
 )
 
 // DbLinkUpdate is the builder for updating DbLink entities.

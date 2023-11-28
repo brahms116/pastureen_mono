@@ -1,4 +1,4 @@
-module github.com/brahms116/pastureen_mono/golang/libarian
+module github.com/brahms116/pastureen_mono/golang/librarian
 
 go 1.21
 

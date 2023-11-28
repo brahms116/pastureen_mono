@@ -3,11 +3,11 @@
 package dblink
 
 import (
-	"pastureen/librarian/ent/predicate"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/brahms116/pastureen_mono/golang/librarian/ent/predicate"
 )
 
 // ID filters vertices based on their ID field.

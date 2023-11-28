@@ -4,7 +4,7 @@ import (
 	"context"
 	blogModels "github.com/brahms116/pastureen_mono/golang/blog_models"
 	models "github.com/brahms116/pastureen_mono/golang/librarian_models"
-	"pastureen/librarian/ent"
+  "github.com/brahms116/pastureen_mono/golang/librarian/ent"
 )
 
 func PostToCreateLinkParams(post *blogModels.Post) models.Link {

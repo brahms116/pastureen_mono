@@ -5,7 +5,8 @@ package hook
 import (
 	"context"
 	"fmt"
-	"pastureen/librarian/ent"
+
+	"github.com/brahms116/pastureen_mono/golang/librarian/ent"
 )
 
 // The DbLinkFunc type is an adapter to allow the use of ordinary

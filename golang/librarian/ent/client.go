@@ -9,15 +9,14 @@ import (
 	"log"
 	"reflect"
 
-	"pastureen/librarian/ent/migrate"
-
-	"pastureen/librarian/ent/dblink"
-	"pastureen/librarian/ent/dbtag"
+	"github.com/brahms116/pastureen_mono/golang/librarian/ent/migrate"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/brahms116/pastureen_mono/golang/librarian/ent/dblink"
+	"github.com/brahms116/pastureen_mono/golang/librarian/ent/dbtag"
 )
 
 // Client is the client that holds all ent builders.
