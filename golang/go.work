@@ -12,5 +12,6 @@ use (
 	./publisher_client
 	./publisher_models
 	./shared_models
+  ./pastureen_client
 )
 

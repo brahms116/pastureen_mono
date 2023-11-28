@@ -1,5 +1,6 @@
 package models
 
+// Contracts
 type User struct {
 	Fname string `json:"fname"`
 	Lname string `json:"lname"`
@@ -30,4 +31,22 @@ type LoginRequest struct {
 
 type TokenPairResponse struct {
 	TokenPair TokenPair `json:"tokenPair"`
+}
+
+// Client types
+type Credentials struct {
+	Endpoint string
+	Email    string
+	Password string
+}
+
+type TokenCredentials struct {
+	Endpoint     string
+	AccessToken  string
+	RefreshToken string
+}
+
+type AuthenticatedApiRequestConfig struct {
+	Endpoint    string
+	AccessToken string
 }
