@@ -3,85 +3,80 @@ package client
 import (
 	"bufio"
 	"fmt"
-	authModels "github.com/brahms116/pastureen_mono/golang/auth_models"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-const PASTUREEN_ENDPOINT = "https://pastureen.davidkwong.net"
+const DEFAULT_PASTUREEN_ENDPOINT = "https://pastureen.davidkwong.net"
 
-type CredentialOptions = authModels.Credentials
-
-func MergeCredentialOptions(options CredentialOptions, options2 CredentialOptions) CredentialOptions {
-	if options.Endpoint == "" {
-		options.Endpoint = options2.Endpoint
-	}
-	if options.Email == "" {
-		options.Email = options2.Email
-	}
-	if options.Password == "" {
-		options.Password = options2.Password
-	}
-	return options
+type PastureenCredentials struct {
+	Email             string
+	Password          string
+	PastureenEndpoint string
 }
 
-func MergeCredentialOptionsList(optionsList []CredentialOptions) CredentialOptions {
-	if len(optionsList) == 0 {
-		return CredentialOptions{}
+type PastureenCredentialOptions = PastureenCredentials
+
+func (p PastureenCredentialOptions) Merge(other PastureenCredentialOptions) PastureenCredentialOptions {
+	if p.Email == "" {
+		p.Email = other.Email
 	}
-	options := optionsList[0]
-	return MergeCredentialOptions(options, MergeCredentialOptionsList(optionsList[1:]))
+	if p.Password == "" {
+		p.Password = other.Password
+	}
+	if p.PastureenEndpoint == "" {
+		p.PastureenEndpoint = other.PastureenEndpoint
+	}
+	return p
 }
 
-func CredentialsFromOptions(options CredentialOptions) (authModels.Credentials, error) {
-
-	if options.Email == "" {
-		return authModels.Credentials{}, fmt.Errorf("Email is required")
+func (p PastureenCredentialOptions) ToPastureenCredentials() (PastureenCredentialOptions, error) {
+	if p.Email == "" {
+		return PastureenCredentialOptions{}, fmt.Errorf("Email is required")
+	}
+	if p.Password == "" {
+		return PastureenCredentialOptions{}, fmt.Errorf("Password is required")
 	}
 
-	if options.Password == "" {
-		return authModels.Credentials{}, fmt.Errorf("Password is required")
+	credentials := PastureenCredentialOptions{
+		Email:             p.Email,
+		Password:          p.Password,
+		PastureenEndpoint: p.PastureenEndpoint,
 	}
 
-	credentials := authModels.Credentials{
-		Endpoint: options.Endpoint,
-		Email:    options.Email,
-		Password: options.Password,
-	}
-
-	if credentials.Endpoint == "" {
-		credentials.Endpoint = PASTUREEN_ENDPOINT
+	if credentials.PastureenEndpoint == "" {
+		credentials.PastureenEndpoint = DEFAULT_PASTUREEN_ENDPOINT
 	}
 
 	return credentials, nil
 }
 
-func resolveCredentialsFromEnv() CredentialOptions {
-	return CredentialOptions{
-		Endpoint: os.Getenv("PASTUREEN_ENDPOINT"),
-		Email:    os.Getenv("PASTUREEN_EMAIL"),
-		Password: os.Getenv("PASTUREEN_PASSWORD"),
+func resolveCredentialsFromEnv() PastureenCredentialOptions {
+	return PastureenCredentialOptions{
+		PastureenEndpoint: os.Getenv("PASTUREEN_ENDPOINT"),
+		Email:             os.Getenv("PASTUREEN_EMAIL"),
+		Password:          os.Getenv("PASTUREEN_PASSWORD"),
 	}
 }
 
-func resolveCredentialsFromConfigFile() CredentialOptions {
+func resolveCredentialsFromConfigFile() PastureenCredentialOptions {
 	// locate the config file
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return CredentialOptions{}
+		return PastureenCredentialOptions{}
 	}
 	configFilePath := filepath.Join(homeDir, ".pastureen")
 	configFile, err := os.Open(configFilePath)
 	if err != nil {
-		return CredentialOptions{}
+		return PastureenCredentialOptions{}
 	}
 	defer configFile.Close()
 
 	// parse the config file
 	scanner := bufio.NewScanner(configFile)
 
-	returnConfig := CredentialOptions{}
+	returnConfig := PastureenCredentialOptions{}
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -106,19 +101,12 @@ func resolveCredentialsFromConfigFile() CredentialOptions {
 		case "PASSWORD":
 			returnConfig.Password = value
 		case "ENDPOINT":
-			returnConfig.Endpoint = value
+			returnConfig.PastureenEndpoint = value
 		}
 	}
 	return returnConfig
 }
 
-func ResolveCredentials() (authModels.Credentials, error) {
-	return CredentialsFromOptions(
-		MergeCredentialOptionsList(
-			[]CredentialOptions{
-				resolveCredentialsFromEnv(),
-				resolveCredentialsFromConfigFile(),
-			},
-		),
-	)
+func ResolveCredentials() (PastureenCredentials, error) {
+	return resolveCredentialsFromEnv().Merge(resolveCredentialsFromConfigFile()).ToPastureenCredentials()
 }

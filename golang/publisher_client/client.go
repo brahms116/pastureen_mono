@@ -2,7 +2,7 @@ package client
 
 import (
 	"encoding/json"
-	authModels "github.com/brahms116/pastureen_mono/golang/auth_models"
+	authClient "github.com/brahms116/pastureen_mono/golang/auth_client"
 	blogModels "github.com/brahms116/pastureen_mono/golang/blog_models"
 	"github.com/brahms116/pastureen_mono/golang/http_utils"
 	"github.com/brahms116/pastureen_mono/golang/publisher_models"
@@ -10,11 +10,45 @@ import (
 	"net/http"
 )
 
-const PUBLISHER_PATH = "/publisher"
+type AccessCredentials struct {
+	AccessToken       string
+	PublisherEndpoint string
+}
 
-func Generate(requestConfig authModels.AuthenticatedApiRequestConfig, generatePostReq models.GeneratePostRequest) (blogModels.Post, error) {
+func NewAccessCredentials(accessToken string, publisherEndpoint string) AccessCredentials {
+	return AccessCredentials{
+		AccessToken:       accessToken,
+		PublisherEndpoint: publisherEndpoint,
+	}
+}
 
-  publisherEndpoint := requestConfig.Endpoint + PUBLISHER_PATH
+func (c AccessCredentials) GeneratePost(generatePostReq models.GeneratePostRequest) (blogModels.Post, error) {
+	return generate(c, generatePostReq)
+}
+
+type PublisherClientConfig struct {
+	PublisherEndpoint string
+	TokenCredentials  authClient.TokenCredentials
+}
+
+func NewPublisherClientConfig(publisherEndpoint string, tokenCredentials authClient.TokenCredentials) PublisherClientConfig {
+	return PublisherClientConfig{
+		PublisherEndpoint: publisherEndpoint,
+		TokenCredentials:  tokenCredentials,
+	}
+}
+
+func (c PublisherClientConfig) ToAccessCredentials() AccessCredentials {
+	return NewAccessCredentials(
+		c.TokenCredentials.AccessToken, c.PublisherEndpoint,
+	)
+}
+
+func (c PublisherClientConfig) GeneratePost(generatePostReq models.GeneratePostRequest) (blogModels.Post, error) {
+	return c.ToAccessCredentials().GeneratePost(generatePostReq)
+}
+
+func generate(accessCredentials AccessCredentials, generatePostReq models.GeneratePostRequest) (blogModels.Post, error) {
 
 	read, write := io.Pipe()
 
@@ -25,11 +59,11 @@ func Generate(requestConfig authModels.AuthenticatedApiRequestConfig, generatePo
 		encoder.Encode(generatePostReq)
 	}()
 
-	request, err := http.NewRequest("POST", publisherEndpoint, read)
+	request, err := http.NewRequest("POST", accessCredentials.PublisherEndpoint, read)
 	if err != nil {
 		return blogModels.Post{}, err
 	}
-	request.Header.Set("Authorization", "Bearer "+requestConfig.AccessToken)
+	request.Header.Set("Authorization", "Bearer "+accessCredentials.AccessToken)
 	request.Header.Set("Content-Type", "application/json")
 
 	response, err := http.DefaultClient.Do(request)

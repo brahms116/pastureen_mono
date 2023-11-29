@@ -3,7 +3,7 @@ package client
 import (
 	"bytes"
 	"encoding/json"
-	authModels "github.com/brahms116/pastureen_mono/golang/auth_models"
+	authClient "github.com/brahms116/pastureen_mono/golang/auth_client"
 	"github.com/brahms116/pastureen_mono/golang/http_utils"
 	librarianModels "github.com/brahms116/pastureen_mono/golang/librarian_models"
 	"io"
@@ -11,17 +11,33 @@ import (
 	"net/url"
 )
 
-const LIBRARIAN_PATH = "/librarian"
+type AccessCredentials struct {
+	AccessToken       string
+	LibrarianEndpoint string
+}
+
+type LibrarianClientConfig struct {
+	LibrarianEndpoint string
+	TokenCredentials  authClient.TokenCredentials
+}
+
+type LibrarianPublicClientConfig struct {
+	LibrarianEndpoint string
+}
+
+func NewLibrarianClient(config LibrarianClientConfig) LibrarianClient {
+  return LibrarianClient{
+    LibrarianEndpoint: config.LibrarianEndpoint,
+    TokenCredentials:  config.TokenCredentials,
+  }
+}
 
 func SearchLinks(endpoint string, query librarianModels.QueryLinksRequest) ([]librarianModels.Link, error) {
-
-	librarianEndpoint := endpoint + LIBRARIAN_PATH
-
 	body, err := json.Marshal(query)
 	if err != nil {
 		return nil, err
 	}
-	resp, err := http.Post(librarianEndpoint+"/search", "application/json", bytes.NewReader(body))
+	resp, err := http.Post(endpoint+"/search", "application/json", bytes.NewReader(body))
 	var searchResponse librarianModels.QueryLinksResponse
 	err = utils.HandleResponse(resp, &searchResponse)
 	if err != nil {
@@ -31,9 +47,8 @@ func SearchLinks(endpoint string, query librarianModels.QueryLinksRequest) ([]li
 }
 
 func GetLink(endpoint string, linkUrl string) (*librarianModels.Link, error) {
-	librarianEndpoint := endpoint + LIBRARIAN_PATH
 
-	resp, err := http.Get(librarianEndpoint + "/link?url=" + url.QueryEscape(linkUrl))
+	resp, err := http.Get(endpoint + "/link?url=" + url.QueryEscape(linkUrl))
 	if err != nil {
 		return nil, err
 	}

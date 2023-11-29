@@ -17,7 +17,7 @@ func getTestConfig() testConfig {
 	return testConfig{
 		Email:    os.Getenv("ADMIN_EMAIL"),
 		Password: os.Getenv("ADMIN_PASSWORD"),
-		Endpoint: os.Getenv("REVERSE_PROXY_URL"),
+		Endpoint: os.Getenv("AUTH_SERVICE_URL"),
 	}
 }
 

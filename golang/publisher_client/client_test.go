@@ -3,7 +3,6 @@ package client
 import (
 	_ "embed"
 	authClient "github.com/brahms116/pastureen_mono/golang/auth_client"
-	authModels "github.com/brahms116/pastureen_mono/golang/auth_models"
 	publisherModels "github.com/brahms116/pastureen_mono/golang/publisher_models"
 	"os"
 	"testing"
@@ -13,40 +12,40 @@ import (
 var TEST_POST string
 
 type TestConfig struct {
-	PastureenEndpoint string
-	Email             string
-	Password          string
+	Email               string
+	Password            string
+	AuthServiceEndpoint string
+	PublisherEndpoint   string
 }
 
 func ConfigFromEnv() TestConfig {
 
-	pastureenEndpoint := os.Getenv("REVERSE_PROXY_URL")
+	authServiceEndpoint := os.Getenv("AUTH_SERVICE_URL")
+	publisherEndpoint := os.Getenv("PUBLISHER_URL")
 	email := os.Getenv("ADMIN_EMAIL")
 	password := os.Getenv("ADMIN_PASSWORD")
 	return TestConfig{
-		PastureenEndpoint: pastureenEndpoint,
-		Email:             email,
-		Password:          password,
+		Email:               email,
+		Password:            password,
+		AuthServiceEndpoint: authServiceEndpoint,
+		PublisherEndpoint:   publisherEndpoint,
 	}
 }
 
-func login() (authModels.AuthenticatedApiRequestConfig, error) {
+func login() (AccessCredentials, error) {
 	config := ConfigFromEnv()
 
-	credentials := authModels.NewCredentials(
-		config.PastureenEndpoint,
-		config.Email,
-		config.Password,
-	)
-	tokens, err := authClient.Login(credentials)
+	tokens, err := authClient.NewCredentials(config.Email, config.Password, config.AuthServiceEndpoint).Login()
+
 	if err != nil {
-		return authModels.AuthenticatedApiRequestConfig{}, err
+		return AccessCredentials{}, err
 	}
-	return authModels.ApiRequestConfigFromTokenCredentials(tokens), nil
+
+	return NewAccessCredentials(tokens.AccessToken, config.PublisherEndpoint), nil
 }
 
 func TestPublish(t *testing.T) {
-	apiRequestConfig, err := login()
+	accessCreds, err := login()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,7 +54,7 @@ func TestPublish(t *testing.T) {
 		MarkdownString: TEST_POST,
 	}
 
-	post, err := Generate(apiRequestConfig, generateRequest)
+	post, err := generate(accessCreds, generateRequest)
 	if err != nil {
 		t.Fatal(err)
 	}
