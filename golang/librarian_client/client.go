@@ -25,12 +25,6 @@ type LibrarianPublicClientConfig struct {
 	LibrarianEndpoint string
 }
 
-func NewLibrarianClient(config LibrarianClientConfig) LibrarianClient {
-  return LibrarianClient{
-    LibrarianEndpoint: config.LibrarianEndpoint,
-    TokenCredentials:  config.TokenCredentials,
-  }
-}
 
 func SearchLinks(endpoint string, query librarianModels.QueryLinksRequest) ([]librarianModels.Link, error) {
 	body, err := json.Marshal(query)
@@ -61,10 +55,10 @@ func GetLink(endpoint string, linkUrl string) (*librarianModels.Link, error) {
 }
 
 func UploadPost(
-	requestConfig authModels.AuthenticatedApiRequestConfig,
+	endpoint string,
+	accessToken string,
 	createPostReq librarianModels.CreateNewPostRequest,
 ) (string, error) {
-	librarianEndpoint := requestConfig.Endpoint + LIBRARIAN_PATH
 
 	read, write := io.Pipe()
 
@@ -75,12 +69,12 @@ func UploadPost(
 		encoder.Encode(createPostReq)
 	}()
 
-	req, err := http.NewRequest("POST", librarianEndpoint+"/post", read)
+	req, err := http.NewRequest("POST", endpoint+"/post", read)
 	if err != nil {
 		return "", err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+requestConfig.AccessToken)
+	req.Header.Set("Authorization", "Bearer "+ accessToken)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", err

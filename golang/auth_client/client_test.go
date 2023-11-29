@@ -28,7 +28,7 @@ func login() (testConfig, models.TokenPair, error) {
 		Password: config.Password,
 	}
 
-	tokens, err := loginApi(config.Endpoint, loginRequest)
+	tokens, err := Login(config.Endpoint, loginRequest)
 	return config, tokens, err
 }
 
@@ -50,7 +50,7 @@ func TestGetUser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	user, err := getUserApi(config.Endpoint, tokens.AccessToken)
+	user, err := GetUser(config.Endpoint, tokens.AccessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,7 +64,7 @@ func TestRefreshToken(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	newTokens, err := refreshTokenApi(config.Endpoint, tokens.RefreshToken)
+	newTokens, err := RefreshToken(config.Endpoint, tokens.RefreshToken)
 	if err != nil {
 		t.Fatal(err)
 	}
