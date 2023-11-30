@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
+	authClient "github.com/brahms116/pastureen_mono/golang/auth_client"
+	"github.com/brahms116/pastureen_mono/golang/librarian/ent"
+	models "github.com/brahms116/pastureen_mono/golang/librarian_models"
 	"log"
 	"os"
-	authClient "github.com/brahms116/pastureen_mono/golang/auth_client"
-	models "github.com/brahms116/pastureen_mono/golang/librarian_models"
-  "github.com/brahms116/pastureen_mono/golang/librarian/ent"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -40,7 +40,8 @@ func Authenticate(authUrl string, adminEmail string) gin.HandlerFunc {
 			return
 		}
 
-		user, err := authClient.GetUser(authUrl, token)
+		user, err := authClient.NewAccessCredentials(token, authUrl).GetUser()
+
 		if err != nil {
 			c.AbortWithStatusJSON(401, gin.H{"errorType": "Unauthenticated", "message": "Invalid token"})
 		}

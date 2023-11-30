@@ -21,19 +21,19 @@ func getTestConfig() testConfig {
 	}
 }
 
-func login() (testConfig, models.TokenPair, error) {
+func testLogin() (testConfig, models.TokenPair, error) {
 	config := getTestConfig()
 	loginRequest := models.LoginRequest{
 		Email:    config.Email,
 		Password: config.Password,
 	}
 
-	tokens, err := Login(config.Endpoint, loginRequest)
+	tokens, err := login(config.Endpoint, loginRequest)
 	return config, tokens, err
 }
 
 func TestLogin(t *testing.T) {
-	_, tokens, err := login()
+	_, tokens, err := testLogin()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,11 +46,11 @@ func TestLogin(t *testing.T) {
 }
 
 func TestGetUser(t *testing.T) {
-	config, tokens, err := login()
+	config, tokens, err := testLogin()
 	if err != nil {
 		t.Fatal(err)
 	}
-	user, err := GetUser(config.Endpoint, tokens.AccessToken)
+	user, err := getUser(config.Endpoint, tokens.AccessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,11 +60,11 @@ func TestGetUser(t *testing.T) {
 }
 
 func TestRefreshToken(t *testing.T) {
-	config, tokens, err := login()
+	config, tokens, err := testLogin()
 	if err != nil {
 		t.Fatal(err)
 	}
-	newTokens, err := RefreshToken(config.Endpoint, tokens.RefreshToken)
+	newTokens, err := refreshToken(config.Endpoint, tokens.RefreshToken)
 	if err != nil {
 		t.Fatal(err)
 	}

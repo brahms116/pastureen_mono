@@ -54,7 +54,7 @@ func TestPublish(t *testing.T) {
 		MarkdownString: TEST_POST,
 	}
 
-	post, err := generate(accessCreds, generateRequest)
+	post, err := generate(accessCreds.publisherEndpoint, accessCreds.accessToken, generateRequest)
 	if err != nil {
 		t.Fatal(err)
 	}

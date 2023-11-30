@@ -3,7 +3,6 @@ package client
 import (
 	"bytes"
 	"encoding/json"
-	authClient "github.com/brahms116/pastureen_mono/golang/auth_client"
 	"github.com/brahms116/pastureen_mono/golang/http_utils"
 	librarianModels "github.com/brahms116/pastureen_mono/golang/librarian_models"
 	"io"
@@ -12,21 +11,54 @@ import (
 )
 
 type AccessCredentials struct {
-	AccessToken       string
-	LibrarianEndpoint string
+	accessToken       string
+	librarianEndpoint string
 }
 
-type LibrarianClientConfig struct {
-	LibrarianEndpoint string
-	TokenCredentials  authClient.TokenCredentials
+func NewAccessCredentials(accessToken string, librarianEndpoint string) AccessCredentials {
+	return AccessCredentials{
+		accessToken:       accessToken,
+		librarianEndpoint: librarianEndpoint,
+	}
 }
 
-type LibrarianPublicClientConfig struct {
-	LibrarianEndpoint string
+func (c AccessCredentials) UploadPost(
+	createPostReq librarianModels.CreateNewPostRequest,
+) (string, error) {
+	return uploadPost(c.librarianEndpoint, c.accessToken, createPostReq)
 }
 
+func (c AccessCredentials) GetLink(linkUrl string) (*librarianModels.Link, error) {
+	return getLink(c.librarianEndpoint, linkUrl)
+}
 
-func SearchLinks(endpoint string, query librarianModels.QueryLinksRequest) ([]librarianModels.Link, error) {
+func (c AccessCredentials) SearchLinks(query librarianModels.QueryLinksRequest) ([]librarianModels.Link, error) {
+	return searchLinks(c.librarianEndpoint, query)
+}
+
+type PublicCredentials struct {
+	librarianEndpoint string
+}
+
+func NewPublicCredentials(librarianEndpoint string) PublicCredentials {
+	return PublicCredentials{
+		librarianEndpoint: librarianEndpoint,
+	}
+}
+
+func (c PublicCredentials) ToAuthenticated(accessToken string) AccessCredentials {
+	return NewAccessCredentials(accessToken, c.librarianEndpoint)
+}
+
+func (c PublicCredentials) GetLink(linkUrl string) (*librarianModels.Link, error) {
+	return getLink(c.librarianEndpoint, linkUrl)
+}
+
+func (c PublicCredentials) SearchLinks(query librarianModels.QueryLinksRequest) ([]librarianModels.Link, error) {
+	return searchLinks(c.librarianEndpoint, query)
+}
+
+func searchLinks(endpoint string, query librarianModels.QueryLinksRequest) ([]librarianModels.Link, error) {
 	body, err := json.Marshal(query)
 	if err != nil {
 		return nil, err
@@ -40,7 +72,7 @@ func SearchLinks(endpoint string, query librarianModels.QueryLinksRequest) ([]li
 	return searchResponse.Links, err
 }
 
-func GetLink(endpoint string, linkUrl string) (*librarianModels.Link, error) {
+func getLink(endpoint string, linkUrl string) (*librarianModels.Link, error) {
 
 	resp, err := http.Get(endpoint + "/link?url=" + url.QueryEscape(linkUrl))
 	if err != nil {
@@ -54,8 +86,8 @@ func GetLink(endpoint string, linkUrl string) (*librarianModels.Link, error) {
 	return getLinkResponse.Link, err
 }
 
-func UploadPost(
-	endpoint string,
+func uploadPost(
+	librarianEndpoint string,
 	accessToken string,
 	createPostReq librarianModels.CreateNewPostRequest,
 ) (string, error) {
@@ -69,12 +101,12 @@ func UploadPost(
 		encoder.Encode(createPostReq)
 	}()
 
-	req, err := http.NewRequest("POST", endpoint+"/post", read)
+	req, err := http.NewRequest("POST", librarianEndpoint+"/post", read)
 	if err != nil {
 		return "", err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+ accessToken)
+	req.Header.Set("Authorization", "Bearer "+accessToken)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", err

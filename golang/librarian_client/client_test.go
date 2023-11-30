@@ -2,7 +2,6 @@ package client
 
 import (
 	authClient "github.com/brahms116/pastureen_mono/golang/auth_client"
-	authModels "github.com/brahms116/pastureen_mono/golang/auth_models"
 	blogModels "github.com/brahms116/pastureen_mono/golang/blog_models"
 	libModels "github.com/brahms116/pastureen_mono/golang/librarian_models"
 	"io"
@@ -14,45 +13,51 @@ import (
 )
 
 type TestConfig struct {
-	Email             string
-	Password          string
-	PastureenEndpoint string
+	Email               string
+	Password            string
+	AuthServiceEndpoint string
+	LibrarianEndpoint   string
+	ReverseProxyUrl     string
 }
 
 func ConfigFromEnv() TestConfig {
 	username := os.Getenv("ADMIN_EMAIL")
 	password := os.Getenv("ADMIN_PASSWORD")
-  pastureenEndpoint := os.Getenv("REVERSE_PROXY_URL")
+	authServiceEndpoint := os.Getenv("AUTH_SERVICE_URL")
+	librarianEndpoint := os.Getenv("LIBRARIAN_URL")
+	reverseProxyUrl := os.Getenv("REVERSE_PROXY_URL")
 	return TestConfig{
-		Email:        username,
-		Password:     password,
-    PastureenEndpoint: pastureenEndpoint,
+		Email:               username,
+		Password:            password,
+		AuthServiceEndpoint: authServiceEndpoint,
+		LibrarianEndpoint:   librarianEndpoint,
+		ReverseProxyUrl:     reverseProxyUrl,
 	}
 }
 
-func login() (authModels.AuthenticatedApiRequestConfig, error) {
+func login() (TestConfig, AccessCredentials, error) {
 	config := ConfigFromEnv()
 
-	credentials := authModels.NewCredentials(
-		config.PastureenEndpoint,
+	credentials := authClient.NewCredentials(
 		config.Email,
 		config.Password,
+		config.AuthServiceEndpoint,
 	)
-	tokens, err := authClient.Login(credentials)
+	tokens, err := credentials.Login()
 	if err != nil {
-		return authModels.AuthenticatedApiRequestConfig{}, err
+		return config, AccessCredentials{}, err
 	}
-	return authModels.ApiRequestConfigFromTokenCredentials(tokens), nil
+	return config, NewAccessCredentials(tokens.AccessToken, config.LibrarianEndpoint), nil
 }
 
 func TestFlow(t *testing.T) {
 
-	requestConfig, err := login()
+	config, creds, err := login()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-  blogEndpoint := requestConfig.Endpoint + "/blog"
+	blogEndpoint := config.ReverseProxyUrl + "/blog"
 
 	randomSlug := uuid.New().String()
 	tag1 := uuid.New().String()
@@ -70,7 +75,7 @@ func TestFlow(t *testing.T) {
 			PostHtml: html,
 		},
 	}
-	url, err := UploadPost(requestConfig, request)
+	url, err := uploadPost(creds.librarianEndpoint, creds.accessToken, request)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -98,22 +103,22 @@ func TestFlow(t *testing.T) {
 	}
 
 	// Try getting link via url
-	getResp, err := GetLink(requestConfig.Endpoint, url)
+	getResp, err := getLink(config.LibrarianEndpoint, url)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	if getResp.Url != url {
-		t.Fatalf("Expected url to be %s (GetLink), got %s", url, getResp.Url)
+		t.Fatalf("Expected url to be %s (getLink), got %s", url, getResp.Url)
 	}
 
 	// Try getting a wrong link
-	value, err := GetLink(requestConfig.Endpoint, tag1)
+	value, err := getLink(config.LibrarianEndpoint, tag1)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if value != nil {
-		t.Fatalf("Expected value to be nil (GetLink), got %s", value)
+		t.Fatalf("Expected value to be nil (getLink), got %s", value)
 	}
 
 	// Try searching for the post via title
@@ -121,7 +126,7 @@ func TestFlow(t *testing.T) {
 		TitleQuery: randomSlug,
 	}
 
-	searchResp, err := SearchLinks(requestConfig.Endpoint, searchReq)
+	searchResp, err := searchLinks(config.LibrarianEndpoint, searchReq)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -137,7 +142,7 @@ func TestFlow(t *testing.T) {
 		Tags: []string{tag1},
 	}
 
-	searchResp, err = SearchLinks(requestConfig.Endpoint, searchReq)
+	searchResp, err = searchLinks(config.LibrarianEndpoint, searchReq)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -153,7 +158,7 @@ func TestFlow(t *testing.T) {
 		Tags: []string{tag2},
 	}
 
-	searchResp, err = SearchLinks(requestConfig.Endpoint, searchReq)
+	searchResp, err = searchLinks(config.LibrarianEndpoint, searchReq)
 	if err != nil {
 		t.Fatal(err)
 	}

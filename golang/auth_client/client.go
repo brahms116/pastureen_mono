@@ -5,9 +5,9 @@ import (
 )
 
 type Credentials struct {
-	Email        string
-	Password     string
-	AuthEndpoint string
+	email        string
+	password     string
+	authEndpoint string
 }
 
 func NewCredentials(
@@ -16,25 +16,25 @@ func NewCredentials(
 	authEndpoint string,
 ) Credentials {
 	return Credentials{
-		Email:        email,
-		Password:     password,
-		AuthEndpoint: authEndpoint,
+		email:        email,
+		password:     password,
+		authEndpoint: authEndpoint,
 	}
 }
 
 func (c Credentials) Login() (TokenCredentials, error) {
 	requestPayload := models.LoginRequest{
-		Email:    c.Email,
-		Password: c.Password,
+		Email:    c.email,
+		Password: c.password,
 	}
-	tokenPair, err := loginApi(c.AuthEndpoint, requestPayload)
+	tokenPair, err := login(c.authEndpoint, requestPayload)
 	if err != nil {
 		return TokenCredentials{}, err
 	}
 	result := TokenCredentials{
 		AccessToken:  tokenPair.AccessToken,
 		RefreshToken: tokenPair.RefreshToken,
-		AuthEndpoint: c.AuthEndpoint,
+		authEndpoint: c.authEndpoint,
 	}
 	return result, nil
 }
@@ -42,7 +42,7 @@ func (c Credentials) Login() (TokenCredentials, error) {
 type TokenCredentials struct {
 	AccessToken  string
 	RefreshToken string
-	AuthEndpoint string
+	authEndpoint string
 }
 
 func NewTokenCredentials(
@@ -53,35 +53,30 @@ func NewTokenCredentials(
 	return TokenCredentials{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
-		AuthEndpoint: authEndpoint,
-	}
-}
-
-func (c TokenCredentials) ToAccessCredentials() AccessCredentials {
-	return AccessCredentials{
-		AccessToken:  c.AccessToken,
-		AuthEndpoint: c.AuthEndpoint,
-	}
-}
-
-func (c TokenCredentials) ToRefreshCredentials() RefreshCredentials {
-	return RefreshCredentials{
-		RefreshToken: c.RefreshToken,
-		AuthEndpoint: c.AuthEndpoint,
+		authEndpoint: authEndpoint,
 	}
 }
 
 func (c TokenCredentials) RefreshTokens() (TokenCredentials, error) {
-	return c.ToRefreshCredentials().RefreshTokens()
+	tokenPair, err := refreshToken(c.authEndpoint, c.RefreshToken)
+	if err != nil {
+		return TokenCredentials{}, err
+	}
+	result := NewTokenCredentials(
+		tokenPair.AccessToken,
+		tokenPair.RefreshToken,
+		c.authEndpoint,
+	)
+	return result, nil
 }
 
 func (c TokenCredentials) GetUser() (models.User, error) {
-	return c.ToAccessCredentials().GetUser()
+	return getUser(c.authEndpoint, c.AccessToken)
 }
 
 type AccessCredentials struct {
-	AccessToken  string
-	AuthEndpoint string
+	accessToken  string
+	authEndpoint string
 }
 
 func NewAccessCredentials(
@@ -89,13 +84,13 @@ func NewAccessCredentials(
 	authEndpoint string,
 ) AccessCredentials {
 	return AccessCredentials{
-		AccessToken:  accessToken,
-		AuthEndpoint: authEndpoint,
+		accessToken:  accessToken,
+		authEndpoint: authEndpoint,
 	}
 }
 
 func (c AccessCredentials) GetUser() (models.User, error) {
-	return getUserApi(c.AuthEndpoint, c.AccessToken)
+	return getUser(c.authEndpoint, c.accessToken)
 }
 
 type RefreshCredentials struct {
@@ -114,14 +109,14 @@ func NewRefreshCredentials(
 }
 
 func (c RefreshCredentials) RefreshTokens() (TokenCredentials, error) {
-	tokenPair, err := refreshTokenApi(c.AuthEndpoint, c.RefreshToken)
+	tokenPair, err := refreshToken(c.AuthEndpoint, c.RefreshToken)
 	if err != nil {
 		return TokenCredentials{}, err
 	}
-	result := TokenCredentials{
-		AccessToken:  tokenPair.AccessToken,
-		RefreshToken: tokenPair.RefreshToken,
-		AuthEndpoint: c.AuthEndpoint,
-	}
+	result := NewTokenCredentials(
+		tokenPair.AccessToken,
+		tokenPair.RefreshToken,
+		c.AuthEndpoint,
+	)
 	return result, nil
 }
