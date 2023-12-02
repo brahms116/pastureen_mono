@@ -152,6 +152,7 @@ pub fn render_links(
         (list(list_props))
         @if let Some(offset) = next_offset {
             .loader
+                hx-swap="outerHTML"
                 hx-trigger="intersect once"
                 hx-get=(format!("{}/links?search={}&offset={}", htmx_url, query, offset))
             {
@@ -170,7 +171,7 @@ pub async fn search_and_render_links(
     let next_offset = if links.links.len() < SEARCH_LIMIT as usize {
         None
     } else {
-        Some(offset.unwrap_or(0) + SEARCH_LIMIT)
+        Some(offset.unwrap_or(1) + 1)
     };
     Ok(render_links(
         &links.links,
