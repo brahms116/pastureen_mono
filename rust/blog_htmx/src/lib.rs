@@ -152,7 +152,7 @@ pub fn render_links(
         (list(list_props))
         @if let Some(offset) = next_offset {
             .loader
-                hx-trigger="revealed once"
+                hx-trigger="intersect once"
                 hx-get=(format!("{}/links?search={}&offset={}", htmx_url, query, offset))
             {
                 "Loading..."
@@ -198,6 +198,10 @@ pub async fn render_search_results(
     config: &BlogHtmxConfig,
 ) -> Result<Markup, BlogHtmxError> {
     let links_html = search_and_render_links(query_str, offset, config).await?;
+
+    if let Some(_) = offset {
+        return Ok(links_html)
+    }
 
     let results_heading = if query_str.is_empty() {
         "Recent posts"

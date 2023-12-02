@@ -58,7 +58,7 @@ async fn main() {
     let app = Router::new()
         .route("/healthcheck", get(healthcheck))
         .route("/search", post(search_links))
-        .route("/search", get(get_next_page_links))
+        .route("/links", get(get_next_page_links))
         .with_state(state)
         .layer(cors);
 
