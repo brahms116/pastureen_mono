@@ -6,43 +6,61 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+  librarianModels "github.com/brahms116/pastureen_mono/golang/librarian_models"
+	authClient "github.com/brahms116/pastureen_mono/golang/auth_client"
+	authModels "github.com/brahms116/pastureen_mono/golang/auth_models"
+	publisherModels "github.com/brahms116/pastureen_mono/golang/publisher_models"
 )
 
 const DEFAULT_PASTUREEN_ENDPOINT = "https://pastureen.davidkwong.net"
 
-type PastureenCredentials struct {
+type Credentials struct {
 	Email             string
 	Password          string
 	PastureenEndpoint string
 }
 
-type PastureenCredentialOptions = PastureenCredentials
-
-func (p PastureenCredentialOptions) Merge(other PastureenCredentialOptions) PastureenCredentialOptions {
-	if p.Email == "" {
-		p.Email = other.Email
-	}
-	if p.Password == "" {
-		p.Password = other.Password
-	}
-	if p.PastureenEndpoint == "" {
-		p.PastureenEndpoint = other.PastureenEndpoint
-	}
-	return p
+type TokenCredentials struct {
+	AccessToken       string
+	RefreshToken      string
+	PastureenEndpoint string
 }
 
-func (p PastureenCredentialOptions) ToPastureenCredentials() (PastureenCredentialOptions, error) {
-	if p.Email == "" {
+type PastureenCredentialOptions = Credentials
+
+func MergeCredentiaOptions(a PastureenCredentialOptions, b PastureenCredentialOptions) PastureenCredentialOptions {
+	if a.Email == "" {
+		a.Email = b.Email
+	}
+	if a.Password == "" {
+		a.Password = b.Password
+	}
+	if a.PastureenEndpoint == "" {
+		a.PastureenEndpoint = b.PastureenEndpoint
+	}
+	return a
+}
+
+func MergeCredentialOptionsList(options []PastureenCredentialOptions) PastureenCredentialOptions {
+	merged := PastureenCredentialOptions{}
+	for _, option := range options {
+		merged = MergeCredentiaOptions(merged, option)
+	}
+	return merged
+}
+
+func CredentialsFromOptions(options PastureenCredentialOptions) (Credentials, error) {
+	if options.Email == "" {
 		return PastureenCredentialOptions{}, fmt.Errorf("Email is required")
 	}
-	if p.Password == "" {
+	if options.Password == "" {
 		return PastureenCredentialOptions{}, fmt.Errorf("Password is required")
 	}
 
 	credentials := PastureenCredentialOptions{
-		Email:             p.Email,
-		Password:          p.Password,
-		PastureenEndpoint: p.PastureenEndpoint,
+		Email:             options.Email,
+		Password:          options.Password,
+		PastureenEndpoint: options.PastureenEndpoint,
 	}
 
 	if credentials.PastureenEndpoint == "" {
@@ -107,6 +125,49 @@ func resolveCredentialsFromConfigFile() PastureenCredentialOptions {
 	return returnConfig
 }
 
-func ResolveCredentials() (PastureenCredentials, error) {
-	return resolveCredentialsFromEnv().Merge(resolveCredentialsFromConfigFile()).ToPastureenCredentials()
+func ResolveCredentials() (Credentials, error) {
+	return CredentialsFromOptions(MergeCredentialOptionsList([]PastureenCredentialOptions{
+		resolveCredentialsFromEnv(),
+		resolveCredentialsFromConfigFile(),
+	}))
+}
+
+func Login(credentials Credentials) (TokenCredentials, error) {
+	tokens, err := authClient.Login(authModels.Credentials{
+		Email:    credentials.Email,
+		Password: credentials.Password,
+		Endpoint: credentials.PastureenEndpoint + "/auth",
+	})
+
+	if err != nil {
+		return TokenCredentials{}, err
+	}
+
+	return TokenCredentials{
+		AccessToken:       tokens.AccessToken,
+		RefreshToken:      tokens.RefreshToken,
+		PastureenEndpoint: credentials.PastureenEndpoint,
+	}, nil
+}
+
+func ToAuthTokenCredentials(tokenCredentials TokenCredentials) authModels.TokenCredentials {
+	return authModels.TokenCredentials{
+		AccessToken:  tokenCredentials.AccessToken,
+		RefreshToken: tokenCredentials.RefreshToken,
+		Endpoint:     tokenCredentials.PastureenEndpoint + "/auth",
+	}
+}
+
+func ToPublisherCredentials(tokenCredentials TokenCredentials) publisherModels.Credentials {
+	return publisherModels.Credentials{
+		AccessToken: tokenCredentials.AccessToken,
+		Endpoint:    tokenCredentials.PastureenEndpoint + "/publisher",
+	}
+}
+
+func ToLibrarianCredentials(tokenCredentials TokenCredentials) librarianModels.Credentials {
+  return librarianModels.Credentials{
+    AccessToken: tokenCredentials.AccessToken,
+    Endpoint:    tokenCredentials.PastureenEndpoint + "/librarian",
+  }
 }

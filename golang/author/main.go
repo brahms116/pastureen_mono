@@ -1,40 +1,19 @@
 package main
 
 import (
-	"log"
-	"os"
-	authClient "github.com/brahms116/pastureen_mono/golang/auth_client"
-	authModels "github.com/brahms116/pastureen_mono/golang/auth_models"
 	libClient "github.com/brahms116/pastureen_mono/golang/librarian_client"
 	libModels "github.com/brahms116/pastureen_mono/golang/librarian_models"
+	pastureen "github.com/brahms116/pastureen_mono/golang/pastureen_client"
 	pubClient "github.com/brahms116/pastureen_mono/golang/publisher_client"
 	pubModels "github.com/brahms116/pastureen_mono/golang/publisher_models"
+	"log"
+	"os"
 	"sync"
 )
 
-const ENV_PREFIX = "AUTHOR_"
-
-type AuthorConfig struct {
-	PublisherUrl  string
-	LibrarianUrl  string
-	AuthUrl       string
-	AdminEmail    string
-	AdminPassword string
-}
-
-func ConfigFromEnv() AuthorConfig {
-	return AuthorConfig{
-		PublisherUrl:  os.Getenv(ENV_PREFIX + "PUBLISHER_URL"),
-		LibrarianUrl:  os.Getenv(ENV_PREFIX + "LIBRARIAN_URL"),
-		AuthUrl:       os.Getenv(ENV_PREFIX + "AUTH_URL"),
-		AdminEmail:    os.Getenv(ENV_PREFIX + "ADMIN_EMAIL"),
-		AdminPassword: os.Getenv(ENV_PREFIX + "ADMIN_PASSWORD"),
-	}
-}
-
 const MAX_WORKERS = 10
 
-func author(path string, config AuthorConfig, accessToken string) {
+func author(path string, tokenCreds pastureen.TokenCredentials) {
 	contents, err := os.ReadFile(path)
 	if err != nil {
 		log.Printf("Error opening file %s: %s", path, err)
@@ -49,14 +28,17 @@ func author(path string, config AuthorConfig, accessToken string) {
 	}
 
 	log.Printf("Generating html for file %s", path)
-	post, err := pubClient.Generate(config.PublisherUrl, accessToken, request)
+	post, err := pubClient.GeneratePostWithCredentials(
+		pastureen.ToPublisherCredentials(tokenCreds), request,
+	)
 	if err != nil {
 		log.Printf("Error generating html for file %s: %s", path, err)
 		return
 	}
+
 	log.Printf("Generated html for file %s", path)
 	log.Printf("Uploading html for file %s", path)
-	url, err := libClient.UploadPost(config.LibrarianUrl, accessToken, libModels.CreateNewPostRequest{
+	url, err := libClient.UploadPostWithCredentials(pastureen.ToLibrarianCredentials(tokenCreds), libModels.CreateNewPostRequest{
 		Post: post,
 	})
 	if err != nil {
@@ -66,22 +48,24 @@ func author(path string, config AuthorConfig, accessToken string) {
 	log.Printf("Uploaded html for file %s. The result url: %s", path, url)
 }
 
-func doAuthor(paths <-chan string, wg *sync.WaitGroup, config AuthorConfig, accessToken string) {
+func doAuthor(paths <-chan string, wg *sync.WaitGroup, tokenCreds pastureen.TokenCredentials) {
 	if wg != nil {
 		defer wg.Done()
 	}
 	for path := range paths {
-		author(path, config, accessToken)
+		author(path, tokenCreds)
 	}
 }
 
 func main() {
-	config := ConfigFromEnv()
 
-	tokens, err := authClient.Login(config.AuthUrl, authModels.LoginRequest{
-		Email:    config.AdminEmail,
-		Password: config.AdminPassword,
-	})
+	credentials, err := pastureen.ResolveCredentials()
+
+	if err != nil {
+		log.Fatalf("Error resolving credentials: %s", err)
+	}
+
+	tokenCreds, err := pastureen.Login(credentials)
 
 	if err != nil {
 		log.Fatalf("Error retrieving auth token: %s", err)
@@ -93,7 +77,7 @@ func main() {
 	paths := make(chan string)
 
 	for i := 0; i < MAX_WORKERS; i++ {
-		go doAuthor(paths, &wg, config, tokens.AccessToken)
+		go doAuthor(paths, &wg, tokenCreds)
 	}
 
 	for _, path := range inputPaths {
