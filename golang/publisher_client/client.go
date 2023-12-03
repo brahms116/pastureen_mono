@@ -9,23 +9,14 @@ import (
 	"net/http"
 )
 
-type AccessCredentials struct {
-	accessToken       string
-	publisherEndpoint string
+func GeneratePostWithCredentials(
+	credentials models.Credentials,
+	generatePostReq models.GeneratePostRequest,
+) (blogModels.Post, error) {
+	return GeneratePost(credentials.Endpoint, credentials.AccessToken, generatePostReq)
 }
 
-func NewAccessCredentials(accessToken string, publisherEndpoint string) AccessCredentials {
-	return AccessCredentials{
-		accessToken:       accessToken,
-		publisherEndpoint: publisherEndpoint,
-	}
-}
-
-func (c AccessCredentials) GeneratePost(generatePostReq models.GeneratePostRequest) (blogModels.Post, error) {
-	return generate(c.publisherEndpoint, c.accessToken, generatePostReq)
-}
-
-func generate(endpoint string, accessToken string, generatePostReq models.GeneratePostRequest) (blogModels.Post, error) {
+func GeneratePost(endpoint string, accessToken string, generatePostReq models.GeneratePostRequest) (blogModels.Post, error) {
 
 	read, write := io.Pipe()
 

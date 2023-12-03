@@ -2,6 +2,7 @@ package client
 
 import (
 	authClient "github.com/brahms116/pastureen_mono/golang/auth_client"
+	authModels "github.com/brahms116/pastureen_mono/golang/auth_models"
 	blogModels "github.com/brahms116/pastureen_mono/golang/blog_models"
 	libModels "github.com/brahms116/pastureen_mono/golang/librarian_models"
 	"io"
@@ -35,19 +36,23 @@ func ConfigFromEnv() TestConfig {
 	}
 }
 
-func login() (TestConfig, AccessCredentials, error) {
+func login() (TestConfig, libModels.Credentials, error) {
 	config := ConfigFromEnv()
 
-	credentials := authClient.NewCredentials(
-		config.Email,
-		config.Password,
-		config.AuthServiceEndpoint,
-	)
-	tokens, err := credentials.Login()
+	tokens, err := authClient.Login(authModels.Credentials{
+		Email:    config.Email,
+		Password: config.Password,
+		Endpoint: config.AuthServiceEndpoint,
+	})
+
 	if err != nil {
-		return config, AccessCredentials{}, err
+		return TestConfig{}, libModels.Credentials{}, err
 	}
-	return config, NewAccessCredentials(tokens.AccessToken, config.LibrarianEndpoint), nil
+
+	return config, libModels.Credentials{
+		AccessToken: tokens.AccessToken,
+		Endpoint:    config.LibrarianEndpoint,
+	}, nil
 }
 
 func TestFlow(t *testing.T) {
@@ -75,7 +80,7 @@ func TestFlow(t *testing.T) {
 			PostHtml: html,
 		},
 	}
-	url, err := uploadPost(creds.librarianEndpoint, creds.accessToken, request)
+	url, err := UploadPost(creds.Endpoint, creds.AccessToken, request)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -103,7 +108,7 @@ func TestFlow(t *testing.T) {
 	}
 
 	// Try getting link via url
-	getResp, err := getLink(config.LibrarianEndpoint, url)
+	getResp, err := GetLink(config.LibrarianEndpoint, url)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,7 +118,7 @@ func TestFlow(t *testing.T) {
 	}
 
 	// Try getting a wrong link
-	value, err := getLink(config.LibrarianEndpoint, tag1)
+	value, err := GetLink(config.LibrarianEndpoint, tag1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -126,7 +131,7 @@ func TestFlow(t *testing.T) {
 		TitleQuery: randomSlug,
 	}
 
-	searchResp, err := searchLinks(config.LibrarianEndpoint, searchReq)
+	searchResp, err := SearchLinks(config.LibrarianEndpoint, searchReq)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,7 +147,7 @@ func TestFlow(t *testing.T) {
 		Tags: []string{tag1},
 	}
 
-	searchResp, err = searchLinks(config.LibrarianEndpoint, searchReq)
+	searchResp, err = SearchLinks(config.LibrarianEndpoint, searchReq)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -158,7 +163,7 @@ func TestFlow(t *testing.T) {
 		Tags: []string{tag2},
 	}
 
-	searchResp, err = searchLinks(config.LibrarianEndpoint, searchReq)
+	searchResp, err = SearchLinks(config.LibrarianEndpoint, searchReq)
 	if err != nil {
 		t.Fatal(err)
 	}

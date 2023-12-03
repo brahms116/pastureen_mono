@@ -50,7 +50,7 @@ func TestGetUser(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	user, err := getUser(config.Endpoint, tokens.AccessToken)
+	user, err := GetUser(config.Endpoint, tokens.AccessToken)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,7 +64,7 @@ func TestRefreshToken(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	newTokens, err := refreshToken(config.Endpoint, tokens.RefreshToken)
+	newTokens, err := RefreshToken(config.Endpoint, tokens.RefreshToken)
 	if err != nil {
 		t.Fatal(err)
 	}

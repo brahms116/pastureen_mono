@@ -1,7 +1,7 @@
-package models;
+package models
 
 import (
-  blogModels "github.com/brahms116/pastureen_mono/golang/blog_models"
+	blogModels "github.com/brahms116/pastureen_mono/golang/blog_models"
 )
 
 type GeneratePostRequest struct {
@@ -10,4 +10,9 @@ type GeneratePostRequest struct {
 
 type GeneratePostResponse struct {
 	GeneratedPost blogModels.Post `json:"generatedPost"`
+}
+
+type Credentials struct {
+	AccessToken string
+	Endpoint    string
 }

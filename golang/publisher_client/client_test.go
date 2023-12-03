@@ -3,6 +3,7 @@ package client
 import (
 	_ "embed"
 	authClient "github.com/brahms116/pastureen_mono/golang/auth_client"
+	authModels "github.com/brahms116/pastureen_mono/golang/auth_models"
 	publisherModels "github.com/brahms116/pastureen_mono/golang/publisher_models"
 	"os"
 	"testing"
@@ -32,16 +33,22 @@ func ConfigFromEnv() TestConfig {
 	}
 }
 
-func login() (AccessCredentials, error) {
+func login() (publisherModels.Credentials, error) {
 	config := ConfigFromEnv()
 
-	tokens, err := authClient.NewCredentials(config.Email, config.Password, config.AuthServiceEndpoint).Login()
+	authCreds, err := authClient.Login(authModels.Credentials{
+		Email:    config.Email,
+		Password: config.Password,
+		Endpoint: config.AuthServiceEndpoint,
+	})
 
 	if err != nil {
-		return AccessCredentials{}, err
+		return publisherModels.Credentials{}, err
 	}
-
-	return NewAccessCredentials(tokens.AccessToken, config.PublisherEndpoint), nil
+	return publisherModels.Credentials{
+		AccessToken: authCreds.AccessToken,
+		Endpoint:    config.PublisherEndpoint,
+	}, nil
 }
 
 func TestPublish(t *testing.T) {
@@ -54,7 +61,7 @@ func TestPublish(t *testing.T) {
 		MarkdownString: TEST_POST,
 	}
 
-	post, err := generate(accessCreds.publisherEndpoint, accessCreds.accessToken, generateRequest)
+	post, err := GeneratePost(accessCreds.Endpoint, accessCreds.AccessToken, generateRequest)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -32,3 +32,22 @@ type LoginRequest struct {
 type TokenPairResponse struct {
 	TokenPair TokenPair `json:"tokenPair"`
 }
+
+
+// Client structs
+type Credentials struct {
+	Email    string
+	Password string
+	Endpoint string
+}
+
+type TokenCredentials struct {
+	AccessToken  string
+	RefreshToken string
+	Endpoint     string
+}
+
+type AccessCredentials struct {
+	AccessToken string
+	Endpoint    string
+}

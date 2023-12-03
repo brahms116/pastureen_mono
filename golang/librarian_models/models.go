@@ -1,7 +1,7 @@
 package models
 
 import (
-  blogModels "github.com/brahms116/pastureen_mono/golang/blog_models"
+	blogModels "github.com/brahms116/pastureen_mono/golang/blog_models"
 )
 
 type Link struct {
@@ -22,10 +22,10 @@ type PaginationRequest struct {
 
 type QueryLinksRequest struct {
 	Pagination PaginationRequest `json:"pagination"`
-	Tags       []string `json:"tags"`
-	TitleQuery string   `json:"titleQuery"`
-	StartDate  string   `json:"startDate"`
-	EndDate    string   `json:"endDate"`
+	Tags       []string          `json:"tags"`
+	TitleQuery string            `json:"titleQuery"`
+	StartDate  string            `json:"startDate"`
+	EndDate    string            `json:"endDate"`
 }
 
 type QueryLinksResponse struct {
@@ -33,22 +33,28 @@ type QueryLinksResponse struct {
 }
 
 type GetLinkRequest struct {
-  Url string `form:"url"`
+	Url string `form:"url"`
 }
 
 type GetLinkResponse struct {
-  // Has to be a pointer to allow for null values
-  Link *Link `json:"link"`
+	// Has to be a pointer to allow for null values
+	Link *Link `json:"link"`
 }
 
 type CreateNewPostRequest struct {
-  Post blogModels.Post `json:"post"`
+	Post blogModels.Post `json:"post"`
 }
 
 type CreateNewPostResponse struct {
-  Url string `json:"url"`
+	Url string `json:"url"`
 }
 
 type GetTagsResponse struct {
-  Tags []string `json:"tags"`
+	Tags []string `json:"tags"`
+}
+
+// Client models
+type Credentials struct {
+	AccessToken string
+	Endpoint    string
 }

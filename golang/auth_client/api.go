@@ -8,7 +8,23 @@ import (
 	"net/http"
 )
 
-func getUser(endpoint string, accessToken string) (models.User, error) {
+func GetUserFromTokenCredentials(credentials models.TokenCredentials) (models.User, error) {
+	return GetUser(credentials.Endpoint, credentials.AccessToken)
+}
+
+func GetUserFromAccessCredentials(credentials models.AccessCredentials) (models.User, error) {
+	return GetUser(credentials.Endpoint, credentials.AccessToken)
+}
+
+func GetUserFromCredentials(credentials models.Credentials) (models.User, error) {
+	tokenCredentials, err := Login(credentials)
+	if err != nil {
+		return models.User{}, err
+	}
+	return GetUserFromTokenCredentials(tokenCredentials)
+}
+
+func GetUser(endpoint string, accessToken string) (models.User, error) {
 	request, err := http.NewRequest("GET", endpoint+"/user", nil)
 	if err != nil {
 		return models.User{}, err
@@ -23,13 +39,50 @@ func getUser(endpoint string, accessToken string) (models.User, error) {
 	return user.User, err
 }
 
-func refreshToken(endpoint string, refreshToken string) (models.TokenPair, error) {
-	request, err := http.NewRequest("GET", endpoint+"/token", nil)
+func RefreshToken(endpoint string, refreshToken string) (models.TokenCredentials, error) {
+	tokens, err := getRefreshToken(endpoint, refreshToken)
+	if err != nil {
+		return models.TokenCredentials{}, err
+	}
+	return models.TokenCredentials{
+		AccessToken:  tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
+		Endpoint:     endpoint,
+	}, nil
+}
+
+func RefreshTokenWithAccessCredentials(credentials models.AccessCredentials, refreshToken string) (models.TokenCredentials, error) {
+	return RefreshToken(credentials.Endpoint, refreshToken)
+}
+
+func RefreshTokenWithCredentials(credentials models.TokenCredentials) (models.TokenCredentials, error) {
+	return RefreshToken(credentials.Endpoint, credentials.RefreshToken)
+}
+
+// Exported wrapper around inner login function for easier use
+func Login(credentials models.Credentials) (models.TokenCredentials, error) {
+	tokenPair, err := login(credentials.Endpoint, models.LoginRequest{
+		Email:    credentials.Email,
+		Password: credentials.Password,
+	})
+	if err != nil {
+		return models.TokenCredentials{}, err
+	}
+	return models.TokenCredentials{
+		AccessToken:  tokenPair.AccessToken,
+		RefreshToken: tokenPair.RefreshToken,
+		Endpoint:     credentials.Endpoint,
+	}, nil
+}
+
+// Private functions as primitives with api contract types
+
+func login(endpoint string, loginRequest models.LoginRequest) (models.TokenPair, error) {
+	body, err := json.Marshal(loginRequest)
 	if err != nil {
 		return models.TokenPair{}, err
 	}
-	request.Header.Set("Authorization", "Bearer "+refreshToken)
-	response, err := http.DefaultClient.Do(request)
+	response, err := http.Post(endpoint+"/token", "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		return models.TokenPair{}, err
 	}
@@ -38,12 +91,13 @@ func refreshToken(endpoint string, refreshToken string) (models.TokenPair, error
 	return tokenPair.TokenPair, err
 }
 
-func login(endpoint string, loginRequest models.LoginRequest) (models.TokenPair, error) {
-	body, err := json.Marshal(loginRequest)
+func getRefreshToken(endpoint string, refreshToken string) (models.TokenPair, error) {
+	request, err := http.NewRequest("GET", endpoint+"/token", nil)
 	if err != nil {
 		return models.TokenPair{}, err
 	}
-	response, err := http.Post(endpoint+"/token", "application/json", bytes.NewBuffer(body))
+	request.Header.Set("Authorization", "Bearer "+refreshToken)
+	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return models.TokenPair{}, err
 	}
