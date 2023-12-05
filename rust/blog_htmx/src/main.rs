@@ -1,17 +1,16 @@
 use axum::{
     extract::{Form, Json, Query, State},
-    http::StatusCode,
+    http::{HeaderValue, StatusCode, Uri},
     response::{Html, IntoResponse},
     routing::{get, post},
     Router, Server,
 };
 
-use shared_models::*;
-
 use blog_htmx::*;
+use shared_models::*;
 use std::{net::SocketAddr, sync::Arc};
 
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::cors::{Any, CorsLayer, AllowOrigin};
 
 pub struct JsonErrResponse(pub StatusCode, pub Json<HttpErrResponseBody>);
 impl IntoResponse for JsonErrResponse {
@@ -36,6 +35,26 @@ struct BlogHtmxState {
     config: BlogHtmxConfig,
 }
 
+fn cors_predicate(headers: &HeaderValue, blog_base_url: &str) -> bool {
+    let Ok(origin) = headers.to_str() else {
+        return false;
+    };
+
+    if origin == blog_base_url {
+        return true;
+    }
+
+    let Ok(uri) = origin.parse::<Uri>() else {
+        return false;
+    };
+
+    if uri.host() == Some("localhost") || uri.host() == Some("127.0.0.1") {
+        return true;
+    }
+
+    false
+}
+
 #[tokio::main]
 async fn main() {
     let config = BlogHtmxConfig::from_env().unwrap_or_else(|err| {
@@ -46,8 +65,11 @@ async fn main() {
         std::process::exit(1);
     });
 
+    let base_url = config.base_url.clone();
     let cors = CorsLayer::new()
-        .allow_origin([config.base_url.parse().unwrap()])
+        .allow_origin(AllowOrigin::predicate(move |origin: &HeaderValue, _| {
+            cors_predicate(origin, &base_url)
+        }))
         .allow_methods(Any)
         .allow_headers(Any);
 
