@@ -457,6 +457,8 @@ pub fn global_search(props: GlobalSearchProps) -> Markup {
                 }
                 if (!$event.detail.isFromQuery) {
                     $dispatch('focusglobalsearch')
+                } else {
+                    htmx.trigger($refs.searchInput, 'focus')
                 }
             "
             x-on:closeglobalsearch-window="
