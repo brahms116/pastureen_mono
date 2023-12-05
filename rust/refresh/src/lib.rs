@@ -438,6 +438,12 @@ pub fn global_search(props: GlobalSearchProps) -> Markup {
         .map(|url| DerivedHtmxUrls::from(url))
         .unwrap_or_default();
 
+    let htmx_resolved_trigger = if let Some(trigger) = props.input_options.trigger.as_ref() {
+        format!("fromQuery, {}", trigger)
+    } else {
+        "fromQuery".to_string()
+    };
+
     correct_alpine_directives(html! {
         .global-search #global-search
             x-data=(x_data)
@@ -458,7 +464,9 @@ pub fn global_search(props: GlobalSearchProps) -> Markup {
                 if (!$event.detail.isFromQuery) {
                     $dispatch('focusglobalsearch')
                 } else {
-                    htmx.trigger($refs.searchInput, 'focus')
+                    // We need to trigger the input manually
+                    $refs.searchInput.value = searchInput
+                    htmx.trigger($refs.searchInput, 'fromQuery')
                 }
             "
             x-on:closeglobalsearch-window="
@@ -500,7 +508,7 @@ pub fn global_search(props: GlobalSearchProps) -> Markup {
                             hx-get=[derived_htmx_urls.get]
                             hx-put=[derived_htmx_urls.put]
                             hx-delete=[derived_htmx_urls.delete]
-                            hx-trigger=[props.input_options.trigger]
+                            hx-trigger=(htmx_resolved_trigger)
                             hx-swap=[props.input_options.swap]
                             hx-target=[props.input_options.target]
                             hx-indicator=[props.input_options.indicator]
