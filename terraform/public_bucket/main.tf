@@ -28,8 +28,10 @@ resource "aws_s3_bucket_policy" "policy" {
   POLICY
 }
 
-resource "aws_s3_bucket_website" "website" {
+resource "aws_s3_bucket_website_configuration" "website_config" {
   count = var.is_website ? 1 : 0
   bucket = aws_s3_bucket.my_bucket.id
-  index_document = "index.html"
+  index_document {
+    suffix = "index.html"
+  }
 }
