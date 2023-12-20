@@ -219,7 +219,7 @@ fn index_body(props: IndexBodyProps) -> Markup {
 }
 
 pub fn render_index_page(config: BlogConfig) -> String {
-    let layout_props = LayoutProps {
+    let layout_props = PageProps {
         global_search_props: GlobalSearchProps {
             base_url: config.base_url.clone(),
             assets_url: config.assets_url.clone(),
@@ -245,7 +245,7 @@ pub fn render_index_page(config: BlogConfig) -> String {
         title: "Pastureen".to_string(),
     };
 
-    layout(layout_props).into_string()
+    page(layout_props).into_string()
 }
 
 struct PostBodyProps<'a> {
@@ -296,7 +296,7 @@ pub fn render_post_page(config: BlogConfig, props: PostProps) -> String {
             .collect::<Vec<&str>>(),
     };
 
-    let layout_props = LayoutProps {
+    let page_props = PageProps {
         global_search_props: GlobalSearchProps {
             base_url: config.base_url.clone(),
             assets_url: config.assets_url.clone(),
@@ -319,7 +319,7 @@ pub fn render_post_page(config: BlogConfig, props: PostProps) -> String {
         title: props.meta.title,
     };
 
-    layout(layout_props).into_string()
+    page(page_props).into_string()
 }
 
 pub fn render_post(page_config: BlogConfig, props: PostProps) -> Post {
