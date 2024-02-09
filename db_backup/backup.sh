@@ -1,5 +1,21 @@
 #!/bin/bash
 
+
+# Script to back up different postgres databases and uploads them to s3
+#
+# Usage: ./backup.sh <file with db names and connection strings>
+#
+# The file should have the following format:
+#
+# db1=postgresql://user:password@host:port/db1
+# db2=postgresql://user:password@host:port/db2
+# ...
+#
+# The script will create a directory with the current timestamp and dump each
+# database into a separate file in that directory. Then it will upload the
+# directory to s3. The s3 bucket is hardcoded to pastureen-db-backups. And the folder
+# in the bucket is the current timestamp.
+
 set -e
 
 cur_ts=$(date +%Y-%m-%d-%H-%M-%S)
